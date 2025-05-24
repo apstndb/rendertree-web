@@ -1,0 +1,224 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Go wasm sample 3</title>
+    <script src="wasm_exec.js"></script>
+    <style>
+        /* Copy button styles */
+        .copy-button {
+            position: absolute;
+            top: 5px;
+            left: 5px; /* Changed from right to left */
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .copy-button:hover {
+            opacity: 1;
+            background-color: #e9ecef;
+        }
+        /* Styles for when copy is completed */
+        .copy-button.copied {
+            background-color: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        /* Pre element container styles */
+        .pre-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        /* Rendering control styles */
+        .render-controls {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+        .render-controls select {
+            margin-right: 10px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .render-controls button {
+            padding: 5px 15px;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .render-controls button:hover {
+            background-color: #0069d9;
+        }
+        /* File upload control styles */
+        .file-input-container {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+        .file-input-label {
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+<script lang="javascript">
+    /**
+     * @function renderASCII
+     * @global
+     * @description Renders the input Spanner execution plan as ASCII art.
+     * This function is globally exposed by the 'rendertree.wasm' WebAssembly module
+     * and becomes available after WebAssembly.instantiateStreaming and go.run() complete.
+     * @param {string} input - The text to be rendered.
+     * @returns {string} The ASCII art representation as a string.
+     */
+
+    const go = new Go();
+
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('input').value = e.target.result;
+        };
+        reader.readAsText(file);
+    }
+
+    WebAssembly.instantiateStreaming(fetch("rendertree.wasm"), go.importObject).then((result) => {
+        go.run(result.instance);
+    });
+
+    const PREDICATE_MARKER = "*";
+
+    function createTableRow(table, node, index) {
+        const { Predicates, ID, TreePart, NodeText } = node;
+        const row = table.insertRow(index);
+        const idCell = row.insertCell(0);
+        const nodeCell = row.insertCell(1);
+
+        idCell.innerText = (Predicates !== null && Predicates.length > 0 ? PREDICATE_MARKER : "") + ID;
+        idCell.style.textAlign = "right";
+
+        nodeCell.style.whiteSpace = "pre";
+        const codeElement = document.createElement('code');
+        codeElement.textContent = TreePart + NodeText;
+        nodeCell.appendChild(codeElement);
+        return row;
+    }
+
+    function table(input) {
+        // unmarshal JSON
+        const renderedNodes = JSON.parse(input);
+        const placeholder = window.document.getElementById("placeholder");
+        placeholder.innerHTML = "";
+
+        const table = document.createElement('table');
+
+        renderedNodes.forEach((node, i) => {
+            createTableRow(table, node, i);
+        });
+        placeholder.appendChild(table);
+    }
+
+    function copyToClipboard(text) {
+        // Copy text to clipboard using the Clipboard API
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                console.log('Text copied to clipboard');
+                return true;
+            })
+            .catch(err => {
+                console.error('Failed to copy text to clipboard:', err);
+                return false;
+            });
+    }
+
+    function ascii(input) {
+        const result = renderASCII(input)
+
+        const placeholder = window.document.getElementById("placeholder");
+        placeholder.innerHTML = "";
+
+        // Create pre container for positioning
+        const preContainer = document.createElement('div');
+        preContainer.className = 'pre-container';
+
+        // Create pre element
+        const pre = document.createElement('pre');
+        pre.style.fontFamily = "monospace";
+        pre.style.whiteSpace = "pre";
+        pre.style.border = "solid";
+        pre.style.padding = "10px";
+        pre.style.marginTop = "0";
+        pre.style.position = "relative";
+
+        // Create code element
+        const code = document.createElement('code');
+        code.innerText = result;
+        code.style.fontFamily = "Consolas, 'Courier New', Courier, monospace";
+
+        // Create copy button
+        const copyButton = document.createElement('button');
+        copyButton.className = 'copy-button';
+        copyButton.textContent = 'Copy';
+        
+        // Copy button click event handler
+        copyButton.addEventListener('click', function() {
+            if (copyToClipboard(code.innerText)) {
+                // Visual feedback on successful copy
+                copyButton.textContent = 'Copied!';
+                copyButton.classList.add('copied');
+                
+                // Reset button state after 2 seconds
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                    copyButton.classList.remove('copied');
+                }, 2000);
+            }
+        });
+
+        // Assemble elements
+        pre.appendChild(code);
+        preContainer.appendChild(pre);
+        preContainer.appendChild(copyButton);
+        placeholder.appendChild(preContainer);
+    }
+
+    // Function to execute rendering based on selected method
+    function renderSelected() {
+        const input = document.getElementById("input").value;
+        const renderType = document.getElementById("renderType").value;
+        
+        if (renderType === "table") {
+            table(render(input));
+        } else if (renderType === "ascii") {
+            ascii(input);
+        }
+    }
+
+</script>
+<textarea id="input" rows="10" cols="80"></textarea>
+<div class="render-controls">
+    <div class="file-input-container">
+        <label for="fileInput" class="file-input-label">Upload file:</label>
+        <input type="file" id="fileInput" onchange="handleFileUpload(event)">
+    </div>
+    <select id="renderType">
+        <option value="ascii">ASCII</option>
+        <option value="table">Table (Experimental)</option>
+    </select>
+    <button onClick="renderSelected()">Render</button>
+</div>
+<div id="placeholder"></div>
+</body>
+</html>
