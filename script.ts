@@ -7,6 +7,7 @@
  * @param {string} input - The text to be rendered.
  * @returns {string} The ASCII art representation as a string.
  */
+declare function renderASCII(input: string, mode: string): string;
 
 /**
  * @function render
@@ -18,6 +19,21 @@
  * @param {string} mode - The rendering mode.
  * @returns {string} The JSON string representation of the rendered plan.
  */
+declare function render(input: string, mode: string): string;
+
+// Declare Go class from wasm_exec.js
+declare class Go {
+    importObject: WebAssembly.Imports;
+    run(instance: WebAssembly.Instance): Promise<void>;
+}
+
+// Define interfaces for the rendered node structure
+interface RenderedNode {
+    Predicates: string[] | null;
+    ID: string;
+    TreePart: string;
+    NodeText: string;
+}
 
 const go = new Go();
 
@@ -32,25 +48,25 @@ const MIN_CONTAINER_HEIGHT = 100; // Minimum height for the container in pixels
  * @param {HTMLElement} container - The container element to resize
  * @param {HTMLElement} handle - The resize handle element
  */
-function setupResizeHandler(container, handle) {
+function setupResizeHandler(container: HTMLElement, handle: HTMLElement): void {
     let startY = 0;
     let startHeight = 0;
     
-    handle.addEventListener('mousedown', function(e) {
+    handle.addEventListener('mousedown', function(e: MouseEvent) {
         startY = e.clientY;
-        startHeight = parseInt(document.defaultView.getComputedStyle(container).height, 10);
+        startHeight = parseInt(document.defaultView!.getComputedStyle(container).height, 10);
         document.documentElement.addEventListener('mousemove', doDrag, false);
         document.documentElement.addEventListener('mouseup', stopDrag, false);
         e.preventDefault(); // Prevent text selection during drag
     }, false);
     
-    function doDrag(e) {
+    function doDrag(e: MouseEvent): void {
         const newHeight = Math.max(MIN_CONTAINER_HEIGHT, startHeight + e.clientY - startY);
         container.style.height = newHeight + 'px';
         e.preventDefault();
     }
     
-    function stopDrag(e) {
+    function stopDrag(e: MouseEvent): void {
         document.documentElement.removeEventListener('mousemove', doDrag, false);
         document.documentElement.removeEventListener('mouseup', stopDrag, false);
     }
@@ -63,7 +79,7 @@ function setupResizeHandler(container, handle) {
  * @param {string} fontFamily - Font family to use for measurement
  * @returns {number} - Optimal font size in pixels
  */
-function calculateOptimalFontSize(text, containerWidth, fontFamily) {
+function calculateOptimalFontSize(text: string, containerWidth: number, fontFamily: string): number {
     // Find the longest line in the text
     const lines = text.split('\n');
     const maxLineLength = Math.max(...lines.map(line => line.length));
@@ -88,7 +104,7 @@ function calculateOptimalFontSize(text, containerWidth, fontFamily) {
  * @param {number} containerWidth - Available width
  * @description This is used only during initial rendering and when manually requested
  */
-function adjustFontSize(element, text, containerWidth) {
+function adjustFontSize(element: HTMLElement, text: string, containerWidth: number): void {
     const optimalSize = calculateOptimalFontSize(text, containerWidth, 
         "Consolas, 'Courier New', Courier, monospace");
     element.style.fontSize = `${optimalSize}px`;
@@ -100,7 +116,7 @@ function adjustFontSize(element, text, containerWidth) {
  * @param {string} text - The text content
  * @returns {number} - Optimal height in pixels
  */
-function calculateOptimalHeight(preElement, text) {
+function calculateOptimalHeight(preElement: HTMLElement, text: string): number {
     // Count number of lines
     const lineCount = text.split('\n').length;
     
@@ -132,16 +148,22 @@ function calculateOptimalHeight(preElement, text) {
  * @param {HTMLElement} preElement - The pre element with content
  * @param {string} text - The text content
  */
-function adjustContainerHeight(container, preElement, text) {
+function adjustContainerHeight(container: HTMLElement, preElement: HTMLElement, text: string): void {
     const optimalHeight = calculateOptimalHeight(preElement, text);
     container.style.height = optimalHeight + 'px';
 }
 
-function handleFileUpload(event) {
-    const file = event.target.files[0];
+function handleFileUpload(event: Event): void {
+    const fileInput = event.target as HTMLInputElement;
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    
+    const file = fileInput.files[0];
     const reader = new FileReader();
-    reader.onload = function (e) {
-        document.getElementById('input').value = e.target.result;
+    reader.onload = function (e: ProgressEvent<FileReader>) {
+        const inputElement = document.getElementById('input') as HTMLTextAreaElement;
+        if (inputElement && e.target && typeof e.target.result === 'string') {
+            inputElement.value = e.target.result;
+        }
     };
     reader.readAsText(file);
 }
@@ -185,7 +207,7 @@ WebAssembly.instantiateStreaming(fetch("rendertree.wasm"), go.importObject).then
 
 const PREDICATE_MARKER = "*";
 
-function createTableRow(table, node, index) {
+function createTableRow(table: HTMLTableElement, node: RenderedNode, index: number): HTMLTableRowElement {
     const { Predicates, ID, TreePart, NodeText } = node;
     const row = table.insertRow(index);
     const idCell = row.insertCell(0);
@@ -201,10 +223,12 @@ function createTableRow(table, node, index) {
     return row;
 }
 
-function table(input, mode) {
+function table(input: string, mode: string): void {
     // unmarshal JSON
-    const renderedNodes = JSON.parse(input);
-    const placeholder = window.document.getElementById("placeholder");
+    const renderedNodes: RenderedNode[] = JSON.parse(input);
+    const placeholder = document.getElementById("placeholder");
+    if (!placeholder) return;
+    
     placeholder.innerHTML = "";
 
     const table = document.createElement('table');
@@ -215,7 +239,7 @@ function table(input, mode) {
     placeholder.appendChild(table);
 }
 
-function copyToClipboard(text) {
+function copyToClipboard(text: string): Promise<boolean> {
     // Copy text to clipboard using the Clipboard API
     return navigator.clipboard.writeText(text)
         .then(() => {
@@ -228,10 +252,12 @@ function copyToClipboard(text) {
         });
 }
 
-function ascii(input, mode) {
+function ascii(input: string, mode: string): void {
     const result = renderASCII(input, mode);
 
-    const placeholder = window.document.getElementById("placeholder");
+    const placeholder = document.getElementById("placeholder");
+    if (!placeholder) return;
+    
     placeholder.innerHTML = "";
 
     // Create pre container for positioning
@@ -311,10 +337,16 @@ function ascii(input, mode) {
 }
 
 // Function to execute rendering based on selected method and mode
-function renderSelected() {
-    const input = document.getElementById("input").value;
-    const renderType = document.getElementById("renderType").value;
-    const renderMode = document.getElementById("renderMode").value;
+function renderSelected(): void {
+    const inputElement = document.getElementById("input") as HTMLTextAreaElement;
+    const renderTypeElement = document.getElementById("renderType") as HTMLSelectElement;
+    const renderModeElement = document.getElementById("renderMode") as HTMLSelectElement;
+    
+    if (!inputElement || !renderTypeElement || !renderModeElement) return;
+    
+    const input = inputElement.value;
+    const renderType = renderTypeElement.value;
+    const renderMode = renderModeElement.value;
     
     if (renderType === "table") {
         table(render(input, renderMode), renderMode);
@@ -327,7 +359,7 @@ function renderSelected() {
 }
 
 // Setup font size and height control buttons
-function setupFontSizeControls() {
+function setupFontSizeControls(): void {
     const codeElement = document.getElementById('result-code');
     const preContainer = document.getElementById('pre-container');
     

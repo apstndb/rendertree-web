@@ -1,0 +1,27 @@
+{
+  "name": "rendertree-web",
+  "version": "0.1.0",
+  "description": "A web-based tool for visualizing Google Cloud Spanner execution plans. This tool helps database administrators and developers understand query execution plans and identify performance bottlenecks.",
+  "main": "dist/script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apstndb/rendertree-web.git"
+  },
+  "author": "apstndb",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/apstndb/rendertree-web/issues"
+  },
+  "homepage": "https://github.com/apstndb/rendertree-web#readme",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@google-cloud/spanner": "^7.0.0"
+  }
+}
