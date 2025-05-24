@@ -51,7 +51,7 @@ const MIN_CONTAINER_HEIGHT = 100; // Minimum height for the container in pixels
 function setupResizeHandler(container: HTMLElement, handle: HTMLElement): void {
     let startY = 0;
     let startHeight = 0;
-    
+
     handle.addEventListener('mousedown', function(e: MouseEvent) {
         startY = e.clientY;
         startHeight = parseInt(document.defaultView!.getComputedStyle(container).height, 10);
@@ -59,13 +59,13 @@ function setupResizeHandler(container: HTMLElement, handle: HTMLElement): void {
         document.documentElement.addEventListener('mouseup', stopDrag, false);
         e.preventDefault(); // Prevent text selection during drag
     }, false);
-    
+
     function doDrag(e: MouseEvent): void {
         const newHeight = Math.max(MIN_CONTAINER_HEIGHT, startHeight + e.clientY - startY);
         container.style.height = newHeight + 'px';
         e.preventDefault();
     }
-    
+
     function stopDrag(e: MouseEvent): void {
         document.documentElement.removeEventListener('mousemove', doDrag, false);
         document.documentElement.removeEventListener('mouseup', stopDrag, false);
@@ -83,17 +83,17 @@ function calculateOptimalFontSize(text: string, containerWidth: number, fontFami
     // Find the longest line in the text
     const lines = text.split('\n');
     const maxLineLength = Math.max(...lines.map(line => line.length));
-    
+
     // Calculate approximate width of the longest line at 1px font size
     // This is an approximation as actual character width varies
     const approximateTextWidth = maxLineLength * CHAR_WIDTH_RATIO;
-    
+
     // Calculate font size that would make the text fit
     let fontSize = containerWidth / approximateTextWidth;
-    
+
     // Apply constraints
     fontSize = Math.max(MIN_FONT_SIZE, Math.min(DEFAULT_FONT_SIZE, fontSize));
-    
+
     return fontSize;
 }
 
@@ -119,26 +119,26 @@ function adjustFontSize(element: HTMLElement, text: string, containerWidth: numb
 function calculateOptimalHeight(preElement: HTMLElement, text: string): number {
     // Count number of lines
     const lineCount = text.split('\n').length;
-    
+
     // Get line height from computed style
     const computedStyle = window.getComputedStyle(preElement);
     const lineHeight = parseInt(computedStyle.lineHeight) || 
                       parseInt(computedStyle.fontSize) * 1.2; // Fallback if lineHeight is 'normal'
-    
+
     // Calculate content height (lines * line height)
     const contentHeight = lineCount * lineHeight;
-    
+
     // Add padding
     const paddingTop = parseInt(computedStyle.paddingTop) || 0;
     const paddingBottom = parseInt(computedStyle.paddingBottom) || 0;
-    
+
     // Calculate total height
     const totalHeight = contentHeight + paddingTop + paddingBottom;
-    
+
     // Constrain within min and max bounds
     const minHeight = 100; // Same as CSS min-height
     const maxHeight = window.innerHeight * 0.7; // 70vh
-    
+
     return Math.min(maxHeight, Math.max(minHeight, totalHeight));
 }
 
@@ -156,7 +156,7 @@ function adjustContainerHeight(container: HTMLElement, preElement: HTMLElement, 
 function handleFileUpload(event: Event): void {
     const fileInput = event.target as HTMLInputElement;
     if (!fileInput.files || fileInput.files.length === 0) return;
-    
+
     const file = fileInput.files[0];
     const reader = new FileReader();
     reader.onload = function (e: ProgressEvent<FileReader>) {
@@ -173,26 +173,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get control buttons
     const autoFontBtn = document.getElementById('auto-font');
     const resetHeightBtn = document.getElementById('reset-height');
-    
+
     // Add event listener for auto height adjustment
     if (resetHeightBtn) {
         resetHeightBtn.addEventListener('click', function() {
             const preContainer = document.getElementById('pre-container');
             const pre = document.getElementById('result-pre');
             const code = document.getElementById('result-code');
-            
+
             if (preContainer && pre && code) {
                 adjustContainerHeight(preContainer, pre, code.innerText);
             }
         });
     }
-    
+
     // Add event listener for auto font size adjustment
     if (autoFontBtn) {
         autoFontBtn.addEventListener('click', function() {
             const preContainer = document.getElementById('pre-container');
             const code = document.getElementById('result-code');
-            
+
             if (preContainer && code) {
                 const containerWidth = preContainer.clientWidth - 20; // 20px for padding
                 adjustFontSize(code, code.innerText, containerWidth);
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-WebAssembly.instantiateStreaming(fetch("rendertree.wasm"), go.importObject).then((result) => {
+WebAssembly.instantiateStreaming(fetch("dist/rendertree.wasm"), go.importObject).then((result) => {
     go.run(result.instance);
 });
 
@@ -228,7 +228,7 @@ function table(input: string, mode: string): void {
     const renderedNodes: RenderedNode[] = JSON.parse(input);
     const placeholder = document.getElementById("placeholder");
     if (!placeholder) return;
-    
+
     placeholder.innerHTML = "";
 
     const table = document.createElement('table');
@@ -257,7 +257,7 @@ function ascii(input: string, mode: string): void {
 
     const placeholder = document.getElementById("placeholder");
     if (!placeholder) return;
-    
+
     placeholder.innerHTML = "";
 
     // Create pre container for positioning
@@ -290,7 +290,7 @@ function ascii(input: string, mode: string): void {
     const copyButton = document.createElement('button');
     copyButton.className = 'copy-button';
     copyButton.textContent = 'Copy';
-    
+
     // Copy button click event handler
     copyButton.addEventListener('click', function () {
         copyToClipboard(code.innerText).then((success) => {
@@ -298,7 +298,7 @@ function ascii(input: string, mode: string): void {
                 // Visual feedback on successful copy
                 copyButton.textContent = 'Copied!';
                 copyButton.classList.add('copied');
-                
+
                 // Reset button state after 2 seconds
                 setTimeout(() => {
                     copyButton.textContent = 'Copy';
@@ -312,26 +312,26 @@ function ascii(input: string, mode: string): void {
     const resizeHandle = document.createElement('div');
     resizeHandle.className = 'resize-handle';
     resizeHandle.title = 'Drag to resize';
-    
+
     // Assemble elements
     pre.appendChild(code);
     preContainer.appendChild(pre);
     preContainer.appendChild(copyButton);
     preContainer.appendChild(resizeHandle);
     placeholder.appendChild(preContainer);
-    
+
     // Set up resize functionality
     setupResizeHandler(preContainer, resizeHandle);
-    
+
     // Adjust font size and container height after elements are in the DOM
     setTimeout(() => {
         // Get available width (container width minus padding)
         const containerWidth = preContainer.clientWidth - 20; // 20px for padding
         adjustFontSize(code, result, containerWidth);
-        
+
         // Adjust container height based on content
         adjustContainerHeight(preContainer, pre, result);
-        
+
         // No window resize handler - adjustments are made only once initially
     }, 0);
 }
@@ -341,19 +341,19 @@ function renderSelected(): void {
     const inputElement = document.getElementById("input") as HTMLTextAreaElement;
     const renderTypeElement = document.getElementById("renderType") as HTMLSelectElement;
     const renderModeElement = document.getElementById("renderMode") as HTMLSelectElement;
-    
+
     if (!inputElement || !renderTypeElement || !renderModeElement) return;
-    
+
     const input = inputElement.value;
     const renderType = renderTypeElement.value;
     const renderMode = renderModeElement.value;
-    
+
     if (renderType === "table") {
         table(render(input, renderMode), renderMode);
     } else if (renderType === "ascii") {
         ascii(input, renderMode);
     }
-    
+
     // Setup font size control buttons after rendering
     setTimeout(setupFontSizeControls, 100);
 }
@@ -362,9 +362,9 @@ function renderSelected(): void {
 function setupFontSizeControls(): void {
     const codeElement = document.getElementById('result-code');
     const preContainer = document.getElementById('pre-container');
-    
+
     if (!codeElement || !preContainer) return;
-    
+
     // Font size controls
     // Decrease font size button
     const decreaseBtn = document.getElementById('decrease-font');
@@ -374,7 +374,7 @@ function setupFontSizeControls(): void {
             codeElement.style.fontSize = `${Math.max(MIN_FONT_SIZE, currentSize - 1)}px`;
         };
     }
-    
+
     // Auto-adjust font size button
     const autoBtn = document.getElementById('auto-font');
     if (autoBtn) {
@@ -383,7 +383,7 @@ function setupFontSizeControls(): void {
             adjustFontSize(codeElement, codeElement.innerText, containerWidth);
         };
     }
-    
+
     // Increase font size button
     const increaseBtn = document.getElementById('increase-font');
     if (increaseBtn) {
@@ -392,7 +392,7 @@ function setupFontSizeControls(): void {
             codeElement.style.fontSize = `${currentSize + 1}px`;
         };
     }
-    
+
     // Height controls
     // Decrease height button
     const decreaseHeightBtn = document.getElementById('decrease-height');
@@ -402,14 +402,14 @@ function setupFontSizeControls(): void {
             preContainer.style.height = `${Math.max(MIN_CONTAINER_HEIGHT, currentHeight - 50)}px`;
         };
     }
-    
+
     // Auto-fit height button
     const resetHeightBtn = document.getElementById('reset-height');
     if (resetHeightBtn) {
         resetHeightBtn.onclick = function() {
             // In flex layout, just reset any manual height that might have been set
             preContainer.style.height = "";
-            
+
             // Focus on the output area
             const pre = document.getElementById('result-pre');
             if (pre) {
@@ -417,7 +417,7 @@ function setupFontSizeControls(): void {
             }
         };
     }
-    
+
     // Increase height button
     const increaseHeightBtn = document.getElementById('increase-height');
     if (increaseHeightBtn) {
@@ -435,13 +435,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (fileInput) {
         fileInput.addEventListener('change', handleFileUpload);
     }
-    
+
     // Set up render button
     const renderButton = document.getElementById('renderButton');
     if (renderButton) {
         renderButton.addEventListener('click', renderSelected);
     }
-    
+
     // Setup initial controls
     setupFontSizeControls();
 });

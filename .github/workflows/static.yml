@@ -39,12 +39,19 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+      - name: Build WebAssembly
+        run: |
+          GOOS=js GOARCH=wasm go build -ldflags="-s -w" -gcflags="all=-trimpath" -o dist/rendertree.wasm ./
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Prepare deployment files
         run: |
           mkdir -p _site
-          cp -r index.html styles.css wasm_exec.js rendertree.wasm dist _site/
+          cp -r index.html styles.css wasm_exec.js dist _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
