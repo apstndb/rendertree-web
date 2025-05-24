@@ -8,6 +8,17 @@
  * @returns {string} The ASCII art representation as a string.
  */
 
+/**
+ * @function render
+ * @global
+ * @description Renders the input Spanner execution plan as structured data.
+ * This function is globally exposed by the 'rendertree.wasm' WebAssembly module
+ * and becomes available after WebAssembly.instantiateStreaming and go.run() complete.
+ * @param {string} input - The text to be rendered.
+ * @param {string} mode - The rendering mode.
+ * @returns {string} The JSON string representation of the rendered plan.
+ */
+
 const go = new Go();
 
 // Font size adjustment constants
@@ -122,9 +133,8 @@ function calculateOptimalHeight(preElement, text) {
  * @param {string} text - The text content
  */
 function adjustContainerHeight(container, preElement, text) {
-    // In flex layout, we don't need to explicitly set height
-    // The container will automatically fill available space
-    // We can adjust other properties if needed
+    const optimalHeight = calculateOptimalHeight(preElement, text);
+    container.style.height = optimalHeight + 'px';
 }
 
 function handleFileUpload(event) {
@@ -135,6 +145,39 @@ function handleFileUpload(event) {
     };
     reader.readAsText(file);
 }
+
+// Initialize control buttons when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Get control buttons
+    const autoFontBtn = document.getElementById('auto-font');
+    const resetHeightBtn = document.getElementById('reset-height');
+    
+    // Add event listener for auto height adjustment
+    if (resetHeightBtn) {
+        resetHeightBtn.addEventListener('click', function() {
+            const preContainer = document.getElementById('pre-container');
+            const pre = document.getElementById('result-pre');
+            const code = document.getElementById('result-code');
+            
+            if (preContainer && pre && code) {
+                adjustContainerHeight(preContainer, pre, code.innerText);
+            }
+        });
+    }
+    
+    // Add event listener for auto font size adjustment
+    if (autoFontBtn) {
+        autoFontBtn.addEventListener('click', function() {
+            const preContainer = document.getElementById('pre-container');
+            const code = document.getElementById('result-code');
+            
+            if (preContainer && code) {
+                const containerWidth = preContainer.clientWidth - 20; // 20px for padding
+                adjustFontSize(code, code.innerText, containerWidth);
+            }
+        });
+    }
+});
 
 WebAssembly.instantiateStreaming(fetch("rendertree.wasm"), go.importObject).then((result) => {
     go.run(result.instance);
