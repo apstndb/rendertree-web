@@ -40,6 +40,7 @@ func referenceRenderTreeTable(planNodes []*sppb.PlanNode, withStats bool) (strin
 		tablewriter.WithRenderer(
 			renderer.NewBlueprint(tw.Rendition{Symbols: tw.NewSymbols(tw.StyleASCII)}),
 		),
+		tablewriter.WithTrimSpace(tw.Off),
 		tablewriter.WithHeaderAutoFormat(tw.Off),
 		tablewriter.WithHeaderAlignment(tw.AlignLeft),
 	)
