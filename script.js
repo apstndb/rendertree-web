@@ -174,7 +174,7 @@ function table(input, mode) {
 
 function copyToClipboard(text) {
     // Copy text to clipboard using the Clipboard API
-    navigator.clipboard.writeText(text)
+    return navigator.clipboard.writeText(text)
         .then(() => {
             console.log('Text copied to clipboard');
             return true;
@@ -223,18 +223,20 @@ function ascii(input, mode) {
     copyButton.textContent = 'Copy';
     
     // Copy button click event handler
-    copyButton.addEventListener('click', function() {
-        if (copyToClipboard(code.innerText)) {
-            // Visual feedback on successful copy
-            copyButton.textContent = 'Copied!';
-            copyButton.classList.add('copied');
-            
-            // Reset button state after 2 seconds
-            setTimeout(() => {
-                copyButton.textContent = 'Copy';
-                copyButton.classList.remove('copied');
-            }, 2000);
-        }
+    copyButton.addEventListener('click', function () {
+        copyToClipboard(code.innerText).then((success) => {
+            if (success) {
+                // Visual feedback on successful copy
+                copyButton.textContent = 'Copied!';
+                copyButton.classList.add('copied');
+                
+                // Reset button state after 2 seconds
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                    copyButton.classList.remove('copied');
+                }, 2000);
+            }
+        });
     });
 
     // Create resize handle
