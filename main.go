@@ -29,7 +29,7 @@ func Render(this js.Value, args []js.Value) any {
 	return string(j)
 }
 
-func referenceRenderTreeTable(planNodes []*sppb.PlanNode) (string, error) {
+func referenceRenderTreeTable(planNodes []*sppb.PlanNode, withStats bool) (string, error) {
 	rendered, err := referenceRenderTree(planNodes)
 	if err != nil {
 		return "", err
@@ -47,12 +47,23 @@ func referenceRenderTreeTable(planNodes []*sppb.PlanNode) (string, error) {
 		config.Header.Formatting.AutoFormat = tw.Off
 		config.Row.ColumnAligns = []tw.Align{tw.AlignRight, tw.AlignLeft}
 	})
-	table.Header("ID", "Operators")
+
+	header := []string{"ID", "Operator"}
+	if withStats {
+		header = append(header, "Rows", "Exec.", "Total Latency")
+	} else {
+	}
+
+	table.Header(header)
 	for _, n := range rendered {
 		hasPred := len(n.Predicates) > 0
-		err := table.Append([]string{
+		rowData := []string{
 			lo.Ternary(hasPred, "*", "") + strconv.Itoa(int(n.ID)),
-			n.TreePart + n.NodeText})
+			n.TreePart + n.NodeText}
+		if withStats {
+			rowData = append(rowData, n.ExecutionStats.Rows.Total, n.ExecutionStats.ExecutionSummary.NumExecutions, n.ExecutionStats.Latency.String())
+		}
+		err := table.Append(rowData)
 		if err != nil {
 			return "", err
 		}
@@ -86,13 +97,37 @@ func referenceRenderTreeTable(planNodes []*sppb.PlanNode) (string, error) {
 	return sb.String(), nil
 }
 
+func detectHasStats(nodes []*sppb.PlanNode) bool {
+	switch {
+	case len(nodes) == 0:
+		return false
+	case nodes[0].ExecutionStats != nil:
+		return true
+	default:
+		return false
+	}
+}
 func RenderASCII(this js.Value, args []js.Value) any {
 	stats, _, err := queryplan.ExtractQueryPlan([]byte(args[0].String()))
 	if err != nil {
 		return err.Error()
 	}
 
-	s, err := referenceRenderTreeTable(stats.GetQueryPlan().GetPlanNodes())
+	var withStats bool
+	switch mode := args[1].String(); strings.ToUpper(mode) {
+	case "AUTO":
+		withStats = detectHasStats(stats.GetQueryPlan().GetPlanNodes())
+	case "PLAN":
+		withStats = false
+	case "PROFILE":
+		withStats = true
+	default:
+		return "unknown mode"
+	}
+
+	stats.GetQueryPlan().GetPlanNodes()
+
+	s, err := referenceRenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), withStats)
 	if err != nil {
 		return err.Error()
 	}

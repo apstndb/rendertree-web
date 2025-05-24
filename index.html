@@ -32,7 +32,38 @@
         /* Pre element container styles */
         .pre-container {
             position: relative;
-            margin-bottom: 15px;
+            width: 100%;
+            overflow: hidden; /* Ensures the container doesn't overflow */
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 100px; /* Minimum height */
+            flex: 1 1 auto; /* Fill available space */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Resize handle styles */
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 10px;
+            background-color: #f5f5f5;
+            border-top: 1px solid #ddd;
+            cursor: ns-resize;
+            text-align: center;
+            font-size: 10px;
+            color: #888;
+            line-height: 10px;
+            user-select: none;
+        }
+        
+        .resize-handle:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .resize-handle::before {
+            content: "≡";
+            font-size: 12px;
         }
         /* Rendering control styles */
         .render-controls {
@@ -46,6 +77,7 @@
             padding: 5px;
             border-radius: 4px;
             border: 1px solid #dee2e6;
+            min-width: 80px;
         }
         .render-controls button {
             padding: 5px 15px;
@@ -68,6 +100,101 @@
             margin-right: 10px;
             white-space: nowrap;
         }
+        
+        /* Font size controls */
+        .font-size-controls {
+            display: flex;
+            margin-left: 10px;
+        }
+        
+        .font-size-controls button, .height-controls button {
+            padding: 5px 10px;
+            margin: 0 3px;
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #495057;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            min-width: 40px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .font-size-controls button:hover, .height-controls button:hover {
+            background-color: #f0f0f0;
+            border-color: #adb5bd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        
+        .font-size-controls button:active, .height-controls button:active {
+            background-color: #e9ecef;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            transform: translateY(1px);
+        }
+        
+        /* Height controls */
+        .height-controls {
+            display: flex;
+            margin-left: 10px;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 5px 8px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* Font size controls */
+        .font-size-controls {
+            display: flex;
+            margin-left: 10px;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 5px 8px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* Control options container */
+        .control-options {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        
+        /* Control group labels */
+        .control-group-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #6c757d;
+            margin-right: 5px;
+        }
+        
+        /* Scrollbar styling for better visibility */
+        pre::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+            background-color: #f5f5f5;
+        }
+        
+        pre::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 4px;
+        }
+        
+        pre::-webkit-scrollbar-thumb:hover {
+            background-color: #555;
+        }
+        
+        /* Ensure scrollbar corner doesn't look odd */
+        pre::-webkit-scrollbar-corner {
+            background-color: #f5f5f5;
+        }
     </style>
 </head>
 
@@ -84,6 +211,123 @@
      */
 
     const go = new Go();
+    
+    // Font size adjustment constants
+    const MIN_FONT_SIZE = 8; // Minimum font size in pixels
+    const DEFAULT_FONT_SIZE = 14; // Default font size in pixels
+    const CHAR_WIDTH_RATIO = 0.6; // Approximate width-to-height ratio for monospace fonts
+    const MIN_CONTAINER_HEIGHT = 100; // Minimum height for the container in pixels
+    
+    /**
+     * Setup resize handler for the pre container
+     * @param {HTMLElement} container - The container element to resize
+     * @param {HTMLElement} handle - The resize handle element
+     */
+    function setupResizeHandler(container, handle) {
+        let startY = 0;
+        let startHeight = 0;
+        
+        handle.addEventListener('mousedown', function(e) {
+            startY = e.clientY;
+            startHeight = parseInt(document.defaultView.getComputedStyle(container).height, 10);
+            document.documentElement.addEventListener('mousemove', doDrag, false);
+            document.documentElement.addEventListener('mouseup', stopDrag, false);
+            e.preventDefault(); // Prevent text selection during drag
+        }, false);
+        
+        function doDrag(e) {
+            const newHeight = Math.max(MIN_CONTAINER_HEIGHT, startHeight + e.clientY - startY);
+            container.style.height = newHeight + 'px';
+            e.preventDefault();
+        }
+        
+        function stopDrag(e) {
+            document.documentElement.removeEventListener('mousemove', doDrag, false);
+            document.documentElement.removeEventListener('mouseup', stopDrag, false);
+        }
+    }
+    
+    /**
+     * Calculates optimal font size to fit content within container width
+     * @param {string} text - The text content to measure
+     * @param {number} containerWidth - Available width in pixels
+     * @param {string} fontFamily - Font family to use for measurement
+     * @returns {number} - Optimal font size in pixels
+     */
+    function calculateOptimalFontSize(text, containerWidth, fontFamily) {
+        // Find the longest line in the text
+        const lines = text.split('\n');
+        const maxLineLength = Math.max(...lines.map(line => line.length));
+        
+        // Calculate approximate width of the longest line at 1px font size
+        // This is an approximation as actual character width varies
+        const approximateTextWidth = maxLineLength * CHAR_WIDTH_RATIO;
+        
+        // Calculate font size that would make the text fit
+        let fontSize = containerWidth / approximateTextWidth;
+        
+        // Apply constraints
+        fontSize = Math.max(MIN_FONT_SIZE, Math.min(DEFAULT_FONT_SIZE, fontSize));
+        
+        return fontSize;
+    }
+    
+    /**
+     * Adjusts font size of an element to fit its content
+     * @param {HTMLElement} element - The element to adjust
+     * @param {string} text - The text content
+     * @param {number} containerWidth - Available width
+     * @description This is used only during initial rendering and when manually requested
+     */
+    function adjustFontSize(element, text, containerWidth) {
+        const optimalSize = calculateOptimalFontSize(text, containerWidth, 
+            "Consolas, 'Courier New', Courier, monospace");
+        element.style.fontSize = `${optimalSize}px`;
+    }
+    
+    /**
+     * Calculates optimal height for container based on content
+     * @param {HTMLElement} preElement - The pre element containing the content
+     * @param {string} text - The text content
+     * @returns {number} - Optimal height in pixels
+     */
+    function calculateOptimalHeight(preElement, text) {
+        // Count number of lines
+        const lineCount = text.split('\n').length;
+        
+        // Get line height from computed style
+        const computedStyle = window.getComputedStyle(preElement);
+        const lineHeight = parseInt(computedStyle.lineHeight) || 
+                          parseInt(computedStyle.fontSize) * 1.2; // Fallback if lineHeight is 'normal'
+        
+        // Calculate content height (lines * line height)
+        const contentHeight = lineCount * lineHeight;
+        
+        // Add padding
+        const paddingTop = parseInt(computedStyle.paddingTop) || 0;
+        const paddingBottom = parseInt(computedStyle.paddingBottom) || 0;
+        
+        // Calculate total height
+        const totalHeight = contentHeight + paddingTop + paddingBottom;
+        
+        // Constrain within min and max bounds
+        const minHeight = 100; // Same as CSS min-height
+        const maxHeight = window.innerHeight * 0.7; // 70vh
+        
+        return Math.min(maxHeight, Math.max(minHeight, totalHeight));
+    }
+    
+    /**
+     * Adjusts container height based on content
+     * @param {HTMLElement} container - The container to adjust
+     * @param {HTMLElement} preElement - The pre element with content
+     * @param {string} text - The text content
+     */
+    function adjustContainerHeight(container, preElement, text) {
+        // In flex layout, we don't need to explicitly set height
+        // The container will automatically fill available space
+        // We can adjust other properties if needed
+    }
 
     function handleFileUpload(event) {
         const file = event.target.files[0];
@@ -116,7 +360,7 @@
         return row;
     }
 
-    function table(input) {
+    function table(input, mode) {
         // unmarshal JSON
         const renderedNodes = JSON.parse(input);
         const placeholder = window.document.getElementById("placeholder");
@@ -143,8 +387,8 @@
             });
     }
 
-    function ascii(input) {
-        const result = renderASCII(input)
+    function ascii(input, mode) {
+        const result = renderASCII(input, mode);
 
         const placeholder = window.document.getElementById("placeholder");
         placeholder.innerHTML = "";
@@ -152,7 +396,8 @@
         // Create pre container for positioning
         const preContainer = document.createElement('div');
         preContainer.className = 'pre-container';
-
+        preContainer.id = 'pre-container';
+    
         // Create pre element
         const pre = document.createElement('pre');
         pre.style.fontFamily = "monospace";
@@ -161,12 +406,19 @@
         pre.style.padding = "10px";
         pre.style.marginTop = "0";
         pre.style.position = "relative";
-
+        pre.style.overflow = "auto"; // Enable both horizontal and vertical scrolling
+        pre.style.maxWidth = "100%"; // Ensure it doesn't exceed container width
+        pre.style.flex = "1 1 auto"; // Fill available space
+        pre.style.boxSizing = "border-box"; // Include padding in the height calculation
+        pre.style.margin = "0"; // Remove margin
+        pre.id = 'result-pre';
+    
         // Create code element
         const code = document.createElement('code');
         code.innerText = result;
         code.style.fontFamily = "Consolas, 'Courier New', Courier, monospace";
-
+        code.id = 'result-code';
+    
         // Create copy button
         const copyButton = document.createElement('button');
         copyButton.className = 'copy-button';
@@ -186,23 +438,118 @@
                 }, 2000);
             }
         });
-
+    
+        // Create resize handle
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'resize-handle';
+        resizeHandle.title = 'Drag to resize';
+        
         // Assemble elements
         pre.appendChild(code);
         preContainer.appendChild(pre);
         preContainer.appendChild(copyButton);
+        preContainer.appendChild(resizeHandle);
         placeholder.appendChild(preContainer);
+        
+        // Set up resize functionality
+        setupResizeHandler(preContainer, resizeHandle);
+        
+        // Adjust font size and container height after elements are in the DOM
+        setTimeout(() => {
+            // Get available width (container width minus padding)
+            const containerWidth = preContainer.clientWidth - 20; // 20px for padding
+            adjustFontSize(code, result, containerWidth);
+            
+            // Adjust container height based on content
+            adjustContainerHeight(preContainer, pre, result);
+            
+            // No window resize handler - adjustments are made only once initially
+        }, 0);
     }
 
-    // Function to execute rendering based on selected method
+    // Function to execute rendering based on selected method and mode
     function renderSelected() {
         const input = document.getElementById("input").value;
         const renderType = document.getElementById("renderType").value;
+        const renderMode = document.getElementById("renderMode").value;
         
         if (renderType === "table") {
-            table(render(input));
+            table(render(input, renderMode), renderMode);
         } else if (renderType === "ascii") {
-            ascii(input);
+            ascii(input, renderMode);
+        }
+        
+        // Setup font size control buttons after rendering
+        setTimeout(setupFontSizeControls, 100);
+    }
+    
+    // Setup font size and height control buttons
+    function setupFontSizeControls() {
+        const codeElement = document.getElementById('result-code');
+        const preContainer = document.getElementById('pre-container');
+        
+        if (!codeElement || !preContainer) return;
+        
+        // Font size controls
+        // Decrease font size button
+        const decreaseBtn = document.getElementById('decrease-font');
+        if (decreaseBtn) {
+            decreaseBtn.onclick = function() {
+                const currentSize = parseInt(getComputedStyle(codeElement).fontSize);
+                codeElement.style.fontSize = `${Math.max(MIN_FONT_SIZE, currentSize - 1)}px`;
+            };
+        }
+        
+        // Auto-adjust font size button
+        const autoBtn = document.getElementById('auto-font');
+        if (autoBtn) {
+            autoBtn.onclick = function() {
+                const containerWidth = preContainer.clientWidth - 20;
+                adjustFontSize(codeElement, codeElement.innerText, containerWidth);
+            };
+        }
+        
+        // Increase font size button
+        const increaseBtn = document.getElementById('increase-font');
+        if (increaseBtn) {
+            increaseBtn.onclick = function() {
+                const currentSize = parseInt(getComputedStyle(codeElement).fontSize);
+                codeElement.style.fontSize = `${currentSize + 1}px`;
+            };
+        }
+        
+        // Height controls
+        // Decrease height button
+        const decreaseHeightBtn = document.getElementById('decrease-height');
+        if (decreaseHeightBtn) {
+            decreaseHeightBtn.onclick = function() {
+                const currentHeight = parseInt(getComputedStyle(preContainer).height);
+                preContainer.style.height = `${Math.max(MIN_CONTAINER_HEIGHT, currentHeight - 50)}px`;
+            };
+        }
+        
+        // Auto-fit height button
+        const resetHeightBtn = document.getElementById('reset-height');
+        if (resetHeightBtn) {
+            resetHeightBtn.onclick = function() {
+                // In flex layout, just reset any manual height that might have been set
+                preContainer.style.height = "";
+                
+                // Focus on the output area
+                const pre = document.getElementById('result-pre');
+                if (pre) {
+                    pre.scrollIntoView({ behavior: 'smooth' });
+                }
+            };
+        }
+        
+        // Increase height button
+        const increaseHeightBtn = document.getElementById('increase-height');
+        if (increaseHeightBtn) {
+            increaseHeightBtn.onclick = function() {
+                const currentHeight = parseInt(getComputedStyle(preContainer).height);
+                preContainer.style.height = `${currentHeight + 50}px`;
+            };
         }
     }
 
@@ -210,14 +557,37 @@
 <textarea id="input" rows="10" cols="80"></textarea>
 <div class="render-controls">
     <div class="file-input-container">
-        <label for="fileInput" class="file-input-label">Upload file:</label>
+        <label for="fileInput" class="file-input-label">Upload:</label>
         <input type="file" id="fileInput" onchange="handleFileUpload(event)">
     </div>
-    <select id="renderType">
-        <option value="ascii">ASCII</option>
-        <option value="table">Table (Experimental)</option>
-    </select>
+    <div class="select-container">
+        <label for="renderType" class="control-group-label">Type:</label>
+        <select id="renderType">
+            <option value="ascii">ASCII</option>
+            <option value="table">Table (Experimental)</option>
+        </select>
+    </div>
+    <div class="select-container">
+        <label for="renderMode" class="control-group-label">Mode:</label>
+        <select id="renderMode">
+            <option value="AUTO">AUTO</option>
+            <option value="PLAN">PLAN</option>
+            <option value="PROFILE">PROFILE</option>
+        </select>
+    </div>
     <button onClick="renderSelected()">Render</button>
+    <div class="font-size-controls">
+        <span class="control-group-label">Font:</span>
+        <button id="decrease-font" title="Decrease font size">A-</button>
+        <button id="auto-font" title="Auto-adjust font size to fit width">Fit</button>
+        <button id="increase-font" title="Increase font size">A+</button>
+    </div>
+    <div class="height-controls">
+        <span class="control-group-label">Height:</span>
+        <button id="decrease-height" title="Decrease height">↑</button>
+        <button id="reset-height" title="Auto-fit height to content">Auto</button>
+        <button id="increase-height" title="Increase height">↓</button>
+    </div>
 </div>
 <div id="placeholder"></div>
 </body>
