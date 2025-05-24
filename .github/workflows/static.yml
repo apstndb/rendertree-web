@@ -31,13 +31,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Prepare deployment files
+        run: |
+          mkdir -p _site
+          cp -r index.html styles.css wasm_exec.js rendertree.wasm dist _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          # Upload only the necessary files for the website
+          path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
