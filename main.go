@@ -8,8 +8,10 @@ import (
 	"syscall/js"
 
 	sppb "cloud.google.com/go/spanner/apiv1/spannerpb"
+	"github.com/apstndb/lox"
 	"github.com/apstndb/spannerplanviz/plantree"
 	"github.com/apstndb/spannerplanviz/queryplan"
+	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/renderer"
 	"github.com/olekukonko/tablewriter/tw"
@@ -35,6 +37,42 @@ func referenceRenderTreeTable(planNodes []*sppb.PlanNode, withStats bool) (strin
 		return "", err
 	}
 
+	tablePart, err := renderTablePart(rendered, withStats)
+	if err != nil {
+		return "", err
+	}
+
+	predPart, err := renderPredicatesPart(rendered)
+	if err != nil {
+		return "", err
+	}
+
+	return tablePart + predPart, nil
+
+}
+
+func renderPredicatesPart(rendered []plantree.RowWithPredicates) (string, error) {
+	maxIDLength := len(fmt.Sprint(lo.LastOr(rendered, plantree.RowWithPredicates{}).ID))
+
+	var predicates []string
+	for _, row := range rendered {
+		for i, predicate := range row.Predicates {
+			prefix := runewidth.FillLeft(lox.IfOrEmpty(i == 0, fmt.Sprint(row.ID)+":"), maxIDLength+1)
+			predicates = append(predicates, fmt.Sprintf("%s %s", prefix, predicate))
+		}
+	}
+
+	var sb strings.Builder
+	if len(predicates) > 0 {
+		fmt.Fprintln(&sb, "Predicates(identified by ID):")
+		for _, s := range predicates {
+			fmt.Fprintln(&sb, " "+s)
+		}
+	}
+	return sb.String(), nil
+}
+
+func renderTablePart(rendered []plantree.RowWithPredicates, withStats bool, ) (string, error) {
 	var sb strings.Builder
 	table := tablewriter.NewTable(&sb,
 		tablewriter.WithRenderer(
@@ -52,49 +90,25 @@ func referenceRenderTreeTable(planNodes []*sppb.PlanNode, withStats bool) (strin
 	header := []string{"ID", "Operator"}
 	if withStats {
 		header = append(header, "Rows", "Exec.", "Total Latency")
-	} else {
 	}
-
 	table.Header(header)
+
 	for _, n := range rendered {
-		hasPred := len(n.Predicates) > 0
 		rowData := []string{
-			lo.Ternary(hasPred, "*", "") + strconv.Itoa(int(n.ID)),
+			lox.IfOrEmpty(len(n.Predicates) > 0, "*") + strconv.Itoa(int(n.ID)),
 			n.TreePart + n.NodeText}
 		if withStats {
 			rowData = append(rowData, n.ExecutionStats.Rows.Total, n.ExecutionStats.ExecutionSummary.NumExecutions, n.ExecutionStats.Latency.String())
 		}
-		err := table.Append(rowData)
-		if err != nil {
+
+		if err := table.Append(rowData); err != nil {
 			return "", err
 		}
 	}
+
 	if err := table.Render(); err != nil {
 		return "", err
 	}
-
-	maxIDLength := len(fmt.Sprint(lo.LastOr(rendered, plantree.RowWithPredicates{}).ID))
-
-	var predicates []string
-	for _, row := range rendered {
-		var prefix string
-		for i, predicate := range row.Predicates {
-			if i == 0 {
-				prefix = fmt.Sprintf("%*d:", maxIDLength, row.ID)
-			} else {
-				prefix = strings.Repeat(" ", maxIDLength+1)
-			}
-			predicates = append(predicates, fmt.Sprintf("%s %s", prefix, predicate))
-		}
-	}
-
-	if len(predicates) > 0 {
-		fmt.Fprintln(&sb, "Predicates(identified by ID):")
-		for _, s := range predicates {
-			fmt.Fprintf(&sb, " %s\n", s)
-		}
-	}
-
 	return sb.String(), nil
 }
 
