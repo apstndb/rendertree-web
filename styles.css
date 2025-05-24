@@ -1,0 +1,190 @@
+/* Copy button styles */
+.copy-button {
+    position: absolute;
+    top: 5px;
+    left: 5px; /* Changed from right to left */
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+.copy-button:hover {
+    opacity: 1;
+    background-color: #e9ecef;
+}
+/* Styles for when copy is completed */
+.copy-button.copied {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+/* Pre element container styles */
+.pre-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden; /* Ensures the container doesn't overflow */
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 100px; /* Minimum height */
+    flex: 1 1 auto; /* Fill available space */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Resize handle styles */
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 10px;
+    background-color: #f5f5f5;
+    border-top: 1px solid #ddd;
+    cursor: ns-resize;
+    text-align: center;
+    font-size: 10px;
+    color: #888;
+    line-height: 10px;
+    user-select: none;
+}
+
+.resize-handle:hover {
+    background-color: #e0e0e0;
+}
+
+.resize-handle::before {
+    content: "≡";
+    font-size: 12px;
+}
+/* Rendering control styles */
+.render-controls {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+.render-controls select {
+    margin-right: 10px;
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    min-width: 80px;
+}
+.render-controls button {
+    padding: 5px 15px;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+.render-controls button:hover {
+    background-color: #0069d9;
+}
+/* File upload control styles */
+.file-input-container {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+}
+.file-input-label {
+    margin-right: 10px;
+    white-space: nowrap;
+}
+
+/* Font size controls */
+.font-size-controls {
+    display: flex;
+    margin-left: 10px;
+}
+
+.font-size-controls button, .height-controls button {
+    padding: 5px 10px;
+    margin: 0 3px;
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #495057;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    min-width: 40px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.font-size-controls button:hover, .height-controls button:hover {
+    background-color: #f0f0f0;
+    border-color: #adb5bd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.font-size-controls button:active, .height-controls button:active {
+    background-color: #e9ecef;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    transform: translateY(1px);
+}
+
+/* Height controls */
+.height-controls {
+    display: flex;
+    margin-left: 10px;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+/* Font size controls */
+.font-size-controls {
+    display: flex;
+    margin-left: 10px;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+/* Control options container */
+.control-options {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+/* Control group labels */
+.control-group-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #6c757d;
+    margin-right: 5px;
+}
+
+/* Scrollbar styling for better visibility */
+pre::-webkit-scrollbar {
+    width: 10px;
+    height: 8px;
+    background-color: #f5f5f5;
+}
+
+pre::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
+}
+
+/* Ensure scrollbar corner doesn't look odd */
+pre::-webkit-scrollbar-corner {
+    background-color: #f5f5f5;
+}
