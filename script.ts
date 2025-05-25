@@ -561,50 +561,50 @@ function setupFontSizeControls(): void {
     // Font size controls
     const decreaseBtn = document.getElementById('decrease-font');
     if (decreaseBtn) {
-        decreaseBtn.onclick = function() {
+        decreaseBtn.addEventListener('click', function() {
             const currentSizePx = window.getComputedStyle(codeElement).fontSize;
             const currentSizeNum = parseInt(currentSizePx);
             const newSize = Math.max(MIN_FONT_SIZE, currentSizeNum - 1);
             setFontSize(codeElement, newSize);
-        };
+        });
     }
 
     const increaseBtn = document.getElementById('increase-font');
     if (increaseBtn) {
-        increaseBtn.onclick = function() {
+        increaseBtn.addEventListener('click', function() {
             const currentSizePx = window.getComputedStyle(codeElement).fontSize;
             const currentSizeNum = parseInt(currentSizePx);
             const newSize = currentSizeNum + 1;
             setFontSize(codeElement, newSize);
-        };
+        });
     }
 
     // Height controls (these logics are not directly related to font display issues, so no changes)
     const decreaseHeightBtn = document.getElementById('decrease-height');
     if (decreaseHeightBtn) {
-        decreaseHeightBtn.onclick = function() {
+        decreaseHeightBtn.addEventListener('click', function() {
             const currentHeight = parseInt(window.getComputedStyle(preContainer).height);
             preContainer.style.height = `${Math.max(MIN_CONTAINER_HEIGHT, currentHeight - 50)}px`;
-        };
+        });
     }
 
     const resetHeightBtn = document.getElementById('reset-height');
     if (resetHeightBtn) {
-        resetHeightBtn.onclick = function() {
+        resetHeightBtn.addEventListener('click', function() {
             const pre = document.getElementById('result-pre');
             // codeElement is already obtained within the scope of this function
             if (pre && codeElement) {
                 adjustContainerHeight(preContainer, pre, codeElement.innerText);
                 pre.scrollIntoView({ behavior: 'smooth' });
             }
-        };
+        });
     }
 
     const increaseHeightBtn = document.getElementById('increase-height');
     if (increaseHeightBtn) {
-        increaseHeightBtn.onclick = function() {
+        increaseHeightBtn.addEventListener('click', function() {
             const currentHeight = parseInt(window.getComputedStyle(preContainer).height);
             preContainer.style.height = `${currentHeight + 50}px`;
-        };
+        });
     }
 }
