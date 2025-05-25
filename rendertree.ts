@@ -14,13 +14,12 @@ export interface RenderedNode {
 
 // These functions will be globally available after WASM initialization
 declare function renderASCII(input: string, mode: string): string;
-declare function render(input: string, mode: string): string;
 
 let wasmInitialized = false;
 
-export async function initWasm(): Promise<{ render: typeof render; renderASCII: typeof renderASCII }> {
+export async function initWasm(): Promise<{ renderASCII: typeof renderASCII }> {
     if (wasmInitialized) {
-        return { render, renderASCII };
+        return { renderASCII };
     }
 
     const go = new Go();
@@ -28,7 +27,7 @@ export async function initWasm(): Promise<{ render: typeof render; renderASCII: 
         const result = await WebAssembly.instantiateStreaming(fetch("dist/rendertree.wasm"), go.importObject);
         go.run(result.instance);
         wasmInitialized = true;
-        return { render, renderASCII };
+        return { renderASCII };
     } catch (e) {
         console.error("Error initializing WebAssembly:", e);
         throw e;

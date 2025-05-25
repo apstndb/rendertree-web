@@ -7,7 +7,7 @@ const MIN_FONT_SIZE = 8; // Minimum font size in pixels
 const DEFAULT_FONT_SIZE = 14; // Default font size in pixels
 const MIN_CONTAINER_HEIGHT = 100; // Minimum height for the container in pixels
 
-let wasmFunctions: { render: (input: string, mode: string) => string; renderASCII: (input: string, mode: string) => string; } | null = null;
+let wasmFunctions: { renderASCII: (input: string, mode: string) => string; } | null = null;
 
 async function initializeWasm() {
     try {
@@ -155,13 +155,7 @@ function renderSelected(): boolean {
         updatePlaceholder('Rendering...');
 
 
-        if (renderType === "table") {
-            if (wasmFunctions) {
-                table(wasmFunctions.render(input, renderMode), renderMode);
-            } else {
-                updatePlaceholder("Error: Rendering engine not loaded.");
-            }
-        } else if (renderType === "ascii") {
+        if (renderType === "ascii") {
             if (wasmFunctions) {
                 ascii(input, renderMode); // ascii function will call wasmFunctions.renderASCII internally
             } else {
@@ -373,40 +367,6 @@ function adjustContainerHeight(container: HTMLElement, preElement: HTMLElement, 
 }
 
 
-const PREDICATE_MARKER = "*";
-
-
-function createTableRow(table: HTMLTableElement, node: RenderedNode, index: number): HTMLTableRowElement {
-    const { Predicates, ID, TreePart, NodeText } = node;
-    const row = table.insertRow(index);
-    const idCell = row.insertCell(0);
-    const nodeCell = row.insertCell(1);
-
-    idCell.innerText = (Predicates !== null && Predicates.length > 0 ? PREDICATE_MARKER : "") + ID;
-    idCell.style.textAlign = "right";
-
-    nodeCell.style.whiteSpace = "pre";
-    const codeElement = document.createElement('code');
-    codeElement.textContent = TreePart + NodeText;
-    nodeCell.appendChild(codeElement);
-    return row;
-}
-
-function table(input: string, mode: string): void {
-    // unmarshal JSON
-    const renderedNodes: RenderedNode[] = JSON.parse(input);
-    const placeholder = document.getElementById("placeholder");
-    if (!placeholder) return;
-
-    placeholder.innerHTML = "";
-
-    const table = document.createElement('table');
-
-    renderedNodes.forEach((node, i) => {
-        createTableRow(table, node, i);
-    });
-    placeholder.appendChild(table);
-}
 
 function copyToClipboard(text: string): Promise<boolean> {
     // Copy text to clipboard using the Clipboard API
