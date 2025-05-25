@@ -5,6 +5,7 @@
  * This function is globally exposed by the 'rendertree.wasm' WebAssembly module
  * and becomes available after WebAssembly.instantiateStreaming and go.run() complete.
  * @param {string} input - The text to be rendered.
+ * @param {string} mode - The rendering mode.
  * @returns {string} The ASCII art representation as a string.
  */
 declare function renderASCII(input: string, mode: string): string;
@@ -47,53 +48,55 @@ const FONT_SIZE_STORAGE_KEY = 'rendertree-font-size';
 
 /**
  * Setup resize handler for the pre container
- * @param {HTMLElement} container - The container element to resize
- * @param {HTMLElement} handle - The resize handle element
+ * @param container - The container element to resize
+ * @param handle - The resize handle element
  */
 function setupResizeHandler(container: HTMLElement, handle: HTMLElement): void {
     let startY = 0;
     let startHeight = 0;
 
-    handle.addEventListener('mousedown', function(e: MouseEvent) {
+    const onMouseDown = (e: MouseEvent): void => {
         startY = e.clientY;
-        startHeight = parseInt(document.defaultView!.getComputedStyle(container).height, 10);
+        startHeight = parseInt(window.getComputedStyle(container).height, 10); // Use window.getComputedStyle
         document.documentElement.addEventListener('mousemove', doDrag, false);
         document.documentElement.addEventListener('mouseup', stopDrag, false);
         e.preventDefault(); // Prevent text selection during drag
-    }, false);
+    };
 
-    function doDrag(e: MouseEvent): void {
+    const doDrag = (e: MouseEvent): void => {
         const newHeight = Math.max(MIN_CONTAINER_HEIGHT, startHeight + e.clientY - startY);
-        container.style.height = newHeight + 'px';
+        container.style.height = `${newHeight}px`;
         e.preventDefault();
-    }
+    };
 
-    function stopDrag(e: MouseEvent): void {
+    const stopDrag = (): void => {
         document.documentElement.removeEventListener('mousemove', doDrag, false);
         document.documentElement.removeEventListener('mouseup', stopDrag, false);
-    }
+    };
+
+    handle.addEventListener('mousedown', onMouseDown, false);
 }
 
 /**
- * Gets the stored font size from local storage or returns the default
- * @returns {number} - Font size in pixels
+ * Gets the stored font size from local storage or returns the default.
+ * @returns Font size in pixels.
  */
 function getStoredFontSize(): number {
     const storedSize = localStorage.getItem(FONT_SIZE_STORAGE_KEY);
-    return storedSize ? parseInt(storedSize) : DEFAULT_FONT_SIZE;
+    return storedSize ? parseInt(storedSize, 10) : DEFAULT_FONT_SIZE; // Added radix for parseInt
 }
 
 /**
- * Stores the font size in local storage
- * @param {number} fontSize - Font size in pixels
+ * Stores the font size in local storage.
+ * @param fontSize - Font size in pixels.
  */
 function storeFontSize(fontSize: number): void {
     localStorage.setItem(FONT_SIZE_STORAGE_KEY, fontSize.toString());
 }
 
 /**
- * Updates the font size display element with the current font size
- * @param {number} fontSize - Font size in pixels
+ * Updates the font size display element with the current font size.
+ * @param fontSize - Font size in pixels.
  */
 function updateFontSizeDisplay(fontSize: number): void {
     const fontSizeDisplay = document.getElementById('font-size-display');
@@ -103,9 +106,9 @@ function updateFontSizeDisplay(fontSize: number): void {
 }
 
 /**
- * Sets the font size of an element and updates related UI
- * @param {HTMLElement} element - The element to adjust
- * @param {number} fontSize - Font size in pixels
+ * Sets the font size of an element and updates related UI.
+ * @param element - The element to adjust.
+ * @param fontSize - Font size in pixels.
  */
 function setFontSize(element: HTMLElement, fontSize: number): void {
     element.style.fontSize = `${fontSize}px`;
@@ -113,68 +116,83 @@ function setFontSize(element: HTMLElement, fontSize: number): void {
     storeFontSize(fontSize);
 }
 
+interface UIElements {
+    inputElement: HTMLTextAreaElement;
+    renderTypeElement: HTMLSelectElement;
+    renderModeElement: HTMLSelectElement;
+}
+
 /**
- * Calculates the optimal font size to avoid horizontal scrollbar
- * @param {HTMLElement} preElement - The pre element containing the content
- * @param {string} text - The text content
- * @returns {number} - Optimal font size in pixels
+ * Helper function to get required UI elements.
+ * Throws an error if any required element is not found.
+ * @returns Object containing required UI elements.
  */
-/**
- * Helper function to get required UI elements
- * @returns Object containing required UI elements or null if any is missing
- */
-function getUIElements() {
-    const inputElement = document.getElementById("input") as HTMLTextAreaElement;
-    const renderTypeElement = document.getElementById("renderType") as HTMLSelectElement;
-    const renderModeElement = document.getElementById("renderMode") as HTMLSelectElement;
-    
-    if (!inputElement || !renderTypeElement || !renderModeElement) {
-        console.error("Required elements not found for rendering");
-        return null;
+function getUIElements(): UIElements {
+    const inputElement = document.getElementById("input") as HTMLTextAreaElement | null;
+    const renderTypeElement = document.getElementById("renderType") as HTMLSelectElement | null;
+    const renderModeElement = document.getElementById("renderMode") as HTMLSelectElement | null;
+
+    if (!inputElement) {
+        throw new Error("Input element with ID 'input' not found.");
     }
-    
+    if (!renderTypeElement) {
+        throw new Error("Render type select element with ID 'renderType' not found.");
+    }
+    if (!renderModeElement) {
+        throw new Error("Render mode select element with ID 'renderMode' not found.");
+    }
+
     return { inputElement, renderTypeElement, renderModeElement };
 }
 
 /**
- * Renders the query plan based on current input and selected options
- * @returns boolean indicating if rendering was successful
+ * Renders the query plan based on current input and selected options.
+ * @returns boolean indicating if rendering was successful.
  */
 function renderSelected(): boolean {
-    const elements = getUIElements();
-    if (!elements) return false;
-    
-    const { inputElement, renderTypeElement, renderModeElement } = elements;
-    const input = inputElement.value.trim();
-    const renderType = renderTypeElement.value;
-    const renderMode = renderModeElement.value;
-
-    // Skip rendering if input is empty
-    if (!input) {
-        console.log("No input to render");
-        return false;
-    }
-
-    console.log(`Rendering with type: ${renderType}, mode: ${renderMode}`);
-
     try {
+        const elements = getUIElements();
+        const { inputElement, renderTypeElement, renderModeElement } = elements;
+
+        const input = inputElement.value.trim();
+        const renderType = renderTypeElement.value;
+        const renderMode = renderModeElement.value;
+
+        if (!input) {
+            console.log("No input to render");
+            const placeholder = document.getElementById('placeholder');
+            if (placeholder) placeholder.textContent = 'Please provide input for the query plan.';
+            return false;
+        }
+
+        console.log(`Rendering with type: ${renderType}, mode: ${renderMode}`);
+        const placeholder = document.getElementById('placeholder');
+        if (placeholder) placeholder.textContent = 'Rendering...';
+
+
         if (renderType === "table") {
             table(render(input, renderMode), renderMode);
         } else if (renderType === "ascii") {
             ascii(input, renderMode);
         }
-        
-        // Setup font size control buttons after rendering
+
+        // Consider if this timeout is strictly necessary or if there's a more direct way to ensure elements are ready.
         setTimeout(setupFontSizeControls, 100);
         return true;
     } catch (error) {
-        console.error("Error during rendering:", error);
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Error during rendering:", message);
+        const placeholder = document.getElementById('placeholder');
+        if (placeholder) {
+            placeholder.textContent = `Error during rendering: ${message}`;
+        }
         return false;
     }
 }
 
+
 /**
- * Handles file input and reads the file
+ * Handles file input and reads the file.
  */
 function handleFileInput(event: Event): void {
     const fileInput = event.target as HTMLInputElement;
@@ -185,171 +203,172 @@ function handleFileInput(event: Event): void {
         return;
     }
 
-    // TypeScriptに files[0] が必ず存在することを明示的に伝える
-    const file = files[0]!; // 非nullアサーション演算子を使用
+    const file = files.item(0);
+    if (!file) {
+        console.log("No file selected, or file is not accessible.");
+        return;
+    }
+
     console.log(`File selected: ${file.name}`);
 
     const reader = new FileReader();
 
-    reader.onload = function(e) {
-        const content = e.target?.result as string;
-        const elements = getUIElements();
-        
-        if (!elements || !content) {
-            console.error("Missing required elements or empty file content");
+    reader.onload = function(e: ProgressEvent<FileReader>) {
+        const content = e.target?.result;
+
+        if (typeof content !== 'string') {
+            console.error("Empty or invalid file content");
+            const placeholder = document.getElementById('placeholder');
+            if (placeholder) placeholder.textContent = 'Error: Could not read file content.';
             return;
         }
-        
-        elements.inputElement.value = content;
-        // Automatically render when file is loaded
-        renderSelected();
+
+        try {
+            const { inputElement } = getUIElements();
+            inputElement.value = content;
+            renderSelected();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error("Error setting input value or auto-rendering from file:", message);
+            const placeholder = document.getElementById('placeholder');
+            if (placeholder) placeholder.textContent = `Error processing file: ${message}`;
+        }
     };
 
     reader.onerror = function() {
         console.error("Error reading file:", reader.error);
+        const placeholder = document.getElementById('placeholder');
+        if (placeholder) placeholder.textContent = `Error reading file: ${reader.error?.message || 'Unknown error'}`;
     };
 
     reader.readAsText(file);
 }
 
 /**
- * Initialize UI elements and set up event listeners
+ * Initialize UI elements and set up event listeners.
  */
 function initializeUI(): void {
     console.log('Initializing UI...');
 
-    // Make the placeholder responsive to window size
     const placeholder = document.getElementById('placeholder');
     const contentContainer = document.getElementById('content-container');
 
     if (placeholder && contentContainer) {
-        // Apply styles in a more concise way
         Object.assign(placeholder.style, {
             width: '100%',
             height: '100%'
         });
-        
+
         Object.assign(contentContainer.style, {
             flex: '1',
             display: 'flex',
             flexDirection: 'column'
         });
+    } else {
+        console.warn("Placeholder or content-container not found during UI initialization.");
     }
 
-    // Set up event listeners
     const fileInput = document.getElementById('fileInput');
     const renderButton = document.getElementById('renderButton');
 
     fileInput?.addEventListener('change', handleFileInput);
     renderButton?.addEventListener('click', renderSelected);
 
-    // Initialize font size controls
-    setupFontSizeControls();
+    try {
+        setupFontSizeControls();
+    } catch(error) {
+        console.warn("Could not initialize font size controls on DOMContentLoaded:", error);
+    }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initializeUI);
 
+/**
+ * Calculates the optimal font size to avoid horizontal scrollbar
+ * @param preElement - The pre element containing the content
+ * @param text - The text content
+ * @returns Optimal font size in pixels
+ */
 function calculateInitialFontSize(preElement: HTMLElement, text: string): number {
-    // Create a temporary element to measure text width
     const tempElement = document.createElement('div');
     tempElement.style.visibility = 'hidden';
     tempElement.style.position = 'absolute';
     tempElement.style.whiteSpace = 'pre';
-    tempElement.style.fontFamily = "Consolas, 'Courier New', Courier, monospace";
+    tempElement.style.fontFamily = window.getComputedStyle(preElement).fontFamily || "Consolas, 'Courier New', Courier, monospace";
 
-    // Find the longest line in the text
     const lines = text.split('\n');
-    const maxLineLength = Math.max(...lines.map(line => line.length));
-    tempElement.textContent = 'X'.repeat(maxLineLength);
+    const maxLineLength = lines.length > 0 ? Math.max(...lines.map(line => line.length)) : 0;
 
+    if (maxLineLength === 0) {
+        return DEFAULT_FONT_SIZE;
+    }
+    tempElement.textContent = 'X'.repeat(maxLineLength);
     document.body.appendChild(tempElement);
 
-    // Binary search to find the largest font size that doesn't cause horizontal scrollbar
     let minSize = MIN_FONT_SIZE;
-    let maxSize = DEFAULT_FONT_SIZE;
-    let currentSize = DEFAULT_FONT_SIZE;
-    const containerWidth = preElement.clientWidth - 20; // 20px for padding
+    let maxSize = DEFAULT_FONT_SIZE * 2; // Allow searching for larger fonts than default
+    let optimalSize = DEFAULT_FONT_SIZE;
+
+    const containerWidth = preElement.clientWidth > 20 ? preElement.clientWidth - 20 : preElement.clientWidth; // Subtract padding
+    if (containerWidth <= 0) { // Safety check
+        document.body.removeChild(tempElement);
+        return DEFAULT_FONT_SIZE;
+    }
 
     while (minSize <= maxSize) {
-        currentSize = Math.floor((minSize + maxSize) / 2);
+        const currentSize = Math.floor((minSize + maxSize) / 2);
+        if (currentSize < MIN_FONT_SIZE) break;
+
         tempElement.style.fontSize = `${currentSize}px`;
 
         if (tempElement.scrollWidth > containerWidth) {
             maxSize = currentSize - 1;
         } else {
+            optimalSize = currentSize;
             minSize = currentSize + 1;
         }
     }
 
     document.body.removeChild(tempElement);
-    return Math.max(MIN_FONT_SIZE, maxSize);
+    return Math.max(MIN_FONT_SIZE, optimalSize);
 }
 
+
 /**
- * Calculates optimal height for container based on content
- * @param {HTMLElement} preElement - The pre element containing the content
- * @param {string} text - The text content
- * @returns {number} - Optimal height in pixels
+ * Calculates optimal height for container based on content.
+ * @param preElement - The pre element containing the content.
+ * @param text - The text content.
+ * @returns Optimal height in pixels.
  */
 function calculateOptimalHeight(preElement: HTMLElement, text: string): number {
-    // Count number of lines
-    const lineCount = text.split('\n').length;
+    const lines = text.split('\n');
+    const lineCount = lines.length;
 
-    // Get line height from computed style
+    if (lineCount === 0) return MIN_CONTAINER_HEIGHT;
+
     const computedStyle = window.getComputedStyle(preElement);
-    const lineHeight = parseInt(computedStyle.lineHeight) || 
-                      parseInt(computedStyle.fontSize) * 1.2; // Fallback if lineHeight is 'normal'
-
-    // Calculate content height (lines * line height)
-    const contentHeight = lineCount * lineHeight;
-
-    // Add padding
-    const paddingTop = parseInt(computedStyle.paddingTop) || 0;
-    const paddingBottom = parseInt(computedStyle.paddingBottom) || 0;
-
-    // Calculate total height
-    const totalHeight = contentHeight + paddingTop + paddingBottom;
-
-    // Constrain within min and max bounds
-    const minHeight = 100; // Same as CSS min-height
-
-    // Calculate available viewport height
-    const viewportHeight = window.innerHeight;
-
-    // Calculate height of other elements
-    const inputElement = document.getElementById('input');
-    const controlsElement = document.querySelector('.render-controls');
-    const footer = document.querySelector('footer');
-
-    let otherElementsHeight = 0;
-
-    if (inputElement) {
-        otherElementsHeight += inputElement.getBoundingClientRect().height;
-    }
-
-    if (controlsElement) {
-        otherElementsHeight += controlsElement.getBoundingClientRect().height;
-    }
-
-    if (footer) {
-        otherElementsHeight += footer.getBoundingClientRect().height;
-    }
-
-    // Add some padding
-    otherElementsHeight += 40; // 20px top and bottom padding
-
-    // Calculate maximum available height
-    const maxHeight = viewportHeight - otherElementsHeight;
-
-    // Return the appropriate height
-    if (totalHeight < minHeight) {
-        return minHeight;
-    } else if (totalHeight > maxHeight) {
-        return maxHeight;
+    const fontSize = parseFloat(computedStyle.fontSize);
+    // Use 'lineHeight' if it's a specific value, otherwise estimate based on font size.
+    // 'normal' typically translates to around 1.2 to 1.5 times the font size.
+    const lineHeightValue = computedStyle.lineHeight;
+    let lineHeight: number;
+    if (lineHeightValue === 'normal' || !lineHeightValue) {
+        lineHeight = fontSize * 1.4; // Adjusted factor for better estimation
     } else {
-        return totalHeight;
+        lineHeight = parseFloat(lineHeightValue);
     }
+
+    // Ensure lineHeight is a positive number
+    if (isNaN(lineHeight) || lineHeight <=0) {
+        lineHeight = fontSize * 1.4;
+    }
+
+
+    const contentHeight = lineCount * lineHeight;
+    const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+    const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+
+    return Math.max(MIN_CONTAINER_HEIGHT, contentHeight + paddingTop + paddingBottom);
 }
 
 /**
@@ -363,45 +382,12 @@ function adjustContainerHeight(container: HTMLElement, preElement: HTMLElement, 
     container.style.height = optimalHeight + 'px';
 }
 
-function handleFileUpload(event: Event): void {
-    const fileInput = event.target as HTMLInputElement;
-    if (!fileInput.files || fileInput.files.length === 0) return;
-
-    const file = fileInput.files[0]!;
-    const reader = new FileReader();
-    reader.onload = function (e: ProgressEvent<FileReader>) {
-        const inputElement = document.getElementById('input') as HTMLTextAreaElement;
-        if (inputElement && e.target && typeof e.target.result === 'string') {
-            inputElement.value = e.target.result;
-        }
-    };
-    reader.readAsText(file);
-}
-
-// Initialize control buttons when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Get control buttons
-    const resetHeightBtn = document.getElementById('reset-height');
-
-    // Add event listener for auto height adjustment
-    if (resetHeightBtn) {
-        resetHeightBtn.addEventListener('click', function() {
-            const preContainer = document.getElementById('pre-container');
-            const pre = document.getElementById('result-pre');
-            const code = document.getElementById('result-code');
-
-            if (preContainer && pre && code) {
-                adjustContainerHeight(preContainer, pre, code.innerText);
-            }
-        });
-    }
-});
-
 WebAssembly.instantiateStreaming(fetch("dist/rendertree.wasm"), go.importObject).then((result) => {
     go.run(result.instance);
 });
 
 const PREDICATE_MARKER = "*";
+
 
 function createTableRow(table: HTMLTableElement, node: RenderedNode, index: number): HTMLTableRowElement {
     const { Predicates, ID, TreePart, NodeText } = node;
@@ -557,6 +543,7 @@ function ascii(input: string, mode: string): void {
     }, 0);
 }
 
+
 // Setup font size and height control buttons
 function setupFontSizeControls(): void {
     const codeElement = document.getElementById('result-code');
@@ -621,21 +608,3 @@ function setupFontSizeControls(): void {
         };
     }
 }
-
-// Add event listeners once the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Set up file upload handler
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileUpload);
-    }
-
-    // Set up render button
-    const renderButton = document.getElementById('renderButton');
-    if (renderButton) {
-        renderButton.addEventListener('click', renderSelected);
-    }
-
-    // Since result-code element does not exist at DOMContentLoaded, remove setupFontSizeControls call here.
-    // setupFontSizeControls();
-});
