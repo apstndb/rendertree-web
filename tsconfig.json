@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "module": "es2015",
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -11,11 +11,18 @@
     "sourceMap": true,
     "noImplicitAny": true,
     "noUncheckedIndexedAccess": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "useDefineForClassFields": true,
-    "isolatedModules": false,
-    "verbatimModuleSyntax": false,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
-    "lib": ["dom", "dom.iterable", "es2015", "es2016", "es2017", "es2022"]
+    "allowSyntheticDefaultImports": true,
+    "exactOptionalPropertyTypes": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "checkJs": false
   },
   "include": ["*.ts"],
   "exclude": ["node_modules"]
