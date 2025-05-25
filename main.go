@@ -17,8 +17,8 @@ import (
 	"github.com/samber/lo"
 )
 
-func referenceRenderTreeTable(planNodes []*sppb.PlanNode, withStats bool) (string, error) {
-	rendered, err := referenceRenderTree(planNodes)
+func RenderTreeTable(planNodes []*sppb.PlanNode, withStats bool) (string, error) {
+	rendered, err := ProcessTree(planNodes)
 	if err != nil {
 		return "", err
 	}
@@ -99,15 +99,13 @@ func renderTablePart(rendered []plantree.RowWithPredicates, withStats bool, ) (s
 }
 
 func detectHasStats(nodes []*sppb.PlanNode) bool {
-	switch {
-	case len(nodes) == 0:
-		return false
-	case nodes[0].ExecutionStats != nil:
-		return true
-	default:
+	if len(nodes) == 0 {
 		return false
 	}
+
+	return nodes[0].ExecutionStats != nil
 }
+
 func renderASCII(this js.Value, args []js.Value) any {
 	stats, _, err := queryplan.ExtractQueryPlan([]byte(args[0].String()))
 	if err != nil {
@@ -126,16 +124,14 @@ func renderASCII(this js.Value, args []js.Value) any {
 		return "unknown mode"
 	}
 
-	stats.GetQueryPlan().GetPlanNodes()
-
-	s, err := referenceRenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), withStats)
+	s, err := RenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), withStats)
 	if err != nil {
 		return err.Error()
 	}
 	return s
 }
 
-func referenceRenderTree(planNodes []*sppb.PlanNode) ([]plantree.RowWithPredicates, error) {
+func ProcessTree(planNodes []*sppb.PlanNode) ([]plantree.RowWithPredicates, error) {
 	qp := queryplan.New(planNodes)
 	return plantree.ProcessPlan(qp,
 		plantree.WithQueryPlanOptions(
@@ -147,6 +143,6 @@ func referenceRenderTree(planNodes []*sppb.PlanNode) ([]plantree.RowWithPredicat
 
 func main() {
 	js.Global().Set("renderASCII", js.FuncOf(renderASCII))
-	c := make(<-chan struct{}, 0)
+	c := make(<-chan struct{})
 	<-c
 }
