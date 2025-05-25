@@ -5,7 +5,7 @@
   "main": "dist/script.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && GOOS=js GOARCH=wasm go build -ldflags=\"-s -w\" -gcflags=\"all=-trimpath\" -o dist/rendertree.wasm ./",
+    "build": "tsc && GOOS=js GOARCH=wasm go build -ldflags=\"-s -w\" -gcflags=\"all=-trimpath\" -o dist/rendertree.wasm ./ && cp \"$(go env GOROOT)/lib/wasm/wasm_exec.js\" dist/",
     "build:ts": "tsc",
     "build:wasm": "GOOS=js GOARCH=wasm go build -ldflags=\"-s -w\" -gcflags=\"all=-trimpath\" -o dist/rendertree.wasm ./",
     "watch": "tsc --watch"

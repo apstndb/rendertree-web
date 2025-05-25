@@ -23,3 +23,6 @@ yarn-error.log*
 *.swp
 *.swo
 .DS_Store
+
+# Go WebAssembly helper file (copied from Go installation)
+# wasm_exec.js is now in dist/ directory which is already ignored
