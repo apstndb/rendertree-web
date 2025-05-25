@@ -9,17 +9,40 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    padding: 10px; /* Add some padding around the content */
+}
+
+textarea#input {
+    width: calc(100% - 20px); /* Adjust width for padding */
+    margin-bottom: 10px;
+}
+
+#main-container {
+    display: flex;
+    flex-grow: 1; /* Allow it to take up available vertical space */
+    gap: 10px; /* Space between panes */
+}
+
+.render-controls {
+    flex: 0 0 250px; /* Fixed width sidebar */
+    display: flex;
+    flex-direction: column; /* Stack controls vertically */
+    padding: 10px;
+    border-right: 1px solid #eee;
+    margin-bottom: 0; /* Remove margin-bottom as it's a sidebar */
+    margin-top: 0; /* Remove margin-top */
+    gap: 10px; /* Space between control groups */
 }
 
 #placeholder {
-    flex: 1;
+    flex-grow: 1; /* Take up remaining space */
     display: flex;
     flex-direction: column;
+    padding: 10px; /* Add padding to the placeholder area */
 }
 
 footer {
-    position: sticky;
-    bottom: 0;
+    position: relative; /* Change to relative as body is flex column */
     width: 100%;
     background-color: #fff;
     padding: 10px 0;
@@ -91,17 +114,19 @@ footer {
 }
 /* Rendering control styles */
 .render-controls {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-    margin-top: 10px;
+    /* display: flex; Removed as it's now a column flex container */
+    /* align-items: center; Removed as it's now a column flex container */
+    /* margin-bottom: 10px; Removed as it's a sidebar */
+    /* margin-top: 10px; Removed as it's a sidebar */
 }
 .render-controls select {
-    margin-right: 10px;
+    margin-right: 0; /* Remove margin-right as elements are stacked */
+    margin-bottom: 10px; /* Add margin-bottom for spacing */
     padding: 5px;
     border-radius: 4px;
     border: 1px solid #dee2e6;
     min-width: 80px;
+    width: 100%; /* Make select full width */
 }
 .render-controls button {
     padding: 5px 15px;
@@ -110,6 +135,8 @@ footer {
     color: white;
     border: none;
     cursor: pointer;
+    width: 100%; /* Make button full width */
+    margin-bottom: 10px; /* Add margin-bottom for spacing */
 }
 .render-controls button:hover {
     background-color: #0069d9;
@@ -117,18 +144,28 @@ footer {
 /* File upload control styles */
 .file-input-container {
     display: flex;
-    align-items: center;
-    margin-right: 20px;
+    flex-direction: column; /* Stack label and input vertically */
+    align-items: flex-start; /* Align items to the start */
+    margin-right: 0; /* Remove margin-right */
+    margin-bottom: 10px; /* Add margin-bottom for spacing */
+    width: 100%; /* Make container full width */
 }
 .file-input-label {
-    margin-right: 10px;
+    margin-right: 0; /* Remove margin-right */
+    margin-bottom: 5px; /* Add margin-bottom for spacing */
     white-space: nowrap;
+}
+.file-input-container input[type="file"] {
+    width: 100%; /* Make input full width */
 }
 
 /* Font size controls */
 .font-size-controls {
     display: flex;
-    margin-left: 10px;
+    margin-left: 0; /* Remove margin-left */
+    margin-bottom: 10px; /* Add margin-bottom for spacing */
+    width: 100%; /* Make full width */
+    justify-content: space-between; /* Distribute items */
 }
 
 .font-size-controls button, .height-controls button {
@@ -164,23 +201,15 @@ footer {
 /* Height controls */
 .height-controls {
     display: flex;
-    margin-left: 10px;
+    margin-left: 0; /* Remove margin-left */
+    margin-bottom: 10px; /* Add margin-bottom for spacing */
     align-items: center;
     background-color: #f8f9fa;
     padding: 5px 8px;
     border-radius: 6px;
     border: 1px solid #e9ecef;
-}
-
-/* Font size controls */
-.font-size-controls {
-    display: flex;
-    margin-left: 10px;
-    align-items: center;
-    background-color: #f8f9fa;
-    padding: 5px 8px;
-    border-radius: 6px;
-    border: 1px solid #e9ecef;
+    width: 100%; /* Make full width */
+    justify-content: space-between; /* Distribute items */
 }
 
 /* Control options container */
@@ -235,4 +264,14 @@ pre::-webkit-scrollbar-thumb:hover {
 /* Ensure scrollbar corner doesn't look odd */
 pre::-webkit-scrollbar-corner {
     background-color: #f5f5f5;
+}
+.select-container {
+    width: 100%; /* Make select container full width */
+    margin-bottom: 10px; /* Add margin-bottom for spacing */
+}
+.select-container label {
+    margin-bottom: 5px; /* Add margin-bottom for spacing */
+}
+.select-container select {
+    width: 100%; /* Make select full width */
 }
