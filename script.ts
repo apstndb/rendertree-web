@@ -119,6 +119,114 @@ function setFontSize(element: HTMLElement, fontSize: number): void {
  * @param {string} text - The text content
  * @returns {number} - Optimal font size in pixels
  */
+/**
+ * Renders the query plan based on current input and selected options
+ */
+function renderSelected(): void {
+    const inputElement = document.getElementById("input") as HTMLTextAreaElement;
+    const renderTypeElement = document.getElementById("renderType") as HTMLSelectElement;
+    const renderModeElement = document.getElementById("renderMode") as HTMLSelectElement;
+
+    if (!inputElement || !renderTypeElement || !renderModeElement) {
+        console.error("Required elements not found for rendering");
+        return;
+    }
+
+    const input = inputElement.value;
+    const renderType = renderTypeElement.value;
+    const renderMode = renderModeElement.value;
+
+    // Skip rendering if input is empty
+    if (!input.trim()) {
+        console.log("No input to render");
+        return;
+    }
+
+    console.log(`Rendering with type: ${renderType}, mode: ${renderMode}`);
+
+    if (renderType === "table") {
+        table(render(input, renderMode), renderMode);
+    } else if (renderType === "ascii") {
+        ascii(input, renderMode);
+    }
+
+    // Setup font size control buttons after rendering
+    setTimeout(setupFontSizeControls, 100);
+}
+
+/**
+ * Handles file input and reads the file
+ */
+function handleFileInput(event: Event): void {
+    const fileInput = event.target as HTMLInputElement;
+    const files = fileInput.files;
+
+    if (!files || files.length === 0) {
+        console.log("No file selected");
+        return;
+    }
+
+    const file = files[0];
+    console.log(`File selected: ${file.name}`);
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const content = e.target?.result as string;
+        const inputElement = document.getElementById("input") as HTMLTextAreaElement;
+
+        if (inputElement && content) {
+            inputElement.value = content;
+            // Automatically render when file is loaded
+            renderSelected();
+        }
+    };
+
+    reader.onerror = function() {
+        console.error("Error reading file");
+    };
+
+    reader.readAsText(file);
+}
+
+/**
+ * Initialize UI elements and set up event listeners
+ */
+function initializeUI(): void {
+    console.log('Initializing UI...');
+
+    // Make the placeholder responsive to window size
+    const placeholder = document.getElementById('placeholder');
+    const contentContainer = document.getElementById('content-container');
+
+    if (placeholder && contentContainer) {
+        // Ensure placeholder fills the available space
+        placeholder.style.width = '100%';
+        placeholder.style.height = '100%';
+        contentContainer.style.flex = '1';
+        contentContainer.style.display = 'flex';
+        contentContainer.style.flexDirection = 'column';
+    }
+
+    // Set up event listeners
+    const fileInput = document.getElementById('fileInput');
+    const renderButton = document.getElementById('renderButton');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileInput);
+    }
+
+    if (renderButton) {
+        renderButton.addEventListener('click', renderSelected);
+    }
+
+    // Initialize font size controls
+    setupFontSizeControls();
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeUI);
+
 function calculateInitialFontSize(preElement: HTMLElement, text: string): number {
     // Create a temporary element to measure text width
     const tempElement = document.createElement('div');
@@ -358,6 +466,8 @@ function ascii(input: string, mode: string): void {
     const copyButton = document.createElement('button');
     copyButton.className = 'copy-button';
     copyButton.textContent = 'Copy';
+    copyButton.style.right = '5px'; // 明示的に右側に配置
+    copyButton.style.left = 'auto'; // 左側の配置をリセット
 
     // Copy button click event handler
     copyButton.addEventListener('click', function () {
@@ -422,28 +532,6 @@ function ascii(input: string, mode: string): void {
         // Store the resize handler on the container element for cleanup if needed
         preContainer.dataset.resizeHandler = 'true';
     }, 0);
-}
-
-// Function to execute rendering based on selected method and mode
-function renderSelected(): void {
-    const inputElement = document.getElementById("input") as HTMLTextAreaElement;
-    const renderTypeElement = document.getElementById("renderType") as HTMLSelectElement;
-    const renderModeElement = document.getElementById("renderMode") as HTMLSelectElement;
-
-    if (!inputElement || !renderTypeElement || !renderModeElement) return;
-
-    const input = inputElement.value;
-    const renderType = renderTypeElement.value;
-    const renderMode = renderModeElement.value;
-
-    if (renderType === "table") {
-        table(render(input, renderMode), renderMode);
-    } else if (renderType === "ascii") {
-        ascii(input, renderMode);
-    }
-
-    // Setup font size control buttons after rendering
-    setTimeout(setupFontSizeControls, 100);
 }
 
 // Setup font size and height control buttons

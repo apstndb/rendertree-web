@@ -25,5 +25,8 @@
   },
   "dependencies": {
     "@google-cloud/spanner": "^7.0.0"
+  },
+  "scripts": {
+    "build": "tsc"
   }
 }

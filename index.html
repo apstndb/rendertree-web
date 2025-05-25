@@ -11,7 +11,7 @@
 <body>
 <div id="main-container">
     <div id="left-pane">
-        <textarea id="input" rows="10" cols="80"></textarea>
+            <textarea id="input" placeholder="Enter Spanner QueryPlan in JSON or YAML format..."></textarea>
         <div class="render-controls">
             <div class="file-input-container">
                 <label for="fileInput" class="file-input-label">Upload:</label>
@@ -39,18 +39,15 @@
                 <span id="font-size-display" class="font-size-value">14px</span>
                 <button id="increase-font" title="Increase font size">A+</button>
             </div>
-            <div class="height-controls">
-                <span class="control-group-label">Height:</span>
-                <button id="decrease-height" title="Decrease height">↑</button>
-                <button id="reset-height" title="Auto-fit height to content">Auto</button>
-                <button id="increase-height" title="Increase height">↓</button>
-            </div>
         </div>
     </div>
-    <div id="placeholder"></div>
-</div>
-<footer>
+    <div id="content-container">
+        <div id="placeholder"></div>
+    </div>
+    </div>
+    
+    <footer>
     <a href="https://github.com/apstndb/rendertree-web" target="_blank">GitHub Repository</a>
-</footer>
+    </footer>
 </body>
 </html>

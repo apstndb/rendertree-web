@@ -15,23 +15,94 @@ body {
 textarea#input {
     width: calc(100% - 20px); /* Adjust width for padding */
     margin-bottom: 10px;
+    flex: 1; /* Fill available space */
+    min-height: 150px; /* Set minimum height */
+    resize: vertical; /* Allow resize only in vertical direction */
+    box-sizing: border-box; /* Include padding and border in width and height */
 }
 
 #main-container {
     display: flex;
     flex-grow: 1; /* Allow it to take up available vertical space */
     gap: 10px; /* Space between panes */
+    position: relative; /* For absolute positioning of toggle button */
+}
+
+/* Left pane toggle button */
+#toggle-container {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    z-index: 100;
+}
+
+#toggle-left-pane {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+#toggle-left-pane:hover {
+    background-color: #0069d9;
+    transform: scale(1.05);
+}
+
+#toggle-left-pane:active {
+    transform: scale(0.95);
+}
+
+/* Left pane visibility control */
+#left-pane {
+    transition: width 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+    width: 250px;
+    flex-shrink: 0;
+    overflow: hidden;
+    visibility: visible;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Fill the entire height of parent container */
+}
+
+#left-pane.hidden {
+    width: 0 !important;
+    opacity: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: 0 !important;
+}
+
+#main-container.left-pane-hidden {
+    gap: 0 !important;
+}
+
+/* Ensure toggle button is always visible and clickable */
+#toggle-left-pane {
+    z-index: 1000;
+    cursor: pointer !important;
 }
 
 .render-controls {
-    flex: 0 0 250px; /* Fixed width sidebar */
     display: flex;
     flex-direction: column; /* Stack controls vertically */
     padding: 10px;
-    border-right: 1px solid #eee;
-    margin-bottom: 0; /* Remove margin-bottom as it's a sidebar */
-    margin-top: 0; /* Remove margin-top */
+    margin-bottom: 0;
+    margin-top: 0;
     gap: 10px; /* Space between control groups */
+    flex-shrink: 0; /* Control area does not shrink */
 }
 
 #placeholder {
@@ -39,6 +110,7 @@ textarea#input {
     display: flex;
     flex-direction: column;
     padding: 10px; /* Add padding to the placeholder area */
+    position: relative; /* Add relative positioning for absolute child positioning */
 }
 
 footer {
@@ -56,7 +128,7 @@ footer {
 .copy-button {
     position: absolute;
     top: 5px;
-    left: 5px; /* Changed from right to left */
+    right: 5px; /* Changed from left to right */
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 4px;
@@ -127,6 +199,27 @@ footer {
     border: 1px solid #dee2e6;
     min-width: 80px;
     width: 100%; /* Make select full width */
+}
+
+/* Copy button positioning */
+#copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+#copy-button:hover {
+    opacity: 1;
 }
 .render-controls button {
     padding: 5px 15px;
