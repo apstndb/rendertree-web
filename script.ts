@@ -194,8 +194,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const code = document.getElementById('result-code');
 
             if (preContainer && code) {
-                const containerWidth = preContainer.clientWidth - 20; // 20px for padding
-                adjustFontSize(code, code.innerText, containerWidth);
+                // Get the pre element that contains the scrollbar
+                const pre = document.getElementById('result-pre');
+                if (pre) {
+                    // Check if scrollbar is visible
+                    const hasScrollbar = pre.scrollWidth > pre.clientWidth;
+                    // Account for padding (20px) and scrollbar width (10px) if present
+                    const scrollbarWidth = hasScrollbar ? 10 : 0;
+                    const containerWidth = preContainer.clientWidth - 20 - scrollbarWidth;
+                    adjustFontSize(code, code.innerText, containerWidth);
+                } else {
+                    const containerWidth = preContainer.clientWidth - 20; // 20px for padding
+                    adjustFontSize(code, code.innerText, containerWidth);
+                }
             }
         });
     }
@@ -325,14 +336,30 @@ function ascii(input: string, mode: string): void {
 
     // Adjust font size and container height after elements are in the DOM
     setTimeout(() => {
-        // Get available width (container width minus padding)
-        const containerWidth = preContainer.clientWidth - 20; // 20px for padding
+        // Check if scrollbar is visible
+        const hasScrollbar = pre.scrollWidth > pre.clientWidth;
+        // Account for padding (20px) and scrollbar width (10px) if present
+        const scrollbarWidth = hasScrollbar ? 10 : 0;
+        const containerWidth = preContainer.clientWidth - 20 - scrollbarWidth; // 20px for padding
         adjustFontSize(code, result, containerWidth);
 
         // Adjust container height based on content
         adjustContainerHeight(preContainer, pre, result);
 
-        // No window resize handler - adjustments are made only once initially
+        // Add window resize handler to adjust font size and container dimensions
+        const resizeHandler = () => {
+            const hasScrollbar = pre.scrollWidth > pre.clientWidth;
+            const scrollbarWidth = hasScrollbar ? 10 : 0;
+            const containerWidth = preContainer.clientWidth - 20 - scrollbarWidth;
+            adjustFontSize(code, result, containerWidth);
+            adjustContainerHeight(preContainer, pre, result);
+        };
+
+        // Add resize event listener
+        window.addEventListener('resize', resizeHandler);
+
+        // Store the resize handler on the container element for cleanup if needed
+        preContainer.dataset.resizeHandler = 'true';
     }, 0);
 }
 
@@ -379,8 +406,19 @@ function setupFontSizeControls(): void {
     const autoBtn = document.getElementById('auto-font');
     if (autoBtn) {
         autoBtn.onclick = function() {
-            const containerWidth = preContainer.clientWidth - 20;
-            adjustFontSize(codeElement, codeElement.innerText, containerWidth);
+            // Get the pre element that contains the scrollbar
+            const pre = document.getElementById('result-pre');
+            if (pre) {
+                // Check if scrollbar is visible
+                const hasScrollbar = pre.scrollWidth > pre.clientWidth;
+                // Account for padding (20px) and scrollbar width (10px) if present
+                const scrollbarWidth = hasScrollbar ? 10 : 0;
+                const containerWidth = preContainer.clientWidth - 20 - scrollbarWidth;
+                adjustFontSize(codeElement, codeElement.innerText, containerWidth);
+            } else {
+                const containerWidth = preContainer.clientWidth - 20;
+                adjustFontSize(codeElement, codeElement.innerText, containerWidth);
+            }
         };
     }
 
@@ -407,12 +445,15 @@ function setupFontSizeControls(): void {
     const resetHeightBtn = document.getElementById('reset-height');
     if (resetHeightBtn) {
         resetHeightBtn.onclick = function() {
-            // In flex layout, just reset any manual height that might have been set
-            preContainer.style.height = "";
-
-            // Focus on the output area
+            // Get the pre element
             const pre = document.getElementById('result-pre');
-            if (pre) {
+            const code = document.getElementById('result-code');
+
+            if (pre && code) {
+                // Adjust container height based on content
+                adjustContainerHeight(preContainer, pre, code.innerText);
+
+                // Focus on the output area
                 pre.scrollIntoView({ behavior: 'smooth' });
             }
         };
