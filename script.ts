@@ -120,38 +120,57 @@ function setFontSize(element: HTMLElement, fontSize: number): void {
  * @returns {number} - Optimal font size in pixels
  */
 /**
- * Renders the query plan based on current input and selected options
+ * Helper function to get required UI elements
+ * @returns Object containing required UI elements or null if any is missing
  */
-function renderSelected(): void {
+function getUIElements() {
     const inputElement = document.getElementById("input") as HTMLTextAreaElement;
     const renderTypeElement = document.getElementById("renderType") as HTMLSelectElement;
     const renderModeElement = document.getElementById("renderMode") as HTMLSelectElement;
-
+    
     if (!inputElement || !renderTypeElement || !renderModeElement) {
         console.error("Required elements not found for rendering");
-        return;
+        return null;
     }
+    
+    return { inputElement, renderTypeElement, renderModeElement };
+}
 
-    const input = inputElement.value;
+/**
+ * Renders the query plan based on current input and selected options
+ * @returns boolean indicating if rendering was successful
+ */
+function renderSelected(): boolean {
+    const elements = getUIElements();
+    if (!elements) return false;
+    
+    const { inputElement, renderTypeElement, renderModeElement } = elements;
+    const input = inputElement.value.trim();
     const renderType = renderTypeElement.value;
     const renderMode = renderModeElement.value;
 
     // Skip rendering if input is empty
-    if (!input.trim()) {
+    if (!input) {
         console.log("No input to render");
-        return;
+        return false;
     }
 
     console.log(`Rendering with type: ${renderType}, mode: ${renderMode}`);
 
-    if (renderType === "table") {
-        table(render(input, renderMode), renderMode);
-    } else if (renderType === "ascii") {
-        ascii(input, renderMode);
+    try {
+        if (renderType === "table") {
+            table(render(input, renderMode), renderMode);
+        } else if (renderType === "ascii") {
+            ascii(input, renderMode);
+        }
+        
+        // Setup font size control buttons after rendering
+        setTimeout(setupFontSizeControls, 100);
+        return true;
+    } catch (error) {
+        console.error("Error during rendering:", error);
+        return false;
     }
-
-    // Setup font size control buttons after rendering
-    setTimeout(setupFontSizeControls, 100);
 }
 
 /**
@@ -161,7 +180,7 @@ function handleFileInput(event: Event): void {
     const fileInput = event.target as HTMLInputElement;
     const files = fileInput.files;
 
-    if (!files || files.length === 0) {
+    if (!files?.length) {
         console.log("No file selected");
         return;
     }
@@ -173,17 +192,20 @@ function handleFileInput(event: Event): void {
 
     reader.onload = function(e) {
         const content = e.target?.result as string;
-        const inputElement = document.getElementById("input") as HTMLTextAreaElement;
-
-        if (inputElement && content) {
-            inputElement.value = content;
-            // Automatically render when file is loaded
-            renderSelected();
+        const elements = getUIElements();
+        
+        if (!elements || !content) {
+            console.error("Missing required elements or empty file content");
+            return;
         }
+        
+        elements.inputElement.value = content;
+        // Automatically render when file is loaded
+        renderSelected();
     };
 
     reader.onerror = function() {
-        console.error("Error reading file");
+        console.error("Error reading file:", reader.error);
     };
 
     reader.readAsText(file);
@@ -200,25 +222,25 @@ function initializeUI(): void {
     const contentContainer = document.getElementById('content-container');
 
     if (placeholder && contentContainer) {
-        // Ensure placeholder fills the available space
-        placeholder.style.width = '100%';
-        placeholder.style.height = '100%';
-        contentContainer.style.flex = '1';
-        contentContainer.style.display = 'flex';
-        contentContainer.style.flexDirection = 'column';
+        // Apply styles in a more concise way
+        Object.assign(placeholder.style, {
+            width: '100%',
+            height: '100%'
+        });
+        
+        Object.assign(contentContainer.style, {
+            flex: '1',
+            display: 'flex',
+            flexDirection: 'column'
+        });
     }
 
     // Set up event listeners
     const fileInput = document.getElementById('fileInput');
     const renderButton = document.getElementById('renderButton');
 
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileInput);
-    }
-
-    if (renderButton) {
-        renderButton.addEventListener('click', renderSelected);
-    }
+    fileInput?.addEventListener('change', handleFileInput);
+    renderButton?.addEventListener('click', renderSelected);
 
     // Initialize font size controls
     setupFontSizeControls();
