@@ -40,8 +40,10 @@ const go = new Go();
 // Font size adjustment constants
 const MIN_FONT_SIZE = 8; // Minimum font size in pixels
 const DEFAULT_FONT_SIZE = 14; // Default font size in pixels
-const CHAR_WIDTH_RATIO = 0.6; // Approximate width-to-height ratio for monospace fonts
 const MIN_CONTAINER_HEIGHT = 100; // Minimum height for the container in pixels
+
+// Local storage keys
+const FONT_SIZE_STORAGE_KEY = 'rendertree-font-size';
 
 /**
  * Setup resize handler for the pre container
@@ -73,41 +75,84 @@ function setupResizeHandler(container: HTMLElement, handle: HTMLElement): void {
 }
 
 /**
- * Calculates optimal font size to fit content within container width
- * @param {string} text - The text content to measure
- * @param {number} containerWidth - Available width in pixels
- * @param {string} fontFamily - Font family to use for measurement
- * @returns {number} - Optimal font size in pixels
+ * Gets the stored font size from local storage or returns the default
+ * @returns {number} - Font size in pixels
  */
-function calculateOptimalFontSize(text: string, containerWidth: number, fontFamily: string): number {
-    // Find the longest line in the text
-    const lines = text.split('\n');
-    const maxLineLength = Math.max(...lines.map(line => line.length));
-
-    // Calculate approximate width of the longest line at 1px font size
-    // This is an approximation as actual character width varies
-    const approximateTextWidth = maxLineLength * CHAR_WIDTH_RATIO;
-
-    // Calculate font size that would make the text fit
-    let fontSize = containerWidth / approximateTextWidth;
-
-    // Apply constraints
-    fontSize = Math.max(MIN_FONT_SIZE, Math.min(DEFAULT_FONT_SIZE, fontSize));
-
-    return fontSize;
+function getStoredFontSize(): number {
+    const storedSize = localStorage.getItem(FONT_SIZE_STORAGE_KEY);
+    return storedSize ? parseInt(storedSize) : DEFAULT_FONT_SIZE;
 }
 
 /**
- * Adjusts font size of an element to fit its content
- * @param {HTMLElement} element - The element to adjust
- * @param {string} text - The text content
- * @param {number} containerWidth - Available width
- * @description This is used only during initial rendering and when manually requested
+ * Stores the font size in local storage
+ * @param {number} fontSize - Font size in pixels
  */
-function adjustFontSize(element: HTMLElement, text: string, containerWidth: number): void {
-    const optimalSize = calculateOptimalFontSize(text, containerWidth, 
-        "Consolas, 'Courier New', Courier, monospace");
-    element.style.fontSize = `${optimalSize}px`;
+function storeFontSize(fontSize: number): void {
+    localStorage.setItem(FONT_SIZE_STORAGE_KEY, fontSize.toString());
+}
+
+/**
+ * Updates the font size display element with the current font size
+ * @param {number} fontSize - Font size in pixels
+ */
+function updateFontSizeDisplay(fontSize: number): void {
+    const fontSizeDisplay = document.getElementById('font-size-display');
+    if (fontSizeDisplay) {
+        fontSizeDisplay.textContent = `${fontSize}px`;
+    }
+}
+
+/**
+ * Sets the font size of an element and updates related UI
+ * @param {HTMLElement} element - The element to adjust
+ * @param {number} fontSize - Font size in pixels
+ */
+function setFontSize(element: HTMLElement, fontSize: number): void {
+    element.style.fontSize = `${fontSize}px`;
+    updateFontSizeDisplay(fontSize);
+    storeFontSize(fontSize);
+}
+
+/**
+ * Calculates the optimal font size to avoid horizontal scrollbar
+ * @param {HTMLElement} preElement - The pre element containing the content
+ * @param {string} text - The text content
+ * @returns {number} - Optimal font size in pixels
+ */
+function calculateInitialFontSize(preElement: HTMLElement, text: string): number {
+    // Create a temporary element to measure text width
+    const tempElement = document.createElement('div');
+    tempElement.style.visibility = 'hidden';
+    tempElement.style.position = 'absolute';
+    tempElement.style.whiteSpace = 'pre';
+    tempElement.style.fontFamily = "Consolas, 'Courier New', Courier, monospace";
+
+    // Find the longest line in the text
+    const lines = text.split('\n');
+    const maxLineLength = Math.max(...lines.map(line => line.length));
+    tempElement.textContent = 'X'.repeat(maxLineLength);
+
+    document.body.appendChild(tempElement);
+
+    // Binary search to find the largest font size that doesn't cause horizontal scrollbar
+    let minSize = MIN_FONT_SIZE;
+    let maxSize = DEFAULT_FONT_SIZE;
+    let currentSize = DEFAULT_FONT_SIZE;
+    const containerWidth = preElement.clientWidth - 20; // 20px for padding
+
+    while (minSize <= maxSize) {
+        currentSize = Math.floor((minSize + maxSize) / 2);
+        tempElement.style.fontSize = `${currentSize}px`;
+
+        if (tempElement.scrollWidth > containerWidth) {
+            maxSize = currentSize - 1;
+        } else {
+            minSize = currentSize + 1;
+        }
+    }
+
+    document.body.removeChild(tempElement);
+    return Math.max(MIN_FONT_SIZE, maxSize);
 }
 
 /**
@@ -137,9 +182,43 @@ function calculateOptimalHeight(preElement: HTMLElement, text: string): number {
 
     // Constrain within min and max bounds
     const minHeight = 100; // Same as CSS min-height
-    const maxHeight = window.innerHeight * 0.7; // 70vh
 
-    return Math.min(maxHeight, Math.max(minHeight, totalHeight));
+    // Calculate available viewport height
+    const viewportHeight = window.innerHeight;
+
+    // Calculate height of other elements
+    const inputElement = document.getElementById('input');
+    const controlsElement = document.querySelector('.render-controls');
+    const footer = document.querySelector('footer');
+
+    let otherElementsHeight = 0;
+
+    if (inputElement) {
+        otherElementsHeight += inputElement.getBoundingClientRect().height;
+    }
+
+    if (controlsElement) {
+        otherElementsHeight += controlsElement.getBoundingClientRect().height;
+    }
+
+    if (footer) {
+        otherElementsHeight += footer.getBoundingClientRect().height;
+    }
+
+    // Add some padding
+    otherElementsHeight += 40; // 20px top and bottom padding
+
+    // Calculate maximum available height
+    const maxHeight = viewportHeight - otherElementsHeight;
+
+    // Return the appropriate height
+    if (totalHeight < minHeight) {
+        return minHeight;
+    } else if (totalHeight > maxHeight) {
+        return maxHeight;
+    } else {
+        return totalHeight;
+    }
 }
 
 /**
@@ -171,7 +250,6 @@ function handleFileUpload(event: Event): void {
 // Initialize control buttons when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Get control buttons
-    const autoFontBtn = document.getElementById('auto-font');
     const resetHeightBtn = document.getElementById('reset-height');
 
     // Add event listener for auto height adjustment
@@ -183,30 +261,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (preContainer && pre && code) {
                 adjustContainerHeight(preContainer, pre, code.innerText);
-            }
-        });
-    }
-
-    // Add event listener for auto font size adjustment
-    if (autoFontBtn) {
-        autoFontBtn.addEventListener('click', function() {
-            const preContainer = document.getElementById('pre-container');
-            const code = document.getElementById('result-code');
-
-            if (preContainer && code) {
-                // Get the pre element that contains the scrollbar
-                const pre = document.getElementById('result-pre');
-                if (pre) {
-                    // Check if scrollbar is visible
-                    const hasScrollbar = pre.scrollWidth > pre.clientWidth;
-                    // Account for padding (20px) and scrollbar width (10px) if present
-                    const scrollbarWidth = hasScrollbar ? 10 : 0;
-                    const containerWidth = preContainer.clientWidth - 20 - scrollbarWidth;
-                    adjustFontSize(code, code.innerText, containerWidth);
-                } else {
-                    const containerWidth = preContainer.clientWidth - 20; // 20px for padding
-                    adjustFontSize(code, code.innerText, containerWidth);
-                }
             }
         });
     }
@@ -276,6 +330,9 @@ function ascii(input: string, mode: string): void {
     preContainer.className = 'pre-container';
     preContainer.id = 'pre-container';
 
+    // Remove the fixed height to allow dynamic calculation
+    preContainer.style.height = 'auto';
+
     // Create pre element
     const pre = document.createElement('pre');
     pre.style.fontFamily = "monospace";
@@ -334,24 +391,28 @@ function ascii(input: string, mode: string): void {
     // Set up resize functionality
     setupResizeHandler(preContainer, resizeHandle);
 
-    // Adjust font size and container height after elements are in the DOM
+    // Set font size and adjust container height after elements are in the DOM
     setTimeout(() => {
-        // Check if scrollbar is visible
-        const hasScrollbar = pre.scrollWidth > pre.clientWidth;
-        // Account for padding (20px) and scrollbar width (10px) if present
-        const scrollbarWidth = hasScrollbar ? 10 : 0;
-        const containerWidth = preContainer.clientWidth - 20 - scrollbarWidth; // 20px for padding
-        adjustFontSize(code, result, containerWidth);
+        // Determine the font size to use
+        let fontSize: number;
+
+        // Check if this is the first render (no stored font size)
+        if (!localStorage.getItem(FONT_SIZE_STORAGE_KEY)) {
+            // First render - calculate optimal font size to avoid scrollbar
+            fontSize = calculateInitialFontSize(pre, result);
+        } else {
+            // Use the stored font size from previous renders
+            fontSize = getStoredFontSize();
+        }
+
+        // Set the font size and update the display
+        setFontSize(code, fontSize);
 
         // Adjust container height based on content
         adjustContainerHeight(preContainer, pre, result);
 
-        // Add window resize handler to adjust font size and container dimensions
+        // Add window resize handler to adjust container height only (not font size)
         const resizeHandler = () => {
-            const hasScrollbar = pre.scrollWidth > pre.clientWidth;
-            const scrollbarWidth = hasScrollbar ? 10 : 0;
-            const containerWidth = preContainer.clientWidth - 20 - scrollbarWidth;
-            adjustFontSize(code, result, containerWidth);
             adjustContainerHeight(preContainer, pre, result);
         };
 
@@ -390,80 +451,61 @@ function setupFontSizeControls(): void {
     const codeElement = document.getElementById('result-code');
     const preContainer = document.getElementById('pre-container');
 
-    if (!codeElement || !preContainer) return;
+    if (!codeElement || !preContainer) {
+        // If result-code element is not yet in the DOM, do nothing
+        return;
+    }
+
+    // Display the current font size correctly on initial load
+    const currentSize = parseInt(window.getComputedStyle(codeElement).fontSize);
+    updateFontSizeDisplay(currentSize);
 
     // Font size controls
-    // Decrease font size button
     const decreaseBtn = document.getElementById('decrease-font');
     if (decreaseBtn) {
         decreaseBtn.onclick = function() {
-            const currentSize = parseInt(getComputedStyle(codeElement).fontSize);
-            codeElement.style.fontSize = `${Math.max(MIN_FONT_SIZE, currentSize - 1)}px`;
+            const currentSizePx = window.getComputedStyle(codeElement).fontSize;
+            const currentSizeNum = parseInt(currentSizePx);
+            const newSize = Math.max(MIN_FONT_SIZE, currentSizeNum - 1);
+            setFontSize(codeElement, newSize);
         };
     }
 
-    // Auto-adjust font size button
-    const autoBtn = document.getElementById('auto-font');
-    if (autoBtn) {
-        autoBtn.onclick = function() {
-            // Get the pre element that contains the scrollbar
-            const pre = document.getElementById('result-pre');
-            if (pre) {
-                // Check if scrollbar is visible
-                const hasScrollbar = pre.scrollWidth > pre.clientWidth;
-                // Account for padding (20px) and scrollbar width (10px) if present
-                const scrollbarWidth = hasScrollbar ? 10 : 0;
-                const containerWidth = preContainer.clientWidth - 20 - scrollbarWidth;
-                adjustFontSize(codeElement, codeElement.innerText, containerWidth);
-            } else {
-                const containerWidth = preContainer.clientWidth - 20;
-                adjustFontSize(codeElement, codeElement.innerText, containerWidth);
-            }
-        };
-    }
-
-    // Increase font size button
     const increaseBtn = document.getElementById('increase-font');
     if (increaseBtn) {
         increaseBtn.onclick = function() {
-            const currentSize = parseInt(getComputedStyle(codeElement).fontSize);
-            codeElement.style.fontSize = `${currentSize + 1}px`;
+            const currentSizePx = window.getComputedStyle(codeElement).fontSize;
+            const currentSizeNum = parseInt(currentSizePx);
+            const newSize = currentSizeNum + 1;
+            setFontSize(codeElement, newSize);
         };
     }
 
-    // Height controls
-    // Decrease height button
+    // Height controls (these logics are not directly related to font display issues, so no changes)
     const decreaseHeightBtn = document.getElementById('decrease-height');
     if (decreaseHeightBtn) {
         decreaseHeightBtn.onclick = function() {
-            const currentHeight = parseInt(getComputedStyle(preContainer).height);
+            const currentHeight = parseInt(window.getComputedStyle(preContainer).height);
             preContainer.style.height = `${Math.max(MIN_CONTAINER_HEIGHT, currentHeight - 50)}px`;
         };
     }
 
-    // Auto-fit height button
     const resetHeightBtn = document.getElementById('reset-height');
     if (resetHeightBtn) {
         resetHeightBtn.onclick = function() {
-            // Get the pre element
             const pre = document.getElementById('result-pre');
-            const code = document.getElementById('result-code');
-
-            if (pre && code) {
-                // Adjust container height based on content
-                adjustContainerHeight(preContainer, pre, code.innerText);
-
-                // Focus on the output area
+            // codeElement is already obtained within the scope of this function
+            if (pre && codeElement) {
+                adjustContainerHeight(preContainer, pre, codeElement.innerText);
                 pre.scrollIntoView({ behavior: 'smooth' });
             }
         };
     }
 
-    // Increase height button
     const increaseHeightBtn = document.getElementById('increase-height');
     if (increaseHeightBtn) {
         increaseHeightBtn.onclick = function() {
-            const currentHeight = parseInt(getComputedStyle(preContainer).height);
+            const currentHeight = parseInt(window.getComputedStyle(preContainer).height);
             preContainer.style.height = `${currentHeight + 50}px`;
         };
     }
@@ -483,6 +525,6 @@ document.addEventListener('DOMContentLoaded', function() {
         renderButton.addEventListener('click', renderSelected);
     }
 
-    // Setup initial controls
-    setupFontSizeControls();
+    // Since result-code element does not exist at DOMContentLoaded, remove setupFontSizeControls call here.
+    // setupFontSizeControls();
 });
