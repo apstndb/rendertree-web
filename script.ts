@@ -180,12 +180,13 @@ function handleFileInput(event: Event): void {
     const fileInput = event.target as HTMLInputElement;
     const files = fileInput.files;
 
-    if (!files?.length) {
+    if (!files || files.length === 0) {
         console.log("No file selected");
         return;
     }
 
-    const file = files[0];
+    // TypeScriptに files[0] が必ず存在することを明示的に伝える
+    const file = files[0]!; // 非nullアサーション演算子を使用
     console.log(`File selected: ${file.name}`);
 
     const reader = new FileReader();
@@ -366,7 +367,7 @@ function handleFileUpload(event: Event): void {
     const fileInput = event.target as HTMLInputElement;
     if (!fileInput.files || fileInput.files.length === 0) return;
 
-    const file = fileInput.files[0];
+    const file = fileInput.files[0]!;
     const reader = new FileReader();
     reader.onload = function (e: ProgressEvent<FileReader>) {
         const inputElement = document.getElementById('input') as HTMLTextAreaElement;
