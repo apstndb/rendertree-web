@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -17,19 +16,6 @@ import (
 	"github.com/olekukonko/tablewriter/tw"
 	"github.com/samber/lo"
 )
-
-func Render(this js.Value, args []js.Value) any {
-	rendered, err := renderTree([]byte(args[0].String()))
-	if err != nil {
-		return err.Error()
-	}
-
-	j, err := json.Marshal(rendered)
-	if err != nil {
-		return err.Error()
-	}
-	return string(j)
-}
 
 func referenceRenderTreeTable(planNodes []*sppb.PlanNode, withStats bool) (string, error) {
 	rendered, err := referenceRenderTree(planNodes)
@@ -122,7 +108,7 @@ func detectHasStats(nodes []*sppb.PlanNode) bool {
 		return false
 	}
 }
-func RenderASCII(this js.Value, args []js.Value) any {
+func renderASCII(this js.Value, args []js.Value) any {
 	stats, _, err := queryplan.ExtractQueryPlan([]byte(args[0].String()))
 	if err != nil {
 		return err.Error()
@@ -149,15 +135,6 @@ func RenderASCII(this js.Value, args []js.Value) any {
 	return s
 }
 
-func renderTree(b []byte) ([]plantree.RowWithPredicates, error) {
-	stats, _, err := queryplan.ExtractQueryPlan(b)
-	if err != nil {
-		return nil, err
-	}
-
-	return referenceRenderTree(stats.GetQueryPlan().GetPlanNodes())
-}
-
 func referenceRenderTree(planNodes []*sppb.PlanNode) ([]plantree.RowWithPredicates, error) {
 	qp := queryplan.New(planNodes)
 	return plantree.ProcessPlan(qp,
@@ -169,8 +146,7 @@ func referenceRenderTree(planNodes []*sppb.PlanNode) ([]plantree.RowWithPredicat
 }
 
 func main() {
-	js.Global().Set("render", js.FuncOf(Render))
-	js.Global().Set("renderASCII", js.FuncOf(RenderASCII))
+	js.Global().Set("renderASCII", js.FuncOf(renderASCII))
 	c := make(<-chan struct{}, 0)
 	<-c
 }
