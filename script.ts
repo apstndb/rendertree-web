@@ -47,6 +47,17 @@ const MIN_CONTAINER_HEIGHT = 100; // Minimum height for the container in pixels
 const FONT_SIZE_STORAGE_KEY = 'rendertree-font-size';
 
 /**
+ * Updates the text content of the placeholder element.
+ * @param message - The message to display.
+ */
+function updatePlaceholder(message: string): void {
+    const placeholder = document.getElementById('placeholder');
+    if (placeholder) {
+        placeholder.textContent = message;
+    }
+}
+
+/**
  * Setup resize handler for the pre container
  * @param container - The container element to resize
  * @param handle - The resize handle element
@@ -160,14 +171,12 @@ function renderSelected(): boolean {
 
         if (!input) {
             console.log("No input to render");
-            const placeholder = document.getElementById('placeholder');
-            if (placeholder) placeholder.textContent = 'Please provide input for the query plan.';
+            updatePlaceholder('Please provide input for the query plan.');
             return false;
         }
 
         console.log(`Rendering with type: ${renderType}, mode: ${renderMode}`);
-        const placeholder = document.getElementById('placeholder');
-        if (placeholder) placeholder.textContent = 'Rendering...';
+        updatePlaceholder('Rendering...');
 
 
         if (renderType === "table") {
@@ -182,10 +191,7 @@ function renderSelected(): boolean {
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         console.error("Error during rendering:", message);
-        const placeholder = document.getElementById('placeholder');
-        if (placeholder) {
-            placeholder.textContent = `Error during rendering: ${message}`;
-        }
+        updatePlaceholder(`Error during rendering: ${message}`);
         return false;
     }
 }
@@ -218,8 +224,7 @@ function handleFileInput(event: Event): void {
 
         if (typeof content !== 'string') {
             console.error("Empty or invalid file content");
-            const placeholder = document.getElementById('placeholder');
-            if (placeholder) placeholder.textContent = 'Error: Could not read file content.';
+            updatePlaceholder('Error: Could not read file content.');
             return;
         }
 
@@ -230,15 +235,13 @@ function handleFileInput(event: Event): void {
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             console.error("Error setting input value or auto-rendering from file:", message);
-            const placeholder = document.getElementById('placeholder');
-            if (placeholder) placeholder.textContent = `Error processing file: ${message}`;
+            updatePlaceholder(`Error processing file: ${message}`);
         }
     };
 
     reader.onerror = function() {
         console.error("Error reading file:", reader.error);
-        const placeholder = document.getElementById('placeholder');
-        if (placeholder) placeholder.textContent = `Error reading file: ${reader.error?.message || 'Unknown error'}`;
+        updatePlaceholder(`Error reading file: ${reader.error?.message || 'Unknown error'}`);
     };
 
     reader.readAsText(file);
