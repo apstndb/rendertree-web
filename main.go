@@ -17,7 +17,40 @@ import (
 	"github.com/samber/lo"
 )
 
-func RenderTreeTable(planNodes []*sppb.PlanNode, withStats bool) (string, error) {
+type RenderMode string
+
+const (
+	RenderModeAuto    RenderMode = "AUTO"
+	RenderModePlan    RenderMode = "PLAN"
+	RenderModeProfile RenderMode = "PROFILE"
+)
+
+func ParseRenderMode(s string) (RenderMode, error) {
+	switch strings.ToUpper(s) {
+	case "AUTO":
+		return RenderModeAuto, nil
+	case "PLAN":
+		return RenderModePlan, nil
+	case "PROFILE":
+		return RenderModeProfile, nil
+	default:
+		return "", fmt.Errorf("unknown render mode: %s", s)
+	}
+}
+
+func RenderTreeTable(planNodes []*sppb.PlanNode, mode RenderMode) (string, error) {
+	var withStats bool
+	switch mode {
+	case RenderModeAuto:
+		withStats = detectHasStats(planNodes)
+	case RenderModePlan:
+		withStats = false
+	case RenderModeProfile:
+		withStats = true
+	default:
+		return "", fmt.Errorf("unknown render mode: %s", mode)
+	}
+
 	rendered, err := ProcessTree(planNodes)
 	if err != nil {
 		return "", err
@@ -107,28 +140,33 @@ func detectHasStats(nodes []*sppb.PlanNode) bool {
 }
 
 func renderASCII(this js.Value, args []js.Value) any {
-	stats, _, err := queryplan.ExtractQueryPlan([]byte(args[0].String()))
-	if err != nil {
-		return err.Error()
+	if len(args) != 2 {
+		return fmt.Sprintf("invalid number of arguments of renderASCII: %d", len(args))
 	}
 
-	var withStats bool
-	switch mode := args[1].String(); strings.ToUpper(mode) {
-	case "AUTO":
-		withStats = detectHasStats(stats.GetQueryPlan().GetPlanNodes())
-	case "PLAN":
-		withStats = false
-	case "PROFILE":
-		withStats = true
-	default:
-		return "unknown mode"
-	}
-
-	s, err := RenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), withStats)
+	s, err := renderASCIIImpl([]byte(args[0].String()), args[1].String())
 	if err != nil {
 		return err.Error()
 	}
 	return s
+}
+
+func renderASCIIImpl(b []byte, modeStr string) (string, error) {
+	stats, _, err := queryplan.ExtractQueryPlan(b)
+	if err != nil {
+		return "", err
+	}
+
+	mode, err := ParseRenderMode(modeStr)
+	if err != nil {
+		return "", err
+	}
+
+	s, err := RenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), mode)
+	if err != nil {
+		return "", err
+	}
+	return s, nil
 }
 
 func ProcessTree(planNodes []*sppb.PlanNode) ([]plantree.RowWithPredicates, error) {
