@@ -1,8 +1,23 @@
 
+import { initWasm } from './rendertree.js';
+import type { RenderedNode } from './rendertree.js';
+
 // Font size adjustment constants
 const MIN_FONT_SIZE = 8; // Minimum font size in pixels
 const DEFAULT_FONT_SIZE = 14; // Default font size in pixels
 const MIN_CONTAINER_HEIGHT = 100; // Minimum height for the container in pixels
+
+let wasmFunctions: { render: (input: string, mode: string) => string; renderASCII: (input: string, mode: string) => string; } | null = null;
+
+async function initializeWasm() {
+    try {
+        wasmFunctions = await initWasm();
+        console.log("WebAssembly initialized successfully.");
+    } catch (error) {
+        console.error("Failed to initialize WebAssembly:", error);
+        updatePlaceholder("Error: Failed to load rendering engine.");
+    }
+}
 
 // Local storage keys
 const FONT_SIZE_STORAGE_KEY = 'rendertree-font-size';
@@ -141,9 +156,17 @@ function renderSelected(): boolean {
 
 
         if (renderType === "table") {
-            table(render(input, renderMode), renderMode);
+            if (wasmFunctions) {
+                table(wasmFunctions.render(input, renderMode), renderMode);
+            } else {
+                updatePlaceholder("Error: Rendering engine not loaded.");
+            }
         } else if (renderType === "ascii") {
-            ascii(input, renderMode);
+            if (wasmFunctions) {
+                ascii(input, renderMode); // ascii function will call wasmFunctions.renderASCII internally
+            } else {
+                updatePlaceholder("Error: Rendering engine not loaded.");
+            }
         }
 
         // Consider if this timeout is strictly necessary or if there's a more direct way to ensure elements are ready.
@@ -245,7 +268,10 @@ function initializeUI(): void {
     }
 }
 
-document.addEventListener('DOMContentLoaded', initializeUI);
+document.addEventListener('DOMContentLoaded', async () => {
+    await initializeWasm();
+    initializeUI();
+});
 
 /**
  * Calculates the optimal font size to avoid horizontal scrollbar
@@ -396,7 +422,11 @@ function copyToClipboard(text: string): Promise<boolean> {
 }
 
 function ascii(input: string, mode: string): void {
-    const result = renderASCII(input, mode);
+    if (!wasmFunctions) {
+        updatePlaceholder("Error: Rendering engine not loaded for ASCII rendering.");
+        return;
+    }
+    const result = wasmFunctions.renderASCII(input, mode);
 
     const placeholder = document.getElementById("placeholder");
     if (!placeholder) return;
