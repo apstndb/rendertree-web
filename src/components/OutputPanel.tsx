@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-interface OutputPanelProps {
-  output: string;
-  message: string;
-  isLoading: boolean;
-  fontSize: number;
-}
+import { useAppContext } from '../contexts/AppContext';
+import { useWasmContext } from '../contexts/WasmContext';
 
 // Component for the character ruler
 const CharacterRuler: React.FC<{ 
@@ -68,7 +63,10 @@ const CharacterRuler: React.FC<{
   );
 };
 
-const OutputPanel: React.FC<OutputPanelProps> = ({ output, message, isLoading, fontSize }) => {
+const OutputPanel: React.FC = () => {
+  const { output, message, fontSize, isRendering } = useAppContext();
+  const { isLoading: isWasmLoading } = useWasmContext();
+  const isLoading = isWasmLoading || isRendering;
   const [containerHeight, setContainerHeight] = useState<number>(300); // Default height
   const [scrollLeft, setScrollLeft] = useState<number>(0); // Track horizontal scroll position
   const [rulerWidth, setRulerWidth] = useState<number>(1000); // Initial width for ruler
@@ -115,10 +113,13 @@ const OutputPanel: React.FC<OutputPanelProps> = ({ output, message, isLoading, f
 
   // Handle resize functionality
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: Event) => {
       if (!resizeStartRef.current) return;
 
-      const newHeight = Math.max(100, resizeStartRef.current.height + e.clientY - resizeStartRef.current.y);
+      // Cast the event to MouseEvent
+      const mouseEvent = e as globalThis.MouseEvent;
+
+      const newHeight = Math.max(100, resizeStartRef.current.height + mouseEvent.clientY - resizeStartRef.current.y);
       setContainerHeight(newHeight);
     };
 
@@ -128,11 +129,14 @@ const OutputPanel: React.FC<OutputPanelProps> = ({ output, message, isLoading, f
       document.removeEventListener('mouseup', handleMouseUp);
     };
 
-    const handleMouseDown = (e: MouseEvent) => {
+    const handleMouseDown = (e: Event) => {
       if (!preContainerRef.current) return;
 
+      // Cast the event to MouseEvent
+      const mouseEvent = e as globalThis.MouseEvent;
+
       resizeStartRef.current = {
-        y: e.clientY,
+        y: mouseEvent.clientY,
         height: preContainerRef.current.clientHeight
       };
 

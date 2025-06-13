@@ -1,40 +1,27 @@
 import React from 'react';
+import { useAppContext } from '../contexts/AppContext';
 
 interface InputPanelProps {
-  input: string;
-  setInput: (input: string) => void;
-  renderType: string;
-  setRenderType: (renderType: string) => void;
-  renderMode: string;
-  setRenderMode: (renderMode: string) => void;
-  format: string;
-  setFormat: (format: string) => void;
-  wrapWidth: number;
-  setWrapWidth: (wrapWidth: number) => void;
-  fontSize: number;
-  setFontSize: (fontSize: number) => void;
-  onRender: () => void;
-  onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   disabled: boolean;
 }
 
-const InputPanel: React.FC<InputPanelProps> = ({
-  input,
-  setInput,
-  renderType,
-  setRenderType,
-  renderMode,
-  setRenderMode,
-  format,
-  setFormat,
-  wrapWidth,
-  setWrapWidth,
-  fontSize,
-  setFontSize,
-  onRender,
-  onFileUpload,
-  disabled
-}) => {
+const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
+  const {
+    input,
+    setInput,
+    renderType,
+    setRenderType,
+    renderMode,
+    setRenderMode,
+    format,
+    setFormat,
+    wrapWidth,
+    setWrapWidth,
+    fontSize,
+    setFontSize,
+    handleRender,
+    handleFileUpload
+  } = useAppContext();
   return (
     <div className={`left-pane ${disabled ? 'disabled' : ''}`}>
       <textarea
@@ -53,7 +40,7 @@ const InputPanel: React.FC<InputPanelProps> = ({
             id="fileInput"
             accept=".yaml,.yml,.json"
             aria-label="Upload plan file"
-            onChange={onFileUpload}
+            onChange={handleFileUpload}
             disabled={disabled}
           />
         </div>
@@ -111,7 +98,7 @@ const InputPanel: React.FC<InputPanelProps> = ({
         </div>
         <button
           className="primary-button"
-          onClick={onRender}
+          onClick={handleRender}
           disabled={disabled}
         >
           Render
