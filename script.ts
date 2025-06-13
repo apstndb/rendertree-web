@@ -1,6 +1,5 @@
 
 import { initWasm } from './rendertree.js';
-import type { RenderedNode } from './rendertree.js';
 
 // Font size adjustment constants
 const MIN_FONT_SIZE = 8; // Minimum font size in pixels

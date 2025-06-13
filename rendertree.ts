@@ -4,14 +4,6 @@ declare class Go {
     run(instance: WebAssembly.Instance): Promise<void>;
 }
 
-// Define interfaces for the rendered node structure
-export interface RenderedNode {
-    Predicates: string[] | null;
-    ID: string;
-    TreePart: string;
-    NodeText: string;
-}
-
 // These functions will be globally available after WASM initialization
 declare function renderASCII(input: string, mode: string): string;
 
