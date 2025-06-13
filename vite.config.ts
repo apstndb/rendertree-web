@@ -1,15 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import goWasm from './src/vite-plugin-go-wasm';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
-  return {
-    plugins: [react()],
+  const config = {
+    plugins: [react(), goWasm()],
     base: command === 'serve' ? '/' : '/rendertree-web/', // Use root path for dev, GitHub Pages path for production
     build: {
       outDir: 'dist',
-      emptyOutDir: false, // Don't empty the dist directory as it contains WASM files
+      emptyOutDir: true, // Empty the dist directory as WASM files are now built by the plugin
       rollupOptions: {
         // No need to externalize files that are properly imported
       },
@@ -27,4 +28,22 @@ export default defineConfig(({ command }) => {
       },
     },
   };
+
+  // Only add custom MIME type configuration in development mode
+  if (command === 'serve') {
+    // Add a custom plugin to handle WASM MIME types
+    config.plugins.push({
+      name: 'configure-wasm-mime-type',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.endsWith('.wasm')) {
+            res.setHeader('Content-Type', 'application/wasm');
+          }
+          next();
+        });
+      }
+    });
+  }
+
+  return config;
 });

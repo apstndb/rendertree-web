@@ -23,8 +23,14 @@ export async function initWasm(): Promise<{ renderASCII: typeof renderASCII }> {
   const go = new Go();
   try {
     // Use import.meta.env.BASE_URL to get the correct base path in both development and production
-    const wasmPath = import.meta.env.DEV ? "/dist/rendertree.wasm" : "./assets/rendertree.wasm";
-    const result = await WebAssembly.instantiateStreaming(fetch(wasmPath), go.importObject);
+    // In development mode, use a relative path to ensure proper MIME type handling
+    const wasmPath = import.meta.env.DEV ? "./dist/rendertree.wasm" : "./assets/rendertree.wasm";
+
+    // Add cache-busting query parameter in development mode to prevent caching issues
+    const wasmUrl = import.meta.env.DEV ? `${wasmPath}?t=${Date.now()}` : wasmPath;
+
+    console.log(`Loading WebAssembly from: ${wasmUrl}`);
+    const result = await WebAssembly.instantiateStreaming(fetch(wasmUrl), go.importObject);
     go.run(result.instance);
     wasmInitialized = true;
     return { renderASCII };
