@@ -6,7 +6,7 @@
   "scripts": {
     "predev": "mkdir -p dist && GOOS=js GOARCH=wasm go build -ldflags=\"-s -w\" -gcflags=\"all=-trimpath\" -o dist/rendertree.wasm ./ && cp \"$(go env GOROOT)/lib/wasm/wasm_exec.js\" dist/",
     "dev": "vite",
-    "build": "tsc && vite build && GOOS=js GOARCH=wasm go build -ldflags=\"-s -w\" -gcflags=\"all=-trimpath\" -o dist/rendertree.wasm ./ && cp \"$(go env GOROOT)/lib/wasm/wasm_exec.js\" dist/",
+    "build": "mkdir -p dist && cp \"$(go env GOROOT)/lib/wasm/wasm_exec.js\" dist/ && tsc && vite build && GOOS=js GOARCH=wasm go build -ldflags=\"-s -w\" -gcflags=\"all=-trimpath\" -o dist/rendertree.wasm ./",
     "build:wasm": "GOOS=js GOARCH=wasm go build -ldflags=\"-s -w\" -gcflags=\"all=-trimpath\" -o dist/rendertree.wasm ./",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
