@@ -1,3 +1,6 @@
+// Import wasm_exec.js
+import './wasm_exec.js';
+
 // Declare Go class from wasm_exec.js
 declare class Go {
   importObject: WebAssembly.Imports;
@@ -20,7 +23,7 @@ export async function initWasm(): Promise<{ renderASCII: typeof renderASCII }> {
 
   const go = new Go();
   try {
-    const result = await WebAssembly.instantiateStreaming(fetch("dist/rendertree.wasm"), go.importObject);
+    const result = await WebAssembly.instantiateStreaming(fetch("./assets/rendertree.wasm"), go.importObject);
     go.run(result.instance);
     wasmInitialized = true;
     return { renderASCII };
@@ -45,13 +48,13 @@ export async function renderASCIITree(
   wrapWidth: number = 0
 ): Promise<string> {
   const wasmFunctions = await initWasm();
-  
+
   const params = {
     input,
     mode,
     format,
     wrapWidth
   };
-  
+
   return wasmFunctions.renderASCII(JSON.stringify(params));
 }

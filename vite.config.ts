@@ -10,8 +10,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: false, // Don't empty the dist directory as it contains WASM files
     rollupOptions: {
-      // Ensure wasm_exec.js and rendertree.wasm are treated as external files
-      external: ['dist/wasm_exec.js', 'dist/rendertree.wasm'],
+      // No need to externalize files that are properly imported
     },
   },
   resolve: {
