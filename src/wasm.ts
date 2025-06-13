@@ -1,5 +1,4 @@
-// Import wasm_exec.js
-import './wasm_exec.js';
+// No need to import wasm_exec.js as it's loaded from GOROOT in index.html
 
 // Declare Go class from wasm_exec.js
 declare class Go {
@@ -23,7 +22,9 @@ export async function initWasm(): Promise<{ renderASCII: typeof renderASCII }> {
 
   const go = new Go();
   try {
-    const result = await WebAssembly.instantiateStreaming(fetch("./assets/rendertree.wasm"), go.importObject);
+    // Use import.meta.env.BASE_URL to get the correct base path in both development and production
+    const wasmPath = import.meta.env.DEV ? "/dist/rendertree.wasm" : "./assets/rendertree.wasm";
+    const result = await WebAssembly.instantiateStreaming(fetch(wasmPath), go.importObject);
     go.run(result.instance);
     wasmInitialized = true;
     return { renderASCII };
