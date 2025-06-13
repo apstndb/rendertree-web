@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"strconv"
 	"strings"
 	"syscall/js"
 
@@ -40,7 +39,7 @@ func ParseRenderMode(s string) (RenderMode, error) {
 	}
 }
 
-func RenderTreeTable(planNodes []*sppb.PlanNode, mode RenderMode, format Format) (string, error) {
+func RenderTreeTable(planNodes []*sppb.PlanNode, mode RenderMode, format Format, wrapWidth int) (string, error) {
 	var withStats bool
 	switch mode {
 	case RenderModeAuto:
@@ -53,7 +52,7 @@ func RenderTreeTable(planNodes []*sppb.PlanNode, mode RenderMode, format Format)
 		return "", fmt.Errorf("unknown render mode: %s", mode)
 	}
 
-	rendered, err := ProcessTree(planNodes, format)
+	rendered, err := ProcessTree(planNodes, format, wrapWidth)
 	if err != nil {
 		return "", err
 	}
@@ -115,9 +114,7 @@ func renderTablePart(rendered []plantree.RowWithPredicates, withStats bool, ) (s
 	table.Header(header)
 
 	for _, n := range rendered {
-		rowData := []string{
-			lox.IfOrEmpty(len(n.Predicates) > 0, "*") + strconv.Itoa(int(n.ID)),
-			n.TreePart + n.NodeText}
+		rowData := []string{n.FormatID(), n.Text()}
 		if withStats {
 			rowData = append(rowData, n.ExecutionStats.Rows.Total, n.ExecutionStats.ExecutionSummary.NumExecutions, n.ExecutionStats.Latency.String())
 		}
@@ -134,9 +131,10 @@ func renderTablePart(rendered []plantree.RowWithPredicates, withStats bool, ) (s
 }
 
 type params struct {
-	Input  string `json:"input"`
-	Mode   string `json:"mode"`
-	Format string `json:"format"`
+	Input     string `json:"input"`
+	Mode      string `json:"mode"`
+	Format    string `json:"format"`
+	WrapWidth int    `json:"wrapWidth"`
 }
 
 func renderASCII(this js.Value, args []js.Value) any {
@@ -149,14 +147,14 @@ func renderASCII(this js.Value, args []js.Value) any {
 		return err.Error()
 	}
 
-	s, err := renderASCIIImpl(par.Input, par.Mode, par.Format)
+	s, err := renderASCIIImpl(par.Input, par.Mode, par.Format, par.WrapWidth)
 	if err != nil {
 		return err.Error()
 	}
 	return s
 }
 
-func renderASCIIImpl(j string, modeStr string, formatStr string) (string, error) {
+func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int) (string, error) {
 	stats, _, err := queryplan.ExtractQueryPlan([]byte(j))
 	if err != nil {
 		return "", err
@@ -172,7 +170,7 @@ func renderASCIIImpl(j string, modeStr string, formatStr string) (string, error)
 		return "", err
 	}
 
-	s, err := RenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), mode, format)
+	s, err := RenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), mode, format, wrapWidth)
 	if err != nil {
 		return "", err
 	}
@@ -201,20 +199,18 @@ func ParseFormat(str string) (Format, error) {
 
 }
 
-func ProcessTree(planNodes []*sppb.PlanNode, format Format) ([]plantree.RowWithPredicates, error) {
+func ProcessTree(planNodes []*sppb.PlanNode, format Format, wrapWidth int) ([]plantree.RowWithPredicates, error) {
 	qp, err := queryplan.New(planNodes)
 	if err != nil {
 		return nil, err
 	}
 
 	var opts []plantree.Option
-	opts = append(opts, plantree.WithQueryPlanOptions(
-		queryplan.WithKnownFlagFormat(queryplan.KnownFlagFormatLabel),
-		queryplan.WithExecutionMethodFormat(queryplan.ExecutionMethodFormatAngle),
-		queryplan.WithTargetMetadataFormat(queryplan.TargetMetadataFormatOn),
-	))
-
 	opts = append(opts, optsForFormat(format)...)
+
+	if wrapWidth > 0 {
+		opts = append(opts, plantree.WithWrapWidth(wrapWidth))
+	}
 
 	return plantree.ProcessPlan(qp, opts...)
 }
