@@ -5,7 +5,7 @@ declare class Go {
 }
 
 // These functions will be globally available after WASM initialization
-declare function renderASCII(input: string, mode: string): string;
+declare function renderASCII(paramsJson: string): string;
 
 let wasmInitialized = false;
 

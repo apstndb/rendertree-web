@@ -32,6 +32,14 @@
                         <option value="PROFILE">PROFILE</option>
                     </select>
                 </div>
+                <div class="select-container">
+                    <label for="format" class="control-group-label">Format:</label>
+                    <select id="format" aria-label="Format">
+                        <option value="CURRENT">CURRENT</option>
+                        <option value="TRADITIONAL">TRADITIONAL</option>
+                        <option value="COMPACT">COMPACT</option>
+                    </select>
+                </div>
                 <button id="renderButton" class="primary-button">Render</button>
                 <div class="font-size-controls">
                     <span class="control-group-label">Font:</span>
@@ -45,11 +53,11 @@
             <div id="placeholder" aria-live="polite"></div>
         </div>
     </div>
-    
+
     <footer>
         <a href="https://github.com/apstndb/rendertree-web" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
     </footer>
-    
+
     <script src="dist/script.js" type="module"></script>
 </body>
 </html>

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall/js"
@@ -38,7 +40,7 @@ func ParseRenderMode(s string) (RenderMode, error) {
 	}
 }
 
-func RenderTreeTable(planNodes []*sppb.PlanNode, mode RenderMode) (string, error) {
+func RenderTreeTable(planNodes []*sppb.PlanNode, mode RenderMode, format Format) (string, error) {
 	var withStats bool
 	switch mode {
 	case RenderModeAuto:
@@ -51,7 +53,7 @@ func RenderTreeTable(planNodes []*sppb.PlanNode, mode RenderMode) (string, error
 		return "", fmt.Errorf("unknown render mode: %s", mode)
 	}
 
-	rendered, err := ProcessTree(planNodes)
+	rendered, err := ProcessTree(planNodes, format)
 	if err != nil {
 		return "", err
 	}
@@ -131,19 +133,30 @@ func renderTablePart(rendered []plantree.RowWithPredicates, withStats bool, ) (s
 	return sb.String(), nil
 }
 
+type params struct {
+	Input  string `json:"input"`
+	Mode   string `json:"mode"`
+	Format string `json:"format"`
+}
+
 func renderASCII(this js.Value, args []js.Value) any {
-	if len(args) != 2 {
+	if len(args) != 1 {
 		return fmt.Sprintf("invalid number of arguments of renderASCII: %d", len(args))
 	}
 
-	s, err := renderASCIIImpl(args[0].String(), args[1].String())
+	par := params{}
+	if err := json.Unmarshal([]byte(args[0].String()), &par); err != nil {
+		return err.Error()
+	}
+
+	s, err := renderASCIIImpl(par.Input, par.Mode, par.Format)
 	if err != nil {
 		return err.Error()
 	}
 	return s
 }
 
-func renderASCIIImpl(j string, modeStr string) (string, error) {
+func renderASCIIImpl(j string, modeStr string, formatStr string) (string, error) {
 	stats, _, err := queryplan.ExtractQueryPlan([]byte(j))
 	if err != nil {
 		return "", err
@@ -154,25 +167,78 @@ func renderASCIIImpl(j string, modeStr string) (string, error) {
 		return "", err
 	}
 
-	s, err := RenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), mode)
+	format, err := ParseFormat(formatStr)
+	if err != nil {
+		return "", err
+	}
+
+	s, err := RenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), mode, format)
 	if err != nil {
 		return "", err
 	}
 	return s, nil
 }
 
-func ProcessTree(planNodes []*sppb.PlanNode) ([]plantree.RowWithPredicates, error) {
+type Format string
+
+const (
+	formatTraditional Format = "TRADITIONAL"
+	formatCurrent     Format = "CURRENT"
+	formatCompact     Format = "COMPACT"
+)
+
+func ParseFormat(str string) (Format, error) {
+	switch strings.ToUpper(str) {
+	case "TRADITIONAL":
+		return formatTraditional, nil
+	case "CURRENT":
+		return formatCurrent, nil
+	case "COMPACT":
+		return formatCompact, nil
+	default:
+		return "", fmt.Errorf("unknown Format: %s", str)
+	}
+
+}
+
+func ProcessTree(planNodes []*sppb.PlanNode, format Format) ([]plantree.RowWithPredicates, error) {
 	qp, err := queryplan.New(planNodes)
 	if err != nil {
 		return nil, err
 	}
 
-	return plantree.ProcessPlan(qp,
+	var opts []plantree.Option
+	opts = append(opts, plantree.WithQueryPlanOptions(
+		queryplan.WithKnownFlagFormat(queryplan.KnownFlagFormatLabel),
+		queryplan.WithExecutionMethodFormat(queryplan.ExecutionMethodFormatAngle),
+		queryplan.WithTargetMetadataFormat(queryplan.TargetMetadataFormatOn),
+	))
+
+	opts = append(opts, optsForFormat(format)...)
+
+	return plantree.ProcessPlan(qp, opts...)
+}
+
+func optsForFormat(format Format) []plantree.Option {
+	currentOpts := []plantree.Option{
 		plantree.WithQueryPlanOptions(
 			queryplan.WithKnownFlagFormat(queryplan.KnownFlagFormatLabel),
 			queryplan.WithExecutionMethodFormat(queryplan.ExecutionMethodFormatAngle),
 			queryplan.WithTargetMetadataFormat(queryplan.TargetMetadataFormatOn),
-		))
+		),
+	}
+
+	switch format {
+	case formatTraditional:
+		return nil
+	case formatCurrent:
+		return currentOpts
+	case formatCompact:
+		return slices.Concat(currentOpts,
+			[]plantree.Option{plantree.EnableCompact()})
+	default:
+		return nil
+	}
 }
 
 func main() {

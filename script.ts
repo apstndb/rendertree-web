@@ -6,7 +6,7 @@ const MIN_FONT_SIZE = 8; // Minimum font size in pixels
 const DEFAULT_FONT_SIZE = 14; // Default font size in pixels
 const MIN_CONTAINER_HEIGHT = 100; // Minimum height for the container in pixels
 
-let wasmFunctions: { renderASCII: (input: string, mode: string) => string; } | null = null;
+let wasmFunctions: { renderASCII: (paramsJson: string) => string; } | null = null;
 
 async function initializeWasm() {
     try {
@@ -106,6 +106,7 @@ interface UIElements {
     inputElement: HTMLTextAreaElement;
     renderTypeElement: HTMLSelectElement;
     renderModeElement: HTMLSelectElement;
+    formatElement: HTMLSelectElement;
 }
 
 /**
@@ -117,6 +118,7 @@ function getUIElements(): UIElements {
     const inputElement = document.getElementById("input") as HTMLTextAreaElement | null;
     const renderTypeElement = document.getElementById("renderType") as HTMLSelectElement | null;
     const renderModeElement = document.getElementById("renderMode") as HTMLSelectElement | null;
+    const formatElement = document.getElementById("format") as HTMLSelectElement | null;
 
     if (!inputElement) {
         throw new Error("Input element with ID 'input' not found.");
@@ -127,8 +129,11 @@ function getUIElements(): UIElements {
     if (!renderModeElement) {
         throw new Error("Render mode select element with ID 'renderMode' not found.");
     }
+    if (!formatElement) {
+        throw new Error("Format select element with ID 'format' not found.");
+    }
 
-    return { inputElement, renderTypeElement, renderModeElement };
+    return { inputElement, renderTypeElement, renderModeElement, formatElement };
 }
 
 /**
@@ -138,11 +143,12 @@ function getUIElements(): UIElements {
 function renderSelected(): boolean {
     try {
         const elements = getUIElements();
-        const { inputElement, renderTypeElement, renderModeElement } = elements;
+        const { inputElement, renderTypeElement, renderModeElement, formatElement } = elements;
 
         const input = inputElement.value.trim();
         const renderType = renderTypeElement.value;
         const renderMode = renderModeElement.value;
+        const format = formatElement.value;
 
         if (!input) {
             console.log("No input to render");
@@ -150,13 +156,13 @@ function renderSelected(): boolean {
             return false;
         }
 
-        console.log(`Rendering with type: ${renderType}, mode: ${renderMode}`);
+        console.log(`Rendering with type: ${renderType}, mode: ${renderMode}, format: ${format}`);
         updatePlaceholder('Rendering...');
 
 
         if (renderType === "ascii") {
             if (wasmFunctions) {
-                ascii(input, renderMode); // ascii function will call wasmFunctions.renderASCII internally
+                ascii(input, renderMode, format); // ascii function will call wasmFunctions.renderASCII internally
             } else {
                 updatePlaceholder("Error: Rendering engine not loaded.");
             }
@@ -380,12 +386,17 @@ function copyToClipboard(text: string): Promise<boolean> {
         });
 }
 
-function ascii(input: string, mode: string): void {
+function ascii(input: string, mode: string, format: string = "CURRENT"): void {
     if (!wasmFunctions) {
         updatePlaceholder("Error: Rendering engine not loaded for ASCII rendering.");
         return;
     }
-    const result = wasmFunctions.renderASCII(input, mode);
+    const params = {
+        input: input,
+        mode: mode,
+        format: format
+    };
+    const result = wasmFunctions.renderASCII(JSON.stringify(params));
 
     const placeholder = document.getElementById("placeholder");
     if (!placeholder) return;
