@@ -8,8 +8,8 @@ import (
 
 	sppb "cloud.google.com/go/spanner/apiv1/spannerpb"
 	"github.com/apstndb/lox"
-	"github.com/apstndb/spannerplanviz/plantree"
-	"github.com/apstndb/spannerplanviz/queryplan"
+	queryplan "github.com/apstndb/spannerplan"
+	"github.com/apstndb/spannerplan/plantree"
 	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/renderer"
@@ -42,7 +42,7 @@ func RenderTreeTable(planNodes []*sppb.PlanNode, mode RenderMode) (string, error
 	var withStats bool
 	switch mode {
 	case RenderModeAuto:
-		withStats = detectHasStats(planNodes)
+		withStats = queryplan.HasStats(planNodes)
 	case RenderModePlan:
 		withStats = false
 	case RenderModeProfile:
@@ -131,28 +131,20 @@ func renderTablePart(rendered []plantree.RowWithPredicates, withStats bool, ) (s
 	return sb.String(), nil
 }
 
-func detectHasStats(nodes []*sppb.PlanNode) bool {
-	if len(nodes) == 0 {
-		return false
-	}
-
-	return nodes[0].ExecutionStats != nil
-}
-
 func renderASCII(this js.Value, args []js.Value) any {
 	if len(args) != 2 {
 		return fmt.Sprintf("invalid number of arguments of renderASCII: %d", len(args))
 	}
 
-	s, err := renderASCIIImpl([]byte(args[0].String()), args[1].String())
+	s, err := renderASCIIImpl(args[0].String(), args[1].String())
 	if err != nil {
 		return err.Error()
 	}
 	return s
 }
 
-func renderASCIIImpl(b []byte, modeStr string) (string, error) {
-	stats, _, err := queryplan.ExtractQueryPlan(b)
+func renderASCIIImpl(j string, modeStr string) (string, error) {
+	stats, _, err := queryplan.ExtractQueryPlan([]byte(j))
 	if err != nil {
 		return "", err
 	}
@@ -170,10 +162,14 @@ func renderASCIIImpl(b []byte, modeStr string) (string, error) {
 }
 
 func ProcessTree(planNodes []*sppb.PlanNode) ([]plantree.RowWithPredicates, error) {
-	qp := queryplan.New(planNodes)
+	qp, err := queryplan.New(planNodes)
+	if err != nil {
+		return nil, err
+	}
+
 	return plantree.ProcessPlan(qp,
 		plantree.WithQueryPlanOptions(
-			queryplan.WithFullScanFormat(queryplan.FullScanFormatLabel),
+			queryplan.WithKnownFlagFormat(queryplan.KnownFlagFormatLabel),
 			queryplan.WithExecutionMethodFormat(queryplan.ExecutionMethodFormatAngle),
 			queryplan.WithTargetMetadataFormat(queryplan.TargetMetadataFormatOn),
 		))
