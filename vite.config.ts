@@ -5,9 +5,14 @@ import { resolve } from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/rendertree-web/', // Base path for GitHub Pages
   build: {
     outDir: 'dist',
     emptyOutDir: false, // Don't empty the dist directory as it contains WASM files
+    rollupOptions: {
+      // Ensure wasm_exec.js and rendertree.wasm are treated as external files
+      external: ['dist/wasm_exec.js', 'dist/rendertree.wasm'],
+    },
   },
   resolve: {
     alias: {
