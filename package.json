@@ -21,8 +21,7 @@
   },
   "homepage": "https://github.com/apstndb/rendertree-web#readme",
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "vite": "^6.3.5"
+    "typescript": "^5.0.0"
   },
   "dependencies": {
     "@google-cloud/spanner": "^7.0.0"
