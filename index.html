@@ -5,63 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Spanner QueryPlan Visualization Tool">
     <title>rendertree-web</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="dist/wasm_exec.js"></script>
+    <script type="module" src="dist/wasm_exec.js"></script>
 </head>
 
 <body>
-    <div id="main-container">
-        <div id="left-pane">
-            <textarea id="input" placeholder="Enter Spanner QueryPlan in JSON or YAML format..." aria-label="QueryPlan input"></textarea>
-            <div class="render-controls">
-                <div class="file-input-container">
-                    <label for="fileInput" class="file-input-label">Upload:</label>
-                    <input type="file" id="fileInput" accept=".yaml,.yml,.json" aria-label="Upload plan file">
-                </div>
-                <div class="select-container">
-                    <label for="renderType" class="control-group-label">Type:</label>
-                    <select id="renderType" aria-label="Render type">
-                        <option value="ascii">ASCII</option>
-                    </select>
-                </div>
-                <div class="select-container">
-                    <label for="renderMode" class="control-group-label">Mode:</label>
-                    <select id="renderMode" aria-label="Render mode">
-                        <option value="AUTO">AUTO</option>
-                        <option value="PLAN">PLAN</option>
-                        <option value="PROFILE">PROFILE</option>
-                    </select>
-                </div>
-                <div class="select-container">
-                    <label for="format" class="control-group-label">Format:</label>
-                    <select id="format" aria-label="Format">
-                        <option value="CURRENT">CURRENT</option>
-                        <option value="TRADITIONAL">TRADITIONAL</option>
-                        <option value="COMPACT">COMPACT</option>
-                    </select>
-                </div>
-                <div class="select-container">
-                    <label for="wrapWidth" class="control-group-label">Wrap Width:</label>
-                    <input type="number" id="wrapWidth" min="0" value="0" aria-label="Wrap Width">
-                </div>
-                <button id="renderButton" class="primary-button">Render</button>
-                <div class="font-size-controls">
-                    <span class="control-group-label">Font:</span>
-                    <button id="decrease-font" title="Decrease font size" aria-label="Decrease font size">A-</button>
-                    <span id="font-size-display" class="font-size-value">14px</span>
-                    <button id="increase-font" title="Increase font size" aria-label="Increase font size">A+</button>
-                </div>
-            </div>
-        </div>
-        <div id="content-container">
-            <div id="placeholder" aria-live="polite"></div>
-        </div>
-    </div>
-
-    <footer>
-        <a href="https://github.com/apstndb/rendertree-web" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
-    </footer>
-
-    <script src="dist/script.js" type="module"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

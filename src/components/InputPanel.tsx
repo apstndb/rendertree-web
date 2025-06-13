@@ -1,0 +1,177 @@
+import React from 'react';
+
+interface InputPanelProps {
+  input: string;
+  setInput: (input: string) => void;
+  renderType: string;
+  setRenderType: (renderType: string) => void;
+  renderMode: string;
+  setRenderMode: (renderMode: string) => void;
+  format: string;
+  setFormat: (format: string) => void;
+  wrapWidth: number;
+  setWrapWidth: (wrapWidth: number) => void;
+  fontSize: number;
+  setFontSize: (fontSize: number) => void;
+  onRender: () => void;
+  onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled: boolean;
+}
+
+const InputPanel: React.FC<InputPanelProps> = ({
+  input,
+  setInput,
+  renderType,
+  setRenderType,
+  renderMode,
+  setRenderMode,
+  format,
+  setFormat,
+  wrapWidth,
+  setWrapWidth,
+  fontSize,
+  setFontSize,
+  onRender,
+  onFileUpload,
+  disabled
+}) => {
+  return (
+    <div className={`left-pane ${disabled ? 'disabled' : ''}`}>
+      <textarea
+        className="input-area"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Enter Spanner QueryPlan in JSON or YAML format..."
+        aria-label="QueryPlan input"
+        disabled={disabled}
+      />
+      <div className="render-controls">
+        <div className="file-input-container">
+          <label htmlFor="fileInput" className="file-input-label">Upload:</label>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".yaml,.yml,.json"
+            aria-label="Upload plan file"
+            onChange={onFileUpload}
+            disabled={disabled}
+          />
+        </div>
+        <div className="select-container">
+          <label htmlFor="renderType" className="control-group-label">Type:</label>
+          <select
+            id="renderType"
+            aria-label="Render type"
+            value={renderType}
+            onChange={(e) => setRenderType(e.target.value)}
+            disabled={disabled}
+          >
+            <option value="ascii">ASCII</option>
+          </select>
+        </div>
+        <div className="select-container">
+          <label htmlFor="renderMode" className="control-group-label">Mode:</label>
+          <select
+            id="renderMode"
+            aria-label="Render mode"
+            value={renderMode}
+            onChange={(e) => setRenderMode(e.target.value)}
+            disabled={disabled}
+          >
+            <option value="AUTO">AUTO</option>
+            <option value="PLAN">PLAN</option>
+            <option value="PROFILE">PROFILE</option>
+          </select>
+        </div>
+        <div className="select-container">
+          <label htmlFor="format" className="control-group-label">Format:</label>
+          <select
+            id="format"
+            aria-label="Format"
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+            disabled={disabled}
+          >
+            <option value="CURRENT">CURRENT</option>
+            <option value="TRADITIONAL">TRADITIONAL</option>
+            <option value="COMPACT">COMPACT</option>
+          </select>
+        </div>
+        <div className="select-container">
+          <label htmlFor="wrapWidth" className="control-group-label">Wrap Width:</label>
+          <input
+            type="number"
+            id="wrapWidth"
+            min="0"
+            value={wrapWidth}
+            onChange={(e) => setWrapWidth(parseInt(e.target.value, 10) || 0)}
+            aria-label="Wrap Width"
+            disabled={disabled}
+          />
+        </div>
+        <button
+          className="primary-button"
+          onClick={onRender}
+          disabled={disabled}
+        >
+          Render
+        </button>
+        <FontSizeControls 
+          fontSize={fontSize}
+          setFontSize={setFontSize}
+          disabled={disabled} 
+        />
+      </div>
+    </div>
+  );
+};
+
+// Font size controls component
+interface FontSizeControlsProps {
+  fontSize: number;
+  setFontSize: (fontSize: number) => void;
+  disabled: boolean;
+}
+
+const FontSizeControls: React.FC<FontSizeControlsProps> = ({ 
+  fontSize, 
+  setFontSize, 
+  disabled 
+}) => {
+  const decreaseFontSize = () => {
+    setFontSize(Math.max(8, fontSize - 1));
+  };
+
+  const increaseFontSize = () => {
+    setFontSize(fontSize + 1);
+  };
+
+  return (
+    <div className="font-size-controls">
+      <span className="control-group-label">Font:</span>
+      <button
+        id="decrease-font"
+        title="Decrease font size"
+        aria-label="Decrease font size"
+        onClick={decreaseFontSize}
+        disabled={disabled}
+      >
+        A-
+      </button>
+      <span id="font-size-display" className="font-size-value">
+        {fontSize}px
+      </span>
+      <button
+        id="increase-font"
+        title="Increase font size"
+        aria-label="Increase font size"
+        onClick={increaseFontSize}
+        disabled={disabled}
+      >
+        A+
+      </button>
+    </div>
+  );
+};
+
+export default InputPanel;

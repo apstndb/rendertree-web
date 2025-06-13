@@ -1,0 +1,463 @@
+/* Global layout styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 10px; /* Add some padding around the content */
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+textarea.input-area {
+  width: calc(100% - 20px); /* Adjust width for padding */
+  margin-bottom: 10px;
+  flex: 1; /* Fill available space */
+  min-height: 150px; /* Set minimum height */
+  resize: vertical; /* Allow resize only in vertical direction */
+  box-sizing: border-box; /* Include padding and border in width and height */
+}
+
+.main-container {
+  display: flex;
+  flex-grow: 1; /* Allow it to take up available vertical space */
+  gap: 10px; /* Space between panes */
+  position: relative; /* For absolute positioning of toggle button */
+}
+
+/* Left pane toggle button */
+.toggle-container {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 100;
+}
+
+.toggle-left-pane {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.toggle-left-pane:hover {
+  background-color: #0069d9;
+  transform: scale(1.05);
+}
+
+.toggle-left-pane:active {
+  transform: scale(0.95);
+}
+
+/* Left pane visibility control */
+.left-pane {
+  transition: width 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+  width: 250px;
+  flex-shrink: 0;
+  overflow: hidden;
+  visibility: visible;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Fill the entire height of parent container */
+}
+
+.left-pane.hidden {
+  width: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 0 !important;
+}
+
+.main-container.left-pane-hidden {
+  gap: 0 !important;
+}
+
+/* Ensure toggle button is always visible and clickable */
+.toggle-left-pane {
+  z-index: 1000;
+  cursor: pointer !important;
+}
+
+.render-controls {
+  display: flex;
+  flex-direction: column; /* Stack controls vertically */
+  padding: 10px;
+  margin-bottom: 0;
+  margin-top: 0;
+  gap: 10px; /* Space between control groups */
+  flex-shrink: 0; /* Control area does not shrink */
+}
+
+.placeholder {
+  flex-grow: 1; /* Take up remaining space */
+  display: flex;
+  flex-direction: column;
+  padding: 10px; /* Add padding to the placeholder area */
+  position: relative; /* Add relative positioning for absolute child positioning */
+}
+
+.app-footer {
+  position: relative; /* Change to relative as body is flex column */
+  width: 100%;
+  background-color: #fff;
+  padding: 10px 0;
+  text-align: center;
+  font-size: 14px;
+  border-top: 1px solid #eee;
+  margin-top: 20px;
+}
+
+/* Copy button styles */
+.copy-button {
+  position: absolute;
+  top: 5px;
+  right: 5px; /* Changed from left to right */
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.copy-button:hover {
+  opacity: 1;
+  background-color: #e9ecef;
+}
+/* Styles for when copy is completed */
+.copy-button.copied {
+  background-color: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+/* Pre element container styles */
+.pre-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden; /* Ensures the container doesn't overflow */
+  resize: vertical; /* Allow vertical resizing */
+  min-height: 100px; /* Minimum height */
+  flex: 1 1 auto; /* Fill available space */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Resize handle styles */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 10px;
+  background-color: #f5f5f5;
+  border-top: 1px solid #ddd;
+  cursor: ns-resize;
+  text-align: center;
+  font-size: 10px;
+  color: #888;
+  line-height: 10px;
+  user-select: none;
+}
+
+.resize-handle:hover {
+  background-color: #e0e0e0;
+}
+
+.resize-handle::before {
+  content: "≡";
+  font-size: 12px;
+}
+/* Rendering control styles */
+.render-controls {
+  /* display: flex; Removed as it's now a column flex container */
+  /* align-items: center; Removed as it's now a column flex container */
+  /* margin-bottom: 10px; Removed as it's a sidebar */
+  /* margin-top: 10px; Removed as it's a sidebar */
+}
+.render-controls select {
+  margin-right: 0; /* Remove margin-right as elements are stacked */
+  margin-bottom: 10px; /* Add margin-bottom for spacing */
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  min-width: 80px;
+  width: 100%; /* Make select full width */
+}
+
+/* Copy button positioning */
+.copy-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+
+.copy-button:hover {
+  opacity: 1;
+}
+.render-controls button {
+  padding: 5px 15px;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  width: 100%; /* Make button full width */
+  margin-bottom: 10px; /* Add margin-bottom for spacing */
+}
+.render-controls button:hover {
+  background-color: #0069d9;
+}
+/* File upload control styles */
+.file-input-container {
+  display: flex;
+  flex-direction: column; /* Stack label and input vertically */
+  align-items: flex-start; /* Align items to the start */
+  margin-right: 0; /* Remove margin-right */
+  margin-bottom: 10px; /* Add margin-bottom for spacing */
+  width: 100%; /* Make container full width */
+}
+.file-input-label {
+  margin-right: 0; /* Remove margin-right */
+  margin-bottom: 5px; /* Add margin-bottom for spacing */
+  white-space: nowrap;
+}
+.file-input-container input[type="file"] {
+  width: 100%; /* Make input full width */
+}
+
+/* Font size controls */
+.font-size-controls {
+  display: flex;
+  margin-left: 0; /* Remove margin-left */
+  margin-bottom: 10px; /* Add margin-bottom for spacing */
+  width: 100%; /* Make full width */
+  justify-content: space-between; /* Distribute items */
+}
+
+.font-size-controls button, .height-controls button {
+  padding: 5px 10px;
+  margin: 0 3px;
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #495057;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  min-width: 40px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.font-size-controls button:hover, .height-controls button:hover {
+  background-color: #f0f0f0;
+  border-color: #adb5bd;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.font-size-controls button:active, .height-controls button:active {
+  background-color: #e9ecef;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  transform: translateY(1px);
+}
+
+/* Height controls */
+.height-controls {
+  display: flex;
+  margin-left: 0; /* Remove margin-left */
+  margin-bottom: 10px; /* Add margin-bottom for spacing */
+  align-items: center;
+  background-color: #f8f9fa;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  width: 100%; /* Make full width */
+  justify-content: space-between; /* Distribute items */
+}
+
+/* Control options container */
+.control-options {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+/* Control group labels */
+.control-group-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #6c757d;
+  margin-right: 5px;
+}
+
+/* Font size value display */
+.font-size-value {
+  display: inline-block;
+  min-width: 40px;
+  text-align: center;
+  padding: 5px 8px;
+  margin: 0 3px;
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  color: #495057;
+  font-size: 12px;
+  font-weight: bold;
+  height: 20px;
+  line-height: 20px;
+}
+
+/* Scrollbar styling for better visibility */
+pre::-webkit-scrollbar {
+  width: 10px;
+  height: 8px;
+  background-color: #f5f5f5;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+/* Ensure scrollbar corner doesn't look odd */
+pre::-webkit-scrollbar-corner {
+  background-color: #f5f5f5;
+}
+.select-container {
+  width: 100%; /* Make select container full width */
+  margin-bottom: 10px; /* Add margin-bottom for spacing */
+}
+.select-container label {
+  margin-bottom: 5px; /* Add margin-bottom for spacing */
+}
+.select-container select {
+  width: 100%; /* Make select full width */
+}
+
+/* Content container */
+.content-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Disabled state for UI elements */
+.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Loading indicator */
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+}
+
+.loading-indicator::after {
+  content: "";
+  width: 40px;
+  height: 40px;
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Character ruler styles */
+.ruler-container {
+  position: relative;
+  height: 25px;
+  background-color: #f8f9fa;
+  border: solid #000;
+  border-width: 1px 1px 0 1px; /* Top, right, bottom, left */
+  overflow: hidden;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.character-ruler {
+  position: relative;
+  height: 100%;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ruler-mark {
+  position: absolute;
+  bottom: 0;
+}
+
+.ruler-mark.major {
+  height: 15px;
+  border-left: 1px solid #adb5bd;
+}
+
+.ruler-mark.minor {
+  height: 8px;
+  border-left: 1px solid #ced4da;
+}
+
+.ruler-mark-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: inherit;
+  color: #6c757d;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
