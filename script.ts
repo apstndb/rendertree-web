@@ -8,10 +8,115 @@ const MIN_CONTAINER_HEIGHT = 100; // Minimum height for the container in pixels
 
 let wasmFunctions: { renderASCII: (paramsJson: string) => string; } | null = null;
 
+/**
+ * Disables all UI elements during loading
+ */
+function disableUI(): void {
+    console.log('Disabling UI elements during loading...');
+
+    // Disable input textarea
+    const inputElement = document.getElementById('input') as HTMLTextAreaElement | null;
+    if (inputElement) {
+        inputElement.disabled = true;
+    }
+
+    // Disable file input
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement | null;
+    if (fileInput) {
+        fileInput.disabled = true;
+    }
+
+    // Disable select elements
+    const selectElements = ['renderType', 'renderMode', 'format'];
+    selectElements.forEach(id => {
+        const element = document.getElementById(id) as HTMLSelectElement | null;
+        if (element) {
+            element.disabled = true;
+        }
+    });
+
+    // Disable wrapWidth input
+    const wrapWidthElement = document.getElementById('wrapWidth') as HTMLInputElement | null;
+    if (wrapWidthElement) {
+        wrapWidthElement.disabled = true;
+    }
+
+    // Disable render button
+    const renderButton = document.getElementById('renderButton') as HTMLButtonElement | null;
+    if (renderButton) {
+        renderButton.disabled = true;
+    }
+
+    // Disable font size control buttons
+    const fontButtons = ['decrease-font', 'increase-font'];
+    fontButtons.forEach(id => {
+        const element = document.getElementById(id) as HTMLButtonElement | null;
+        if (element) {
+            element.disabled = true;
+        }
+    });
+
+    // Update placeholder with loading message
+    updatePlaceholder('Loading rendering engine... Please wait.');
+}
+
+/**
+ * Enables all UI elements after loading is complete
+ */
+function enableUI(): void {
+    console.log('Enabling UI elements after loading...');
+
+    // Enable input textarea
+    const inputElement = document.getElementById('input') as HTMLTextAreaElement | null;
+    if (inputElement) {
+        inputElement.disabled = false;
+    }
+
+    // Enable file input
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement | null;
+    if (fileInput) {
+        fileInput.disabled = false;
+    }
+
+    // Enable select elements
+    const selectElements = ['renderType', 'renderMode', 'format'];
+    selectElements.forEach(id => {
+        const element = document.getElementById(id) as HTMLSelectElement | null;
+        if (element) {
+            element.disabled = false;
+        }
+    });
+
+    // Enable wrapWidth input
+    const wrapWidthElement = document.getElementById('wrapWidth') as HTMLInputElement | null;
+    if (wrapWidthElement) {
+        wrapWidthElement.disabled = false;
+    }
+
+    // Enable render button
+    const renderButton = document.getElementById('renderButton') as HTMLButtonElement | null;
+    if (renderButton) {
+        renderButton.disabled = false;
+    }
+
+    // Enable font size control buttons
+    const fontButtons = ['decrease-font', 'increase-font'];
+    fontButtons.forEach(id => {
+        const element = document.getElementById(id) as HTMLButtonElement | null;
+        if (element) {
+            element.disabled = false;
+        }
+    });
+
+    // Clear loading message
+    updatePlaceholder('Ready. Please enter a query plan and click Render.');
+}
+
 async function initializeWasm() {
     try {
         wasmFunctions = await initWasm();
         console.log("WebAssembly initialized successfully.");
+        enableUI(); // Enable UI elements after WASM is loaded
     } catch (error) {
         console.error("Failed to initialize WebAssembly:", error);
         updatePlaceholder("Error: Failed to load rendering engine.");
@@ -271,8 +376,9 @@ function initializeUI(): void {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await initializeWasm();
-    initializeUI();
+    disableUI(); // Disable UI elements during loading
+    initializeUI(); // Initialize UI structure but elements remain disabled
+    await initializeWasm(); // Load WASM (will enable UI when done)
 });
 
 /**
