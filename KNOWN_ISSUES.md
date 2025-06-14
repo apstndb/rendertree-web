@@ -55,11 +55,6 @@ This document tracks known issues, technical debt, and areas requiring improveme
 - ~~Currently showing as untracked files in git status~~
 - **Fixed**: Removed duplicate test files from root directory
 
-### 10. Complex Test Logic
-**File**: `tests/rendering.spec.ts`
-- Overly complex test file (450+ lines)
-- Browser-specific workarounds suggest underlying issues
-- Should be simplified and root causes addressed
 
 ### 11. Architecture Coupling
 **File**: `src/contexts/AppContext.tsx`
@@ -82,6 +77,7 @@ This document tracks known issues, technical debt, and areas requiring improveme
 
 ### Long-term Improvements
 - [x] Add comprehensive unit tests ✅
+- [x] Simplify complex test logic ✅
 - [ ] Split large contexts into smaller, focused ones
 - [ ] Add proper API documentation
 - [x] Optimize build process error handling to prevent silent failures ✅
