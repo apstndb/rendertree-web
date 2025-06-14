@@ -136,14 +136,10 @@ test.describe('Query Plan Rendering', () => {
 
     DEBUG && console.log('profile.yaml file exists, uploading to file picker');
 
-    try {
-      // Set the file input
-      await page.setInputFiles('[data-testid="file-picker"]', filePath);
-      DEBUG && console.log('File uploaded successfully');
-    } catch (e) {
-      console.error('Error uploading file:', e);
-      throw new Error('Failed to upload file');
-    }
+    // Set the file input. If this fails, the test will automatically fail,
+    // which simplifies the code and removes the warning.
+    await page.setInputFiles('[data-testid="file-picker"]', filePath);
+    DEBUG && console.log('File uploaded successfully');
 
     // Wait a moment for the file to be processed
     await page.waitForTimeout(1000);
