@@ -198,11 +198,22 @@ await loadSampleFile(
 );
 ```
 
+**File Validation:**
+FileContext includes comprehensive validation:
+- **File size**: Maximum 5MB
+- **File extensions**: .yaml, .yml, .json only
+- **MIME types**: Validates common YAML/JSON MIME types
+- **Content validation**: Ensures valid JSON syntax for .json files
+- **Empty file check**: Prevents processing of empty files
+
 **Error Conditions:**
 - No file selected
+- File size exceeds 5MB limit
+- Unsupported file extension
+- Invalid JSON content (for .json files)
+- Empty file content
 - File read errors
 - Network errors for sample files
-- Invalid file format
 
 ---
 

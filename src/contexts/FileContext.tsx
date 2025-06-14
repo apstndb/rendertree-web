@@ -3,6 +3,101 @@ import type { ReactNode } from 'react';
 import { logger } from '../utils/logger';
 
 /**
+ * Configuration for file validation rules.
+ */
+const FILE_VALIDATION_CONFIG = {
+  // Maximum file size in bytes (5MB)
+  maxSize: 5 * 1024 * 1024,
+  // Allowed file extensions
+  allowedExtensions: ['.yaml', '.yml', '.json'],
+  // Allowed MIME types
+  allowedMimeTypes: [
+    'application/x-yaml',
+    'application/yaml', 
+    'text/yaml',
+    'text/x-yaml',
+    'application/json',
+    'text/json',
+    'text/plain' // Many YAML files are served as text/plain
+  ]
+};
+
+/**
+ * Validates uploaded file against security and format requirements.
+ * 
+ * @param file - File to validate
+ * @returns Error message if validation fails, null if valid
+ */
+function validateFile(file: File): string | null {
+  // File size validation
+  if (file.size > FILE_VALIDATION_CONFIG.maxSize) {
+    const maxSizeMB = (FILE_VALIDATION_CONFIG.maxSize / (1024 * 1024)).toFixed(1);
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+    return `File size (${fileSizeMB}MB) exceeds maximum allowed size (${maxSizeMB}MB)`;
+  }
+
+  // File extension validation
+  const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+  if (!FILE_VALIDATION_CONFIG.allowedExtensions.includes(fileExtension)) {
+    return `File type '${fileExtension}' not supported. Allowed types: ${FILE_VALIDATION_CONFIG.allowedExtensions.join(', ')}`;
+  }
+
+  // MIME type validation (if available)
+  if (file.type && !FILE_VALIDATION_CONFIG.allowedMimeTypes.includes(file.type)) {
+    logger.warn(`Unexpected MIME type '${file.type}' for file '${file.name}'. Proceeding with extension-based validation.`);
+  }
+
+  // Empty file check
+  if (file.size === 0) {
+    return 'File is empty';
+  }
+
+  return null; // File is valid
+}
+
+/**
+ * Validates file content to ensure it's a valid query plan format.
+ * 
+ * @param content - File content to validate
+ * @param filename - Original filename for error messages
+ * @returns Error message if validation fails, null if valid
+ */
+function validateFileContent(content: string, filename: string): string | null {
+  // Check if content is empty or only whitespace
+  if (!content.trim()) {
+    return 'File content is empty';
+  }
+
+  // Basic size check for content (prevent extremely large files from causing issues)
+  if (content.length > 10 * 1024 * 1024) { // 10MB text limit
+    return 'File content is too large to process';
+  }
+
+  // Try to detect if it's valid YAML/JSON based on file extension
+  const fileExtension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+  
+  if (fileExtension === '.json') {
+    try {
+      JSON.parse(content);
+    } catch {
+      return 'File does not contain valid JSON';
+    }
+  }
+
+  // For YAML files, we do basic validation without parsing
+  // (since we don't have a YAML parser in the frontend)
+  if (['.yaml', '.yml'].includes(fileExtension)) {
+    // Check for common YAML structure indicators
+    const hasYamlStructure = /^[a-zA-Z_].*:/m.test(content) || content.includes('- ');
+    if (!hasYamlStructure) {
+      logger.warn(`YAML file '${filename}' does not appear to have YAML structure, but proceeding`);
+    }
+  }
+
+  return null; // Content is valid
+}
+
+/**
  * Interface for file operation callbacks and methods.
  * Uses callback pattern for clean error handling and state management.
  */
@@ -79,6 +174,14 @@ export const FileProvider: React.FC<FileProviderProps> = ({ children }) => {
 
     logger.info(`File selected for upload: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
 
+    // File validation
+    const validationError = validateFile(file);
+    if (validationError) {
+      logger.error('File validation failed:', validationError);
+      onError(validationError);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       logger.debug('FileReader onload event triggered');
@@ -91,6 +194,15 @@ export const FileProvider: React.FC<FileProviderProps> = ({ children }) => {
       }
 
       logger.debug(`File content loaded successfully, length: ${content.length} characters`);
+      
+      // Content validation
+      const contentValidationError = validateFileContent(content, file.name);
+      if (contentValidationError) {
+        logger.error('Content validation failed:', contentValidationError);
+        onError(contentValidationError);
+        return;
+      }
+
       onSuccess(content);
     };
 
