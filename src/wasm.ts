@@ -4,11 +4,8 @@ import { logger } from './utils/logger';
 import { WasmInitializationError, WasmRenderingError } from './errors/WasmErrors';
 import { extractErrorInfo } from './utils/errorHandling';
 
-// Declare Go class from wasm_exec.js
-declare class Go {
-  importObject: WebAssembly.Imports;
-  run(instance: WebAssembly.Instance): Promise<void>;
-}
+// Go class will be available globally after wasm_exec.js loads
+// We access it via globalThis to handle dynamic loading timing
 
 // Note: TypeScript needs to know about import.meta.env for type checking,
 // but we access it implicitly through the environment so no explicit interface is needed
@@ -17,6 +14,24 @@ declare class Go {
 declare function renderASCII(paramsJson: string): string;
 
 let wasmInitialized = false;
+
+/**
+ * Wait for Go class to be available (loaded by wasm_exec.js)
+ */
+async function waitForGo(): Promise<void> {
+  const maxWaitTime = 10000; // 10 seconds
+  const pollInterval = 100; // 100ms
+  const startTime = Date.now();
+  
+  while (typeof (globalThis as any).Go === 'undefined') {
+    if (Date.now() - startTime > maxWaitTime) {
+      throw new Error('Timeout waiting for Go class to be loaded from wasm_exec.js');
+    }
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+  }
+  
+  logger.debug('Go class is now available');
+}
 
 /**
  * Initialize WebAssembly module
@@ -31,7 +46,12 @@ export async function initWasm(): Promise<WasmFunctions> {
   }
 
   logger.info('Starting WASM initialization');
-  const go = new Go();
+  
+  // Wait for Go class to be available from wasm_exec.js
+  logger.debug('Waiting for Go class to be loaded...');
+  await waitForGo();
+  
+  const go = new ((globalThis as any).Go)();
   try {
     // Simplified WASM path resolution using Vite environment detection
     // Use import.meta.env to determine the environment instead of URL parsing
