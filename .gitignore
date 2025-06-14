@@ -30,3 +30,6 @@ yarn-error.log*
 # Test results and reports
 playwright-report/
 test-results/
+
+# Temporary files and logs
+tmp/
