@@ -23,7 +23,7 @@ async function waitForGo(): Promise<void> {
   const pollInterval = 100; // 100ms
   const startTime = Date.now();
   
-  while (typeof (globalThis as any).Go === 'undefined') {
+  while (typeof (globalThis as typeof globalThis & { Go?: unknown }).Go === 'undefined') {
     if (Date.now() - startTime > maxWaitTime) {
       throw new Error('Timeout waiting for Go class to be loaded from wasm_exec.js');
     }
@@ -51,7 +51,7 @@ export async function initWasm(): Promise<WasmFunctions> {
   logger.debug('Waiting for Go class to be loaded...');
   await waitForGo();
   
-  const go = new ((globalThis as any).Go)();
+  const go = new ((globalThis as typeof globalThis & { Go: new () => { importObject: WebAssembly.Imports; run: (instance: WebAssembly.Instance) => Promise<void> } }).Go)();
   try {
     // Simplified WASM path resolution using Vite environment detection
     // Use import.meta.env to determine the environment instead of URL parsing
