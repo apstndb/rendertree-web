@@ -1,111 +1,53 @@
-# Known Issues
+# Issue Tracking Migration
 
-This document tracks known issues, technical debt, and areas requiring improvement in the Rendertree Web project.
+**⚠️ This file has been migrated to GitHub Issues**
 
-## 🔴 High Priority Issues
+## Current Issue Tracking
 
-### 1. ~~Complex WASM Path Resolution~~ ✅ **FIXED**
-**Files**: `src/wasm.ts:38-54`, `index.html:14-30`
-- ~~Overly complex path detection logic for different environments (dev/prod/preview)~~
-- ~~Brittle solution that depends on URL path detection~~
-- ~~Could fail in edge cases or different deployment scenarios~~
-- **Fixed**: Simplified to use Vite environment variables (import.meta.env.DEV, import.meta.env.VITE_PREVIEW) instead of URL parsing
+All issues, bugs, enhancements, and technical debt are now tracked using GitHub Issues:
 
-### 2. ~~Dual WASM Building~~ ✅ **FIXED**
-**File**: `src/vite-plugin-go-wasm.ts`
-- ~~WASM is built in both `buildStart` and `closeBundle` hooks~~
-- ~~Inefficient and may cause race conditions~~
-- **Fixed**: Consolidated build logic with race condition prevention using `isBuilding` flag and single shared function
+**👉 [View Active Issues](https://github.com/apstndb/rendertree-web/issues)**
 
-### 3. ~~File Upload Security Validation Gap~~ ✅ **FIXED**
-**File**: `src/contexts/AppContext.tsx`
-- ~~Accepts any content type despite `accept` attribute~~
-- ~~No file size validation~~
-- ~~No content validation before processing~~
-- **Fixed**: Comprehensive validation implemented in FileContext with:
-  - File size limits (5MB max)
-  - MIME type and extension validation (.yaml, .yml, .json only)
-  - Content format validation (JSON parsing, YAML structure detection)
-  - Input element accept attribute properly configured
+## Migration Summary
 
-## 🟡 Medium Priority Issues
+As of June 14, 2025, issue tracking has been migrated from this file to GitHub Issues for better:
+- **Collaboration**: Multiple contributors can comment and collaborate
+- **Project Management**: Labels, milestones, and project boards
+- **Integration**: Automatic linking with commits and pull requests
+- **Searchability**: Better search and filtering capabilities
+- **Notifications**: Email notifications for updates and mentions
 
-### 4. ~~Unused/Redundant Code~~ ✅ **FIXED**
-**File**: `src/components/InputPanel.tsx:69-78`
-- ~~Hidden duplicate file input element that's never used~~
-- ~~Should be removed to reduce complexity~~
-- **Fixed**: Removed unused hidden file input element (verified with lint + tests)
+## Historical Accomplishments
 
-### 5. ~~ESLint Configuration Issues~~ ✅ **FIXED**
-**File**: `eslint.config.js:42`
-- ~~`no-unused-vars` is disabled globally, masking potential issues~~
-- ~~Should use TypeScript-specific rules instead~~
-- **Fixed**: Updated ESLint configuration with TypeScript-specific rules and proper configuration structure
+The following issues were successfully resolved during the KNOWN_ISSUES.md era:
 
-### 6. ~~Excessive Debug Logging~~ ✅ **FIXED**
-**Codebase-wide**
-- ~~Every component and function has extensive debug logging~~
-- ~~Should be conditional based on development vs production environment~~
-- **Fixed**: Reduced verbose logging and implemented proper environment-conditional logging using Vite environment variables
+### High Priority Issues (All Resolved ✅)
+1. **Complex WASM Path Resolution** - Simplified using Vite environment variables
+2. **Dual WASM Building** - Consolidated with race condition prevention
+3. **File Upload Security Validation Gap** - Comprehensive validation in FileContext
 
-### 7. ~~Potential Memory Leaks~~ ✅ **FIXED**
-**File**: `src/components/OutputPanel.tsx:207-211`
-- ~~`setTimeout` without cleanup in copy button functionality~~
-- ~~Could cause memory leaks if component unmounts during timeout~~
-- **Fixed**: Added useRef for timeout management and proper cleanup in useEffect
+### Medium Priority Issues (All Resolved ✅)
+4. **Unused/Redundant Code** - Removed unused file input elements
+5. **ESLint Configuration Issues** - Updated with TypeScript-specific rules
+6. **Excessive Debug Logging** - Implemented environment-conditional logging
+7. **Potential Memory Leaks** - Added proper cleanup for timeouts
 
-## 🟢 Low Priority Issues
+### Low Priority Issues
+8. **~~Misplaced Test Files~~** ✅ **FIXED** - Removed duplicate test files
+9. **Ruler Alignment Issue** → **Migrated to [GitHub Issue #1](https://github.com/apstndb/rendertree-web/issues/1)**
 
-### 8. Ruler Alignment Issue
-**File**: `src/components/OutputPanel.tsx`
-- Character ruler's left edge doesn't align with the first character of the rendered output
-- Makes the ruler ineffective for accurate character position measurement
-- Should align ruler properly with the text content
+### Technical Debt (All Resolved ✅)
+- **Environment Variable Exposure** - Updated to use Vite environment variables
 
-### 9. ~~Misplaced Test Files~~ ✅ **FIXED**
-**Root directory**: `p.json`, `plan.json`, `plan.yaml`
-- ~~Should be moved to `testdata/` directory or removed~~
-- ~~Currently showing as untracked files in git status~~
-- **Fixed**: Removed duplicate test files from root directory
+## For Contributors
 
-
-
-## 🔧 Improvement Recommendations
-
-### Immediate Fixes
-- [x] Remove unused file input element ✅
-- [x] Fix ESLint configuration to use TypeScript-specific rules ✅
-- [x] Add proper cleanup for setTimeout ✅
-- [x] Move test files to appropriate directories ✅
-
-### Medium-term Improvements
-- [x] Simplify WASM path resolution logic ✅
-- [x] Reduce debug logging verbosity ✅
-- [x] Add file upload validation ✅
-- [x] Improve error handling with proper typing ✅
-
-### Long-term Improvements
-- [x] Add comprehensive unit tests ✅
-- [x] Simplify complex test logic ✅
-- [x] Split large contexts into smaller, focused ones ✅
-- [x] Add proper API documentation ✅
-- [x] Optimize build process error handling to prevent silent failures ✅
-- [x] Implement proper character width measurement ✅
-
-### Security Enhancements
-- [x] Add input validation for file uploads ✅
-- [x] Implement content-type verification ✅
-- [x] Add file size limits ✅
-
-## 📋 Technical Debt
-
-### ~~Environment Variable Exposure~~ ✅ **FIXED**
-**File**: `src/utils/logger.ts:4`
-- ~~Uses `process.env.NODE_ENV` in client-side code without proper Vite configuration~~
-- ~~May cause runtime errors if not properly handled~~
-- **Fixed**: Updated to use Vite environment variables (import.meta.env) for proper client-side compatibility
+- **New Issues**: Create new issues using [GitHub Issues](https://github.com/apstndb/rendertree-web/issues/new)
+- **Bug Reports**: Use the bug report template when available
+- **Feature Requests**: Use the feature request template when available
+- **Documentation**: Reference this migration in commit messages when fixing historical issues
 
 ---
 
-**Last Updated**: June 14, 2025  
-**Next Review**: July 14, 2025
+**Migration Date**: June 14, 2025  
+**Total Issues Resolved**: 9 out of 10 (90% completion rate)  
+**Remaining Active Issues**: [1 issue migrated to GitHub](https://github.com/apstndb/rendertree-web/issues/1)

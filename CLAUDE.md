@@ -78,7 +78,7 @@ Sample files in `testdata/` directory are automatically copied to build output a
 ### Making Changes
 When implementing changes or fixes, follow this workflow:
 
-1. **Identify the issue**: Check `KNOWN_ISSUES.md` for documented problems or create a plan for new features
+1. **Identify the issue**: Check GitHub issues for documented problems or create a plan for new features
 2. **Implement the fix**: Make necessary code changes following existing patterns and conventions
 3. **Test thoroughly**: Run the full test suite to ensure no regressions
    ```bash
@@ -103,7 +103,7 @@ When implementing changes or fixes, follow this workflow:
   - `npm run test:unit` - Unit tests
   - `npm run test:preview` - Production build tests
 - **Fix all errors**: Address ESLint warnings, TypeScript compilation errors, and test failures
-- **Update documentation**: Update `KNOWN_ISSUES.md` when fixing documented issues
+- **Update documentation**: Close GitHub issues when fixing documented problems
 - **Test across browsers**: Playwright tests automatically run on Chromium, Firefox, and WebKit
 - **Verify production builds**: `test:preview` ensures changes work in production environment
 
@@ -116,15 +116,15 @@ npm run test:all     # All tests including development mode
 These commands include TypeScript compilation checks that will catch the type errors that cause CI build failures.
 
 ### Issue Tracking
-- Use `KNOWN_ISSUES.md` to track known problems, technical debt, and improvement opportunities
-- Categorize issues by priority (🔴 High, 🟡 Medium, 🟢 Low)
+- Use GitHub issues to track known problems, technical debt, and improvement opportunities
+- Apply appropriate labels for categorization (enhancement, bug, documentation, etc.)
 - **Resolving Issues**: When fixing documented issues:
   1. Complete the implementation and verify all tests pass
-  2. **Delete the resolved issue** from `KNOWN_ISSUES.md` entirely
-  3. Issue numbers can remain as gaps (e.g., if Issue #8 is resolved, it's deleted and numbers jump from #7 to #9)
-  4. Update improvement recommendation checklists to mark items as completed with ✅
-  5. Update the "Last Updated" date at the bottom of the file
-- Include file paths and line numbers for easy navigation
+  2. **Close the GitHub issue** with a reference to the fixing commit
+  3. Use commit messages that reference issues (e.g., "Fix ruler alignment issue (#1)")
+  4. Add closing keywords in commit messages when appropriate (e.g., "Fixes #1", "Closes #1")
+- Include file paths and line numbers in issue descriptions for easy navigation
+- Use GitHub's project management features for milestone tracking
 
 ### TypeScript and CI Compatibility
 - **Ensure TypeScript compilation**: All code must compile without errors for CI to pass
