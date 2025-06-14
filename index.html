@@ -5,11 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Spanner QueryPlan Visualization Tool">
     <title>rendertree-web</title>
-    <script src="dist/wasm_exec.js" type="module"></script>
+    <!-- 
+      We tried to unify the base path for all environments, but it caused issues in development mode.
+      The main issue was that the wasm_exec.js file is placed in different locations in dev vs. preview/production.
+      So we need to use different paths for different environments.
+    -->
+    <script>
+      // Dynamically determine the correct path for wasm_exec.js based on the environment
+      const isPathBased = window.location.pathname.includes('/rendertree-web/');
+      const wasmExecPath = isPathBased ? './wasm_exec.js' : './dist/wasm_exec.js';
+
+      // Create a script element and set its src attribute
+      const script = document.createElement('script');
+      script.src = wasmExecPath;
+      script.onload = function() {
+        console.log('wasm_exec.js loaded successfully from:', wasmExecPath);
+      };
+      script.onerror = function() {
+        console.error('Failed to load wasm_exec.js from:', wasmExecPath);
+      };
+
+      // Append the script element to the document head
+      document.head.appendChild(script);
+    </script>
 </head>
 
 <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="src/main.tsx"></script>
 </body>
 </html>

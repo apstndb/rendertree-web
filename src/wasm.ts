@@ -39,19 +39,24 @@ export async function initWasm(): Promise<WasmFunctions> {
   logger.info('Starting WASM initialization');
   const go = new Go();
   try {
-    // Check if we're in preview mode by looking for the base path in the URL
-    const isPreview = window.location.pathname.includes('/rendertree-web/');
-    logger.debug('Preview mode detected:', isPreview);
+    // Check if we're in preview or production mode by looking for the base path in the URL
+    // This applies to both preview mode (vite preview) and production (GitHub Pages)
+    // as both serve the application under the /rendertree-web/ path
+    const isPathBased = window.location.pathname.includes('/rendertree-web/');
+    logger.debug('Path-based environment detected:', isPathBased);
 
     // Determine the correct path for the WASM file based on the environment
+    // We tried to unify the base path for all environments, but it caused issues in development mode
+    // The main issue was that the WASM file is built and placed in different locations in dev vs. preview/production
+    // So we need to use different paths for different environments
     let wasmPath;
 
-    if (isPreview) {
-      // In preview mode, use the root directory (no dist or assets)
-      wasmPath = "./rendertree.wasm";
+    if (isPathBased) {
+      // In path-based environments (preview or production), use the assets directory
+      // where Vite actually serves the WASM file
+      wasmPath = "./assets/rendertree.wasm";
     } else {
       // In development mode, use the dist directory
-      // This works for both npm run dev and npm run preview:express
       wasmPath = "./dist/rendertree.wasm";
     }
 

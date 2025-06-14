@@ -8,7 +8,6 @@
     "dev": "vite",
     "build": "mkdir -p dist && tsc && vite build",
     "preview": "VITE_PREVIEW=true vite preview --base=/rendertree-web/",
-    "preview:express": "node preview-server.js",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
@@ -17,8 +16,6 @@
     "test:verbose": "DEBUG=true playwright test",
     "test:preview": "playwright test --config=playwright.preview.config.ts",
     "test:preview:verbose": "DEBUG=true playwright test --config=playwright.preview.config.ts",
-    "test:preview:express": "playwright test --config=playwright.preview.express.config.ts",
-    "test:preview:express:verbose": "DEBUG=true playwright test --config=playwright.preview.express.config.ts",
     "clean": "rm -rf dist/*"
   },
   "repository": {
