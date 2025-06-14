@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -159,6 +160,39 @@ const (
 	ErrorTypeInvalidParameters    = "INVALID_PARAMETERS"
 )
 
+// Custom error types for better classification
+type ParseError struct {
+	msg string
+}
+
+func (e ParseError) Error() string {
+	return e.msg
+}
+
+type InvalidSpannerFormatError struct {
+	msg string
+}
+
+func (e InvalidSpannerFormatError) Error() string {
+	return e.msg
+}
+
+type RenderError struct {
+	msg string
+}
+
+func (e RenderError) Error() string {
+	return e.msg
+}
+
+type InvalidParametersError struct {
+	msg string
+}
+
+func (e InvalidParametersError) Error() string {
+	return e.msg
+}
+
 func renderASCII(this js.Value, args []js.Value) any {
 	// Helper function to return structured error response
 	errorResponse := func(errorType, message, details string) string {
@@ -199,7 +233,7 @@ func renderASCII(this js.Value, args []js.Value) any {
 
 	s, err := renderASCIIImpl(par.Input, par.Mode, par.Format, par.WrapWidth)
 	if err != nil {
-		// Classify error types based on error content
+		// Classify error types using errors.As for type-safe error handling
 		errorType := classifyError(err)
 		return errorResponse(errorType, err.Error(), "")
 	}
@@ -207,8 +241,30 @@ func renderASCII(this js.Value, args []js.Value) any {
 	return successResponse(s)
 }
 
-// classifyError determines the error type based on error content
+// classifyError determines the error type using errors.As for type-safe classification
 func classifyError(err error) string {
+	// Check for custom error types first
+	var parseErr ParseError
+	if errors.As(err, &parseErr) {
+		return ErrorTypeParseError
+	}
+	
+	var spannerErr InvalidSpannerFormatError
+	if errors.As(err, &spannerErr) {
+		return ErrorTypeInvalidSpannerFormat
+	}
+	
+	var renderErr RenderError
+	if errors.As(err, &renderErr) {
+		return ErrorTypeRenderError
+	}
+	
+	var paramErr InvalidParametersError
+	if errors.As(err, &paramErr) {
+		return ErrorTypeInvalidParameters
+	}
+	
+	// Fallback to string-based classification for external errors
 	errMsg := err.Error()
 	
 	// Check for Spanner-specific format errors
@@ -239,22 +295,34 @@ func classifyError(err error) string {
 func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int) (string, error) {
 	stats, _, err := queryplan.ExtractQueryPlan([]byte(j))
 	if err != nil {
-		return "", err
+		// Wrap external parsing errors in our custom type
+		return "", ParseError{msg: fmt.Sprintf("Failed to extract query plan: %v", err)}
 	}
 
 	mode, err := ParseRenderMode(modeStr)
 	if err != nil {
-		return "", err
+		return "", InvalidParametersError{msg: fmt.Sprintf("Invalid render mode: %v", err)}
 	}
 
 	format, err := ParseFormat(formatStr)
 	if err != nil {
-		return "", err
+		return "", InvalidParametersError{msg: fmt.Sprintf("Invalid format type: %v", err)}
 	}
 
-	s, err := RenderTreeTable(stats.GetQueryPlan().GetPlanNodes(), mode, format, wrapWidth)
+	// Validate Spanner query plan structure
+	queryPlan := stats.GetQueryPlan()
+	if queryPlan == nil {
+		return "", InvalidSpannerFormatError{msg: "Query plan is missing from input"}
+	}
+	
+	planNodes := queryPlan.GetPlanNodes()
+	if len(planNodes) == 0 {
+		return "", InvalidSpannerFormatError{msg: "Plan nodes are missing from query plan"}
+	}
+
+	s, err := RenderTreeTable(planNodes, mode, format, wrapWidth)
 	if err != nil {
-		return "", err
+		return "", RenderError{msg: fmt.Sprintf("Failed to render tree table: %v", err)}
 	}
 	return s, nil
 }
