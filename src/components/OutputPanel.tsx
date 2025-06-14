@@ -1,22 +1,43 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useWasmContext } from '../contexts/WasmContext';
 import { logger } from '../utils/logger';
 import { extractErrorInfo } from '../utils/errorHandling';
+
+/**
+ * Measures the actual character width for a given font and font size
+ */
+const measureCharacterWidth = (fontSize: number, fontFamily: string): number => {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (!context) {
+    // Fallback to approximation if canvas is not available
+    return fontSize * 0.6;
+  }
+  
+  context.font = `${fontSize}px ${fontFamily}`;
+  // Measure a representative monospace character
+  const metrics = context.measureText('M');
+  return metrics.width;
+};
 
 // Component for the character ruler
 const CharacterRuler: React.FC<{ 
   scrollLeft: number; 
   fontSize: number;
   width: number;
-}> = ({ scrollLeft, fontSize, width }) => {
+  fontFamily?: string;
+}> = ({ scrollLeft, fontSize, width, fontFamily = 'Consolas, "Courier New", Courier, monospace' }) => {
+  // Memoize character width calculation
+  const charWidth = useCallback(() => {
+    return measureCharacterWidth(fontSize, fontFamily);
+  }, [fontSize, fontFamily])();
+
   // Generate ruler marks
   const generateRulerMarks = () => {
     const marks = [];
-    // For monospace fonts, character width is typically about 60% of the font size
-    // This is an approximation and may need adjustment based on the actual font
-    const charWidth = fontSize * 0.6; // Approximate width of a character in monospace font
-    const numMarks = Math.ceil(width / charWidth) + 50; // Add extra marks for scrolling
+    const actualCharWidth = charWidth;
+    const numMarks = Math.ceil(width / actualCharWidth) + 50; // Add extra marks for scrolling
 
     for (let i = 0; i <= numMarks; i += 10) {
       // Add a major mark every 10 characters
@@ -25,7 +46,7 @@ const CharacterRuler: React.FC<{
           key={`major-${i}`}
           className="ruler-mark major"
           style={{ 
-            left: `${i * charWidth}px`,
+            left: `${i * actualCharWidth}px`,
           }}
         >
           <div className="ruler-mark-label">{i}</div>
@@ -40,7 +61,7 @@ const CharacterRuler: React.FC<{
               key={`minor-${i+j}`}
               className="ruler-mark minor"
               style={{ 
-                left: `${(i + j) * charWidth}px`,
+                left: `${(i + j) * actualCharWidth}px`,
               }}
             />
           );
@@ -101,9 +122,10 @@ const OutputPanel: React.FC = () => {
         const maxLineLength = Math.max(...lines.map(line => line.length));
         logger.debug('Calculating ruler width - maxLineLength:', maxLineLength, 'fontSize:', fontSize);
 
-        // Estimate the width based on the font size and character count
+        // Use actual character width measurement for accuracy
         // Add some extra width for safety
-        const estimatedWidth = maxLineLength * fontSize * 0.6 + 100;
+        const actualCharWidth = measureCharacterWidth(fontSize, "Consolas, 'Courier New', Courier, monospace");
+        const estimatedWidth = maxLineLength * actualCharWidth + 100;
         const newWidth = Math.max(1000, estimatedWidth);
         logger.debug('Setting ruler width to:', newWidth);
         setRulerWidth(newWidth);
@@ -272,6 +294,7 @@ const OutputPanel: React.FC = () => {
               scrollLeft={scrollLeft} 
               fontSize={fontSize} 
               width={rulerWidth}
+              fontFamily="Consolas, 'Courier New', Courier, monospace"
             />
           </div>
           <pre 

@@ -49,11 +49,6 @@ This document tracks known issues, technical debt, and areas requiring improveme
 
 ## 🟢 Low Priority Issues
 
-### 8. Inefficient Character Width Calculation
-**File**: `src/components/OutputPanel.tsx:16-18, 102`
-- Hard-coded character width estimation (0.6 * fontSize)
-- Should measure actual character width for accuracy
-
 ### 9. ~~Misplaced Test Files~~ ✅ **FIXED**
 **Root directory**: `p.json`, `plan.json`, `plan.yaml`
 - ~~Should be moved to `testdata/` directory or removed~~
@@ -75,22 +70,22 @@ This document tracks known issues, technical debt, and areas requiring improveme
 
 ### Immediate Fixes
 - [x] Remove unused file input element ✅
-- [ ] Fix ESLint configuration to use TypeScript-specific rules
-- [ ] Add proper cleanup for setTimeout
-- [ ] Move test files to appropriate directories
+- [x] Fix ESLint configuration to use TypeScript-specific rules ✅
+- [x] Add proper cleanup for setTimeout ✅
+- [x] Move test files to appropriate directories ✅
 
 ### Medium-term Improvements
 - [ ] Simplify WASM path resolution logic
-- [ ] Reduce debug logging verbosity
+- [x] Reduce debug logging verbosity ✅
 - [ ] Add file upload validation
-- [ ] Improve error handling with proper typing
+- [x] Improve error handling with proper typing ✅
 
 ### Long-term Improvements
 - [ ] Add comprehensive unit tests
 - [ ] Split large contexts into smaller, focused ones
 - [ ] Add proper API documentation
 - [ ] Optimize build process to eliminate dual WASM building
-- [ ] Implement proper character width measurement
+- [x] Implement proper character width measurement ✅
 
 ### Security Enhancements
 - [ ] Add input validation for file uploads
@@ -109,10 +104,11 @@ This document tracks known issues, technical debt, and areas requiring improveme
 - Extensive use of `unknown[]` type indicates incomplete typing
 - More specific type definitions needed
 
-### Environment Variable Exposure
+### ~~Environment Variable Exposure~~ ✅ **FIXED**
 **File**: `src/utils/logger.ts:4`
-- Uses `process.env.NODE_ENV` in client-side code without proper Vite configuration
-- May cause runtime errors if not properly handled
+- ~~Uses `process.env.NODE_ENV` in client-side code without proper Vite configuration~~
+- ~~May cause runtime errors if not properly handled~~
+- **Fixed**: Updated to use Vite environment variables (import.meta.env) for proper client-side compatibility
 
 ### Missing Unit Test Coverage
 - No unit tests for individual components or utilities
@@ -125,5 +121,5 @@ This document tracks known issues, technical debt, and areas requiring improveme
 
 ---
 
-**Last Updated**: June 15, 2025  
-**Next Review**: July 15, 2025
+**Last Updated**: June 14, 2025  
+**Next Review**: July 14, 2025
