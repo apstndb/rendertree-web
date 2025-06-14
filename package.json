@@ -44,7 +44,9 @@
   },
   "dependencies": {
     "@google-cloud/spanner": "^7.0.0",
+    "loglevel": "^1.9.2",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "winston": "^3.17.0"
   }
 }

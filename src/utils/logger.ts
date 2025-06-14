@@ -1,33 +1,37 @@
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+import log from 'loglevel';
 
-const logLevels: Record<LogLevel, number> = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3
-};
+// Set the default log level based on the environment
+log.setLevel(process.env.NODE_ENV === 'production' ? log.levels.INFO : log.levels.DEBUG);
 
-const currentLevel: LogLevel = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
-
+// Create a wrapper to maintain the same interface as the previous logger
+// This ensures compatibility with existing code
 export const logger = {
-  debug: (message: string, ...args: any[]) => {
-    if (logLevels[currentLevel] <= logLevels.debug) {
-      console.debug(`[DEBUG] ${message}`, ...args);
+  debug: (message: string, ...args: unknown[]): void => {
+    if (args.length > 0) {
+      log.debug(`[DEBUG] ${message}`, ...args);
+    } else {
+      log.debug(`[DEBUG] ${message}`);
     }
   },
-  info: (message: string, ...args: any[]) => {
-    if (logLevels[currentLevel] <= logLevels.info) {
-      console.info(`[INFO] ${message}`, ...args);
+  info: (message: string, ...args: unknown[]): void => {
+    if (args.length > 0) {
+      log.info(`[INFO] ${message}`, ...args);
+    } else {
+      log.info(`[INFO] ${message}`);
     }
   },
-  warn: (message: string, ...args: any[]) => {
-    if (logLevels[currentLevel] <= logLevels.warn) {
-      console.warn(`[WARN] ${message}`, ...args);
+  warn: (message: string, ...args: unknown[]): void => {
+    if (args.length > 0) {
+      log.warn(`[WARN] ${message}`, ...args);
+    } else {
+      log.warn(`[WARN] ${message}`);
     }
   },
-  error: (message: string, ...args: any[]) => {
-    if (logLevels[currentLevel] <= logLevels.error) {
-      console.error(`[ERROR] ${message}`, ...args);
+  error: (message: string, ...args: unknown[]): void => {
+    if (args.length > 0) {
+      log.error(`[ERROR] ${message}`, ...args);
+    } else {
+      log.error(`[ERROR] ${message}`);
     }
   }
 };

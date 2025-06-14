@@ -9,15 +9,8 @@ declare class Go {
   run(instance: WebAssembly.Instance): Promise<void>;
 }
 
-// Declare import.meta.env
-interface ImportMetaEnv {
-  DEV: boolean;
-  BASE_URL: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
+// Note: TypeScript needs to know about import.meta.env for type checking,
+// but we access it implicitly through the environment so no explicit interface is needed
 
 // These functions will be globally available after WASM initialization
 declare function renderASCII(paramsJson: string): string;
