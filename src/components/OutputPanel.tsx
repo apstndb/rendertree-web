@@ -241,7 +241,7 @@ const OutputPanel: React.FC = () => {
           clearTimeout(copyTimeoutRef.current);
         }
 
-        copyTimeoutRef.current = setTimeout(() => {
+        copyTimeoutRef.current = window.setTimeout(() => {
           logger.debug('Resetting copy button UI');
           copyButton.textContent = 'Copy';
           copyButton.classList.remove('copied');

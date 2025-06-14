@@ -23,7 +23,8 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "checkJs": false,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["vite/client"]
   },
   "include": ["*.ts", "src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules"]
