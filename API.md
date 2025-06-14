@@ -49,6 +49,14 @@ if (renderASCII) {
 - WASM file not found (404)
 - Go runtime initialization failure
 - Invalid WASM file format
+- Go class loading timeout (wasm_exec.js timing issues)
+
+**Initialization Process:**
+The WasmContext now includes robust initialization with:
+- Dynamic Go class availability detection
+- 10-second timeout with 100ms polling for Go class loading
+- Cross-browser compatibility improvements
+- Graceful handling of script loading timing issues
 
 ---
 
@@ -91,8 +99,8 @@ Returns the application context state and functions.
 **State Properties:**
 - `input: string` - Current query plan text
 - `renderType: string` - Type of rendering (default: "ascii")
-- `renderMode: string` - Rendering mode ("AUTO", "MANUAL", etc.)
-- `format: string` - Output format ("CURRENT", "LEGACY", etc.)
+- `renderMode: string` - Rendering mode ("AUTO", "PLAN", "PROFILE")
+- `format: string` - Output format ("CURRENT", "TRADITIONAL", "COMPACT")
 - `wrapWidth: number` - Text wrapping width (0 = no wrap)
 - `output: string` - Rendered ASCII output
 - `message: string` - Status/error message for user
@@ -274,10 +282,36 @@ The function expects a JSON string with the following structure:
 ```typescript
 interface RenderParams {
   input: string;    // Query plan text (YAML/JSON)
-  mode: string;     // Rendering mode: "AUTO" | "MANUAL" | etc.
-  format: string;   // Output format: "CURRENT" | "LEGACY" | etc.
+  mode: RenderMode; // Rendering mode: "AUTO" | "PLAN" | "PROFILE"
+  format: FormatType; // Output format: "CURRENT" | "TRADITIONAL" | "COMPACT"
   wrapWidth: number; // Text wrapping width (0 = no wrap)
 }
+
+type RenderMode = "AUTO" | "PLAN" | "PROFILE";
+type FormatType = "CURRENT" | "TRADITIONAL" | "COMPACT";
+```
+
+#### Response Structure
+The function returns a JSON string with the following structured format:
+
+```typescript
+interface WasmResponse {
+  success: boolean;
+  result?: string;
+  error?: WasmError;
+}
+
+interface WasmError {
+  type: WasmErrorType;
+  message: string;
+  details?: string;
+}
+
+type WasmErrorType = 
+  | "PARSE_ERROR" 
+  | "INVALID_SPANNER_FORMAT" 
+  | "RENDER_ERROR" 
+  | "INVALID_PARAMETERS";
 ```
 
 #### Usage
@@ -285,18 +319,88 @@ interface RenderParams {
 const params = {
   input: queryPlanText,
   mode: "AUTO",
-  format: "CURRENT",
+  format: "CURRENT", 
   wrapWidth: 80
 };
 
-const result = renderASCII(JSON.stringify(params));
+const resultStr = renderASCII(JSON.stringify(params));
+const response: WasmResponse = JSON.parse(resultStr);
+
+if (response.success) {
+  console.log('Rendered output:', response.result);
+} else {
+  console.error('Rendering failed:', response.error);
+}
 ```
 
 #### Error Handling
-Throws JavaScript errors for:
-- Invalid JSON parameters
-- Malformed query plans
-- Go runtime errors
+The WASM function now returns structured errors instead of throwing exceptions:
+
+**Error Types:**
+- `PARSE_ERROR` - JSON/YAML parsing failures
+- `INVALID_SPANNER_FORMAT` - Invalid Spanner query plan format
+- `RENDER_ERROR` - General rendering failures
+- `INVALID_PARAMETERS` - Invalid function parameters
+
+**Legacy Error Handling:**
+Previous versions threw JavaScript errors directly. The new structured format provides better error classification and details.
+
+---
+
+## Clipboard Integration
+
+### Copy Button Functionality
+
+The OutputPanel component includes copy-to-clipboard functionality with React state management.
+
+#### Implementation
+```typescript
+// Copy button state tracking
+const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
+
+// Copy function with error handling
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(output);
+    setCopyStatus('copied');
+    
+    // Reset after 2 seconds
+    setTimeout(() => setCopyStatus('idle'), 2000);
+  } catch (error) {
+    console.error('Copy failed:', error);
+  }
+};
+```
+
+#### Cross-Browser Compatibility
+The clipboard functionality requires explicit permissions in test environments:
+
+**Playwright Test Configuration:**
+```typescript
+// playwright.config.ts
+projects: [
+  {
+    name: 'chromium',
+    use: { 
+      ...devices['Desktop Chrome'],
+      permissions: ['clipboard-read', 'clipboard-write'],
+    },
+  },
+  // Similar configuration for Firefox and WebKit
+],
+```
+
+#### Browser Support
+- **Modern browsers**: Full support for `navigator.clipboard.writeText()`
+- **Test environments**: Requires explicit clipboard permissions
+- **Security**: HTTPS required for clipboard access in production
+- **Fallback**: Graceful error handling for unsupported environments
+
+#### Testing Considerations
+- Playwright clipboard operations interact with host system clipboard
+- Operations are isolated per test browser context
+- Permissions must be granted explicitly in test configurations
+- Cross-browser testing ensures consistent behavior
 
 ---
 
