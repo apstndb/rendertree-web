@@ -212,7 +212,7 @@ test.describe('Query Plan Rendering', () => {
             page.waitForResponse(response => 
               response.url().includes('rendertree.wasm') || response.status() === 200, 
               { timeout: 5000 }
-            ).catch(e => DEBUG && console.log('No response detected after clicking render, continuing...')),
+            ).catch(() => DEBUG && console.log('No response detected after clicking render, continuing...')),
             page.click(selector, { force: true })
           ]);
 
@@ -260,19 +260,19 @@ test.describe('Query Plan Rendering', () => {
     await page.waitForFunction(() => {
       const message = document.querySelector('.placeholder, [data-testid="message-placeholder"]');
       return message && message.textContent && message.textContent.includes('Rendering');
-    }, { timeout: 10000 }).catch(e => DEBUG && console.log('Rendering message not found, continuing...'));
+    }, { timeout: 10000 }).catch(() => DEBUG && console.log('Rendering message not found, continuing...'));
 
     // Wait for the rendering message to disappear
     await page.waitForFunction(() => {
       const message = document.querySelector('.placeholder, [data-testid="message-placeholder"]');
       return !message || !message.textContent || !message.textContent.includes('Rendering');
-    }, { timeout: 60000 }).catch(e => DEBUG && console.log('Rendering message still present, continuing...'));
+    }, { timeout: 60000 }).catch(() => DEBUG && console.log('Rendering message still present, continuing...'));
 
     // Instead of waiting for a specific container, take a screenshot to capture the current state
     try {
       if (DEBUG) {
         await page.screenshot({ path: 'test-results/after-render.png' })
-          .catch(e => console.log('Could not take screenshot, continuing...'));
+          .catch(() => console.log('Could not take screenshot, continuing...'));
 
         // Get the entire HTML content for debugging
         const html = await page.content();
