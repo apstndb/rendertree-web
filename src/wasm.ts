@@ -2,6 +2,7 @@
 import type { WasmFunctions, RenderParams, RenderMode, FormatType } from './types/wasm';
 import { logger } from './utils/logger';
 import { WasmInitializationError, WasmRenderingError } from './errors/WasmErrors';
+import { extractErrorInfo } from './utils/errorHandling';
 
 // Declare Go class from wasm_exec.js
 declare class Go {
@@ -80,11 +81,11 @@ export async function initWasm(): Promise<WasmFunctions> {
     wasmInitialized = true;
     return { renderASCII };
   } catch (e) {
-    const errorMsg = e instanceof Error ? e.message : String(e);
-    logger.error("Error initializing WebAssembly:", errorMsg);
+    const { message, originalError } = extractErrorInfo(e);
+    logger.error("Error initializing WebAssembly:", message);
 
     // Wrap the error in our custom error class for better identification
-    throw new WasmInitializationError(errorMsg, e instanceof Error ? e : undefined);
+    throw new WasmInitializationError(message, originalError);
   }
 }
 
@@ -129,10 +130,10 @@ export async function renderASCIITree(
 
     return result;
   } catch (e) {
-    const errorMsg = e instanceof Error ? e.message : String(e);
-    logger.error('Error during rendering:', errorMsg);
+    const { message, originalError } = extractErrorInfo(e);
+    logger.error('Error during rendering:', message);
 
     // Wrap the error in our custom error class for better identification
-    throw new WasmRenderingError(errorMsg, e instanceof Error ? e : undefined);
+    throw new WasmRenderingError(message, originalError);
   }
 }

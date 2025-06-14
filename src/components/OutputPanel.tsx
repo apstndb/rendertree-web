@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useWasmContext } from '../contexts/WasmContext';
 import { logger } from '../utils/logger';
+import { extractErrorInfo } from '../utils/errorHandling';
 
 // Component for the character ruler
 const CharacterRuler: React.FC<{ 
@@ -230,8 +231,8 @@ const OutputPanel: React.FC = () => {
 
       logger.info('Output copied to clipboard successfully');
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      logger.error('Failed to copy text to clipboard:', errorMsg);
+      const { message } = extractErrorInfo(err);
+      logger.error('Failed to copy text to clipboard:', message);
     }
   };
 

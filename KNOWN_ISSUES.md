@@ -29,45 +29,44 @@ This document tracks known issues, technical debt, and areas requiring improveme
 - ~~Should be removed to reduce complexity~~
 - **Fixed**: Removed unused hidden file input element (verified with lint + tests)
 
-### 5. ESLint Configuration Issues
+### 5. ~~ESLint Configuration Issues~~ ✅ **FIXED**
 **File**: `eslint.config.js:42`
-- `no-unused-vars` is disabled globally, masking potential issues
-- Should use TypeScript-specific rules instead
+- ~~`no-unused-vars` is disabled globally, masking potential issues~~
+- ~~Should use TypeScript-specific rules instead~~
+- **Fixed**: Updated ESLint configuration with TypeScript-specific rules and proper configuration structure
 
-### 6. Excessive Debug Logging
+### 6. ~~Excessive Debug Logging~~ ✅ **FIXED**
 **Codebase-wide**
-- Every component and function has extensive debug logging
-- Should be conditional based on development vs production environment
+- ~~Every component and function has extensive debug logging~~
+- ~~Should be conditional based on development vs production environment~~
+- **Fixed**: Reduced verbose logging and implemented proper environment-conditional logging using Vite environment variables
 
-### 7. Potential Memory Leaks
+### 7. ~~Potential Memory Leaks~~ ✅ **FIXED**
 **File**: `src/components/OutputPanel.tsx:207-211`
-- `setTimeout` without cleanup in copy button functionality
-- Could cause memory leaks if component unmounts during timeout
-
-### 8. Error Handling Needs Improvement
-**File**: `src/wasm.ts:82-88`
-- Generic `Error` casting without proper type checking
-- May lose important error information
+- ~~`setTimeout` without cleanup in copy button functionality~~
+- ~~Could cause memory leaks if component unmounts during timeout~~
+- **Fixed**: Added useRef for timeout management and proper cleanup in useEffect
 
 ## 🟢 Low Priority Issues
 
-### 9. Inefficient Character Width Calculation
+### 8. Inefficient Character Width Calculation
 **File**: `src/components/OutputPanel.tsx:16-18, 102`
 - Hard-coded character width estimation (0.6 * fontSize)
 - Should measure actual character width for accuracy
 
-### 10. Misplaced Test Files
+### 9. ~~Misplaced Test Files~~ ✅ **FIXED**
 **Root directory**: `p.json`, `plan.json`, `plan.yaml`
-- Should be moved to `testdata/` directory or removed
-- Currently showing as untracked files in git status
+- ~~Should be moved to `testdata/` directory or removed~~
+- ~~Currently showing as untracked files in git status~~
+- **Fixed**: Removed duplicate test files from root directory
 
-### 11. Complex Test Logic
+### 10. Complex Test Logic
 **File**: `tests/rendering.spec.ts`
 - Overly complex test file (450+ lines)
 - Browser-specific workarounds suggest underlying issues
 - Should be simplified and root causes addressed
 
-### 12. Architecture Coupling
+### 11. Architecture Coupling
 **File**: `src/contexts/AppContext.tsx`
 - AppContext has too many responsibilities (state, file handling, rendering)
 - Should be split into separate contexts/hooks

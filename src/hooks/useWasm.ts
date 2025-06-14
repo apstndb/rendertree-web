@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { initWasm as initWasmOriginal } from '../wasm';
 import { logger } from '../utils/logger';
+import { extractErrorInfo } from '../utils/errorHandling';
 
 export function useWasm() {
   const [isLoading, setIsLoading] = useState(true);
@@ -26,10 +27,10 @@ export function useWasm() {
         logger.debug('Setting isLoading to false');
         setIsLoading(false);
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        logger.error('Error in useWasm hook during initialization:', errorMsg);
+        const { message, originalError } = extractErrorInfo(err);
+        logger.error('Error in useWasm hook during initialization:', message);
 
-        setError(err instanceof Error ? err : new Error(String(err)));
+        setError(originalError || new Error(message));
         logger.debug('Setting isLoading to false after error');
         setIsLoading(false);
       }
