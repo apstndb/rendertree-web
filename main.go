@@ -273,31 +273,7 @@ func classifyError(err error) string {
 		return ErrorTypeInvalidParameters
 	}
 	
-	// Fallback to string-based classification for external errors
-	errMsg := err.Error()
-	
-	// Check for Spanner-specific format errors
-	if strings.Contains(errMsg, "query_plan") || 
-	   strings.Contains(errMsg, "execution_stats") ||
-	   strings.Contains(errMsg, "plan_node") {
-		return ErrorTypeInvalidSpannerFormat
-	}
-	
-	// Check for JSON/YAML parsing errors
-	if strings.Contains(errMsg, "json") || 
-	   strings.Contains(errMsg, "yaml") ||
-	   strings.Contains(errMsg, "unmarshal") ||
-	   strings.Contains(errMsg, "parse") {
-		return ErrorTypeParseError
-	}
-	
-	// Check for parameter validation errors
-	if strings.Contains(errMsg, "unknown render mode") ||
-	   strings.Contains(errMsg, "unknown Format") {
-		return ErrorTypeInvalidParameters
-	}
-	
-	// Default to render error for other cases
+	// Default to render error for unknown error types
 	return ErrorTypeRenderError
 }
 
