@@ -56,10 +56,6 @@ This document tracks known issues, technical debt, and areas requiring improveme
 - **Fixed**: Removed duplicate test files from root directory
 
 
-### 11. Architecture Coupling
-**File**: `src/contexts/AppContext.tsx`
-- AppContext has too many responsibilities (state, file handling, rendering)
-- Should be split into separate contexts/hooks
 
 ## 🔧 Improvement Recommendations
 
@@ -78,7 +74,7 @@ This document tracks known issues, technical debt, and areas requiring improveme
 ### Long-term Improvements
 - [x] Add comprehensive unit tests ✅
 - [x] Simplify complex test logic ✅
-- [ ] Split large contexts into smaller, focused ones
+- [x] Split large contexts into smaller, focused ones ✅
 - [ ] Add proper API documentation
 - [x] Optimize build process error handling to prevent silent failures ✅
 - [x] Implement proper character width measurement ✅

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useWasmContext } from './WasmContext';
+import { useFileContext } from './FileContext';
 import { logger } from '../utils/logger';
 
 // Define types for the application state
@@ -10,7 +11,6 @@ interface AppState {
   renderMode: string;
   format: string;
   wrapWidth: number;
-  fontSize: number;
   output: string;
   message: string;
   isRendering: boolean;
@@ -23,7 +23,6 @@ interface AppContextType extends AppState {
   setRenderMode: (renderMode: string) => void;
   setFormat: (format: string) => void;
   setWrapWidth: (wrapWidth: number) => void;
-  setFontSize: (fontSize: number) => void;
   handleRender: () => Promise<void>;
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   loadSampleFile: (filename: string) => Promise<void>;
@@ -48,23 +47,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [output, setOutput] = useState<string>('');
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('Loading rendering engine... Please wait.');
-  const [fontSize, setFontSize] = useState<number>(14);
 
   // Get WASM functionality from context
   const { isLoading, error, renderASCII } = useWasmContext();
-
-  // Initialize font size from localStorage
-  useEffect(() => {
-    const storedSize = localStorage.getItem('rendertree-font-size');
-    if (storedSize) {
-      setFontSize(parseInt(storedSize, 10));
-    }
-  }, []);
-
-  // Save font size to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem('rendertree-font-size', fontSize.toString());
-  }, [fontSize]);
+  
+  // Get file functionality from context
+  const { handleFileUpload: fileUpload, loadSampleFile: sampleFileLoader } = useFileContext();
 
   // Update message based on WASM loading state
   useEffect(() => {
@@ -135,76 +123,37 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [input, renderMode, format, wrapWidth, renderASCII]);
 
-  // Handle file upload
+  // Handle file upload using FileContext
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    logger.debug('handleFileUpload called');
-
-    const files = event.target.files;
-    if (!files || files.length === 0) {
-      logger.warn('No file selected in file upload');
-      return;
-    }
-
-    const file = files[0];
-    if (!file) {
-      logger.warn('No file selected, or file is not accessible');
-      return;
-    }
-
-    logger.info(`File selected for upload: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      logger.debug('FileReader onload event triggered');
-
-      const content = e.target?.result;
-      if (typeof content !== 'string') {
-        logger.error('Empty or invalid file content from FileReader');
-        setMessage('Error: Could not read file content.');
-        return;
+    fileUpload(
+      event,
+      (content) => {
+        logger.info('File content loaded into input, triggering render');
+        setInput(content);
+        handleRender();
+      },
+      (errorMsg) => {
+        setMessage(`Error: ${errorMsg}`);
       }
+    );
+  }, [fileUpload, handleRender]);
 
-      logger.debug(`File content loaded successfully, length: ${content.length} characters`);
-      setInput(content);
-
-      logger.info('File content loaded into input, triggering render');
-      handleRender();
-    };
-
-    reader.onerror = () => {
-      const errorMsg = reader.error?.message || 'Unknown error';
-      logger.error('Error reading file:', errorMsg);
-      setMessage(`Error reading file: ${errorMsg}`);
-    };
-
-    logger.debug('Starting to read file as text');
-    reader.readAsText(file);
-  }, [handleRender]);
-
-  // Load sample file
+  // Load sample file using FileContext
   const loadSampleFile = useCallback(async (filename: string) => {
-    logger.debug(`loadSampleFile called with filename: ${filename}`);
-
-    try {
-      logger.info(`Fetching sample file: ${filename}`);
-      setMessage(`Loading sample file: ${filename}...`);
-
-      const response = await fetch(filename);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${filename}: ${response.status} ${response.statusText}`);
+    await sampleFileLoader(
+      filename,
+      (content) => {
+        setInput(content);
+        setMessage(`Sample file ${filename} loaded successfully. Click Render to visualize.`);
+      },
+      (errorMsg) => {
+        setMessage(`Error loading sample file: ${errorMsg}`);
+      },
+      (loadingMsg) => {
+        setMessage(loadingMsg);
       }
-
-      const content = await response.text();
-      logger.debug(`Sample file loaded successfully, length: ${content.length} characters`);
-
-      setInput(content);
-      setMessage(`Sample file ${filename} loaded successfully. Click Render to visualize.`);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      logger.error(`Error loading sample file ${filename}:`, errorMsg);
-      setMessage(`Error loading sample file: ${errorMsg}`);
-    }
-  }, []);
+    );
+  }, [sampleFileLoader]);
 
   // Context value
   const contextValue: AppContextType = {
@@ -218,8 +167,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setFormat,
     wrapWidth,
     setWrapWidth,
-    fontSize,
-    setFontSize,
     output,
     message,
     isRendering,

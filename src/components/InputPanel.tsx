@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
+import { useSettingsContext } from '../contexts/SettingsContext';
 
 interface InputPanelProps {
   disabled: boolean;
@@ -17,12 +18,12 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     setFormat,
     wrapWidth,
     setWrapWidth,
-    fontSize,
-    setFontSize,
     handleRender,
     handleFileUpload,
     loadSampleFile
   } = useAppContext();
+
+  const { fontSize, setFontSize } = useSettingsContext();
   return (
     <div className={`left-pane ${disabled ? 'disabled' : ''}`}>
       <div className="file-picker-container">

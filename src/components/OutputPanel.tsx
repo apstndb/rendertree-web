@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useWasmContext } from '../contexts/WasmContext';
+import { useSettingsContext } from '../contexts/SettingsContext';
 import { logger } from '../utils/logger';
 import { extractErrorInfo } from '../utils/errorHandling';
 
@@ -87,8 +88,9 @@ const CharacterRuler: React.FC<{
 };
 
 const OutputPanel: React.FC = () => {
-  const { output, message, fontSize, isRendering } = useAppContext();
+  const { output, message, isRendering } = useAppContext();
   const { isLoading: isWasmLoading } = useWasmContext();
+  const { fontSize } = useSettingsContext();
   const isLoading = isWasmLoading || isRendering;
 
   // Reduced verbose logging - only log significant state changes

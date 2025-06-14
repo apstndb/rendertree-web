@@ -3,6 +3,8 @@ import InputPanel from './components/InputPanel';
 import OutputPanel from './components/OutputPanel';
 import { WasmProvider } from './contexts/WasmContext';
 import { AppProvider } from './contexts/AppContext';
+import { FileProvider } from './contexts/FileContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import { useWasmContext } from './contexts/WasmContext';
 
 // Loading component to show while WASM is initializing
@@ -36,11 +38,15 @@ const AppContent: React.FC = () => {
 function App() {
   return (
     <WasmProvider>
-      <AppProvider>
-        <Suspense fallback={<LoadingFallback />}>
-          <AppContent />
-        </Suspense>
-      </AppProvider>
+      <FileProvider>
+        <SettingsProvider>
+          <AppProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <AppContent />
+            </Suspense>
+          </AppProvider>
+        </SettingsProvider>
+      </FileProvider>
     </WasmProvider>
   );
 }
