@@ -1,5 +1,5 @@
 // No need to import wasm_exec.js as it's loaded from GOROOT in index.html
-import type { WasmFunctions, RenderParams, RenderMode, FormatType } from './types/wasm';
+import type { WasmFunctions, RenderParams, RenderMode, FormatType, WasmResponse } from './types/wasm';
 import { logger } from './utils/logger';
 import { WasmInitializationError, WasmRenderingError } from './errors/WasmErrors';
 import { extractErrorInfo } from './utils/errorHandling';
@@ -119,13 +119,33 @@ export async function renderASCIITree(
     logger.debug('Params JSON length:', paramsJson.length, 'characters');
 
     const startTime = performance.now();
-    const result = wasmFunctions.renderASCII(paramsJson);
+    const resultStr = wasmFunctions.renderASCII(paramsJson);
     const endTime = performance.now();
 
     logger.info(`Rendering completed in ${(endTime - startTime).toFixed(2)}ms`);
-    logger.debug('Result length:', result.length, 'characters');
+    logger.debug('Result string length:', resultStr.length, 'characters');
 
-    return result;
+    // Parse the structured response from WASM
+    let response: WasmResponse;
+    try {
+      response = JSON.parse(resultStr);
+    } catch (parseError) {
+      logger.error('Failed to parse WASM response JSON:', parseError instanceof Error ? parseError.message : String(parseError));
+      throw new WasmRenderingError('Invalid response format from WASM module');
+    }
+
+    // Handle the response based on success/failure
+    if (response.success && response.result !== undefined) {
+      logger.debug('WASM returned successful result, length:', response.result.length, 'characters');
+      return response.result;
+    } else if (response.error) {
+      logger.error('WASM returned error:', response.error);
+      const errorMsg = `${response.error.message}${response.error.details ? ': ' + response.error.details : ''}`;
+      throw new WasmRenderingError(errorMsg);
+    } else {
+      logger.error('Invalid WASM response structure:', response);
+      throw new WasmRenderingError('Invalid response structure from WASM module');
+    }
   } catch (e) {
     const { message, originalError } = extractErrorInfo(e);
     logger.error('Error during rendering:', message);

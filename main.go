@@ -137,21 +137,103 @@ type params struct {
 	WrapWidth int    `json:"wrapWidth"`
 }
 
+// Response represents the structured response from WASM
+type Response struct {
+	Success bool   `json:"success"`
+	Result  string `json:"result,omitempty"`
+	Error   *Error `json:"error,omitempty"`
+}
+
+// Error represents detailed error information
+type Error struct {
+	Type    string `json:"type"`
+	Message string `json:"message"`
+	Details string `json:"details,omitempty"`
+}
+
+// Error types for better error handling
+const (
+	ErrorTypeParseError           = "PARSE_ERROR"
+	ErrorTypeInvalidSpannerFormat = "INVALID_SPANNER_FORMAT"
+	ErrorTypeRenderError          = "RENDER_ERROR"
+	ErrorTypeInvalidParameters    = "INVALID_PARAMETERS"
+)
+
 func renderASCII(this js.Value, args []js.Value) any {
+	// Helper function to return structured error response
+	errorResponse := func(errorType, message, details string) string {
+		resp := Response{
+			Success: false,
+			Error: &Error{
+				Type:    errorType,
+				Message: message,
+				Details: details,
+			},
+		}
+		jsonBytes, _ := json.Marshal(resp)
+		return string(jsonBytes)
+	}
+
+	// Helper function to return structured success response
+	successResponse := func(result string) string {
+		resp := Response{
+			Success: true,
+			Result:  result,
+		}
+		jsonBytes, _ := json.Marshal(resp)
+		return string(jsonBytes)
+	}
+
 	if len(args) != 1 {
-		return fmt.Sprintf("invalid number of arguments of renderASCII: %d", len(args))
+		return errorResponse(ErrorTypeInvalidParameters, 
+			"Invalid number of arguments", 
+			fmt.Sprintf("Expected 1 argument, got %d", len(args)))
 	}
 
 	par := params{}
 	if err := json.Unmarshal([]byte(args[0].String()), &par); err != nil {
-		return err.Error()
+		return errorResponse(ErrorTypeParseError, 
+			"Failed to parse parameters", 
+			err.Error())
 	}
 
 	s, err := renderASCIIImpl(par.Input, par.Mode, par.Format, par.WrapWidth)
 	if err != nil {
-		return err.Error()
+		// Classify error types based on error content
+		errorType := classifyError(err)
+		return errorResponse(errorType, err.Error(), "")
 	}
-	return s
+	
+	return successResponse(s)
+}
+
+// classifyError determines the error type based on error content
+func classifyError(err error) string {
+	errMsg := err.Error()
+	
+	// Check for Spanner-specific format errors
+	if strings.Contains(errMsg, "query_plan") || 
+	   strings.Contains(errMsg, "execution_stats") ||
+	   strings.Contains(errMsg, "plan_node") {
+		return ErrorTypeInvalidSpannerFormat
+	}
+	
+	// Check for JSON/YAML parsing errors
+	if strings.Contains(errMsg, "json") || 
+	   strings.Contains(errMsg, "yaml") ||
+	   strings.Contains(errMsg, "unmarshal") ||
+	   strings.Contains(errMsg, "parse") {
+		return ErrorTypeParseError
+	}
+	
+	// Check for parameter validation errors
+	if strings.Contains(errMsg, "unknown render mode") ||
+	   strings.Contains(errMsg, "unknown Format") {
+		return ErrorTypeInvalidParameters
+	}
+	
+	// Default to render error for other cases
+	return ErrorTypeRenderError
 }
 
 func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int) (string, error) {

@@ -14,8 +14,6 @@ Rendertree Web is a web-based tool for visualizing Google Cloud Spanner executio
 ### Development
 ```bash
 npm run dev          # Start development server
-./dev.sh            # Start dev server in background
-./stop-dev.sh       # Stop background dev server
 ```
 
 ### Building & Testing
@@ -116,14 +114,23 @@ npm run test:all     # All tests including development mode
 These commands include TypeScript compilation checks that will catch the type errors that cause CI build failures.
 
 ### Issue Tracking
-- Use GitHub issues to track known problems, technical debt, and improvement opportunities
+- **Create issues for ALL problems**: Even known/existing issues should be documented in GitHub Issues
 - Apply appropriate labels for categorization (enhancement, bug, documentation, etc.)
+- **Issue Management Best Practices**:
+  - Document test failures, even if they're "known issues"
+  - Include detailed error messages, file paths, and line numbers
+  - Add browser compatibility information when relevant
+  - Use changelog format when updating existing issues
+  - Include reproduction steps and environment details
 - **Resolving Issues**: When fixing documented issues:
   1. Complete the implementation and verify all tests pass
   2. **Close the GitHub issue** with a reference to the fixing commit
   3. Use commit messages that reference issues (e.g., "Fix ruler alignment issue (#1)")
   4. Add closing keywords in commit messages when appropriate (e.g., "Fixes #1", "Closes #1")
-- Include file paths and line numbers in issue descriptions for easy navigation
+- **Issue Updates**: When adding information to existing issues:
+  - Use changelog format: "**2025-06-14**: Added browser compatibility details"
+  - Keep original issue description intact, append updates below
+  - Update labels and milestones as needed
 - Use GitHub's project management features for milestone tracking
 
 ### TypeScript and CI Compatibility

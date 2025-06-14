@@ -104,15 +104,35 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       logger.debug('Rendering with params:', { mode: renderMode, format, wrapWidth, inputLength: input.length });
 
       const startTime = performance.now();
-      const result = renderASCII(JSON.stringify(params));
+      const resultStr = renderASCII(JSON.stringify(params));
       const endTime = performance.now();
 
       logger.info(`Rendering completed in ${(endTime - startTime).toFixed(2)}ms`);
-      logger.debug('Result length:', result.length, 'characters');
+      logger.debug('Result string length:', resultStr.length, 'characters');
 
-      logger.debug('Setting output and clearing message');
-      setOutput(result);
-      setMessage('');
+      // Parse the structured response from WASM
+      try {
+        const response = JSON.parse(resultStr);
+        
+        if (response.success && response.result !== undefined) {
+          logger.debug('WASM returned successful result, setting output');
+          setOutput(response.result);
+          setMessage('');
+        } else if (response.error) {
+          logger.error('WASM returned error:', response.error);
+          const errorMsg = `${response.error.message}${response.error.details ? ': ' + response.error.details : ''}`;
+          setMessage(`Error: ${errorMsg}`);
+          setOutput('');
+        } else {
+          logger.error('Invalid WASM response structure:', response);
+          setMessage('Error: Invalid response from rendering engine');
+          setOutput('');
+        }
+      } catch (parseError) {
+        logger.error('Failed to parse WASM response JSON:', parseError instanceof Error ? parseError.message : String(parseError));
+        setMessage('Error: Invalid response format from rendering engine');
+        setOutput('');
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       logger.error('Error during rendering:', errorMsg);
