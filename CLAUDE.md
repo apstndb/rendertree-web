@@ -149,10 +149,35 @@ These commands include TypeScript compilation checks that will catch the type er
 ### Production Testing Workflow
 After CI completes and deploys to production, validate the deployment:
 1. **Monitor CI completion**: Watch CI status with `gh run watch` until deployment completes
-2. **Wait for deployment**: Allow 2-3 minutes for GitHub Pages to update (deployment lag)
+2. **Wait for deployment**: GitHub Pages deployment is usually reflected quickly (within 30-60 seconds)
 3. **Test production site**: Run end-to-end tests against the live production environment
    ```bash
    npm run test:prod    # Test against https://apstndb.github.io/rendertree-web/
    ```
 4. **Verify functionality**: Ensure all features work correctly in the production environment
 5. **Fix deployment issues**: If production tests fail, investigate and fix issues promptly
+
+### Parallel Development Workflow
+You can optimize your development workflow by running CI monitoring and production testing in parallel with other tasks:
+
+**Efficient Workflow Pattern**:
+1. **Push changes** and immediately start next task
+2. **Background monitoring**: Keep `gh run watch <run-id>` running in a separate terminal
+3. **Continue development**: Work on other issues while CI runs
+4. **Quick validation**: When CI completes, run `npm run test:prod` (takes ~10-15 seconds)
+5. **Commit cycle**: Continue with next task while maintaining CI health
+
+**Example Parallel Session**:
+```bash
+# Terminal 1: Continue development work
+git push origin main
+# Continue with next issue implementation...
+
+# Terminal 2: Monitor CI (non-blocking)
+gh run watch 15656354431
+
+# When CI completes, quick production test
+npm run test:prod
+```
+
+This approach maximizes productivity by utilizing CI wait time for additional development work.

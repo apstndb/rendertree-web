@@ -17,11 +17,16 @@ This document tracks known issues, technical debt, and areas requiring improveme
 - ~~Inefficient and may cause race conditions~~
 - **Fixed**: Consolidated build logic with race condition prevention using `isBuilding` flag and single shared function
 
-### 3. File Upload Security Validation Gap
+### 3. ~~File Upload Security Validation Gap~~ ✅ **FIXED**
 **File**: `src/contexts/AppContext.tsx`
-- Accepts any content type despite `accept` attribute
-- No file size validation
-- No content validation before processing
+- ~~Accepts any content type despite `accept` attribute~~
+- ~~No file size validation~~
+- ~~No content validation before processing~~
+- **Fixed**: Comprehensive validation implemented in FileContext with:
+  - File size limits (5MB max)
+  - MIME type and extension validation (.yaml, .yml, .json only)
+  - Content format validation (JSON parsing, YAML structure detection)
+  - Input element accept attribute properly configured
 
 ## 🟡 Medium Priority Issues
 
