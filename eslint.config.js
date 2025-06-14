@@ -6,14 +6,14 @@ import globals from 'globals';
 
 export default [
   eslint.configs.recommended,
+  ...typescriptEslint.configs.recommended,
   {
-    ignores: ['dist/**', 'node_modules/**', '*.js', '.output.txt'],
+    ignores: ['dist/**', 'node_modules/**', '*.js', '.output.txt', '.eslintrc.cjs'],
   },
   // Browser TypeScript files
   {
     files: ['src/**/*.ts', 'src/**/*.tsx'],
     plugins: {
-      '@typescript-eslint': typescriptEslint,
       'react-refresh': reactRefreshPlugin,
       'react-hooks': reactHooksPlugin,
     },
@@ -39,7 +39,15 @@ export default [
       ],
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      'no-unused-vars': 'off', // Turn off no-unused-vars to avoid errors with interface properties
+      'no-unused-vars': 'off', // Turn off base rule
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { 
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true
+        }
+      ]
     },
   },
   // Context files - disable react-refresh/only-export-components
@@ -52,9 +60,6 @@ export default [
   // Test files
   {
     files: ['tests/**/*.ts', 'tests/**/*.tsx'],
-    plugins: {
-      '@typescript-eslint': typescriptEslint,
-    },
     languageOptions: {
       parser: typescriptEslint.parser,
       parserOptions: {
@@ -71,15 +76,21 @@ export default [
       'no-console': 'off', // Allow console in test files
       'prefer-const': 'error',
       'no-var': 'error',
-      'no-unused-vars': 'off', // Turn off no-unused-vars to avoid errors with interface properties
+      'no-unused-vars': 'off', // Turn off base rule
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { 
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true
+        }
+      ],
+      '@typescript-eslint/no-unused-expressions': 'off' // Allow expect statements in tests
     },
   },
   // Node.js TypeScript files
   {
     files: ['*.config.ts', 'src/vite-plugin-go-wasm.ts'],
-    plugins: {
-      '@typescript-eslint': typescriptEslint,
-    },
     languageOptions: {
       parser: typescriptEslint.parser,
       parserOptions: {
@@ -94,7 +105,15 @@ export default [
       'no-console': 'off', // Allow console in config files
       'prefer-const': 'error',
       'no-var': 'error',
-      'no-unused-vars': 'off', // Turn off no-unused-vars to avoid errors with interface properties
+      'no-unused-vars': 'off', // Turn off base rule
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { 
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true
+        }
+      ]
     },
   }
 ];
