@@ -4,11 +4,12 @@ This document tracks known issues, technical debt, and areas requiring improveme
 
 ## 🔴 High Priority Issues
 
-### 1. Complex WASM Path Resolution
+### 1. ~~Complex WASM Path Resolution~~ ✅ **FIXED**
 **Files**: `src/wasm.ts:38-54`, `index.html:14-30`
-- Overly complex path detection logic for different environments (dev/prod/preview)
-- Brittle solution that depends on URL path detection
-- Could fail in edge cases or different deployment scenarios
+- ~~Overly complex path detection logic for different environments (dev/prod/preview)~~
+- ~~Brittle solution that depends on URL path detection~~
+- ~~Could fail in edge cases or different deployment scenarios~~
+- **Fixed**: Simplified to use Vite environment variables (import.meta.env.DEV, import.meta.env.VITE_PREVIEW) instead of URL parsing
 
 ### 2. Dual WASM Building
 **File**: `src/vite-plugin-go-wasm.ts`
@@ -49,6 +50,12 @@ This document tracks known issues, technical debt, and areas requiring improveme
 
 ## 🟢 Low Priority Issues
 
+### 8. Ruler Alignment Issue
+**File**: `src/components/OutputPanel.tsx`
+- Character ruler's left edge doesn't align with the first character of the rendered output
+- Makes the ruler ineffective for accurate character position measurement
+- Should align ruler properly with the text content
+
 ### 9. ~~Misplaced Test Files~~ ✅ **FIXED**
 **Root directory**: `p.json`, `plan.json`, `plan.yaml`
 - ~~Should be moved to `testdata/` directory or removed~~
@@ -66,7 +73,7 @@ This document tracks known issues, technical debt, and areas requiring improveme
 - [x] Move test files to appropriate directories ✅
 
 ### Medium-term Improvements
-- [ ] Simplify WASM path resolution logic
+- [x] Simplify WASM path resolution logic ✅
 - [x] Reduce debug logging verbosity ✅
 - [x] Add file upload validation ✅
 - [x] Improve error handling with proper typing ✅

@@ -33,28 +33,25 @@ export async function initWasm(): Promise<WasmFunctions> {
   logger.info('Starting WASM initialization');
   const go = new Go();
   try {
-    // Check if we're in preview or production mode by looking for the base path in the URL
-    // This applies to both preview mode (vite preview) and production (GitHub Pages)
-    // as both serve the application under the /rendertree-web/ path
-    const isPathBased = window.location.pathname.includes('/rendertree-web/');
-    logger.debug('Path-based environment detected:', isPathBased);
+    // Simplified WASM path resolution using Vite environment detection
+    // Use import.meta.env to determine the environment instead of URL parsing
+    const isDevelopment = import.meta.env.DEV;
+    const isPreview = import.meta.env.VITE_PREVIEW === 'true';
+    
+    logger.debug('Environment detection:', { isDevelopment, isPreview });
 
-    // Determine the correct path for the WASM file based on the environment
-    // We tried to unify the base path for all environments, but it caused issues in development mode
-    // The main issue was that the WASM file is built and placed in different locations in dev vs. preview/production
-    // So we need to use different paths for different environments
-    let wasmPath;
-
-    if (isPathBased) {
-      // In path-based environments (preview or production), use the assets directory
-      // where Vite actually serves the WASM file
-      wasmPath = "./assets/rendertree.wasm";
-    } else {
-      // In development mode, use the dist directory
+    // Determine WASM path based on environment
+    let wasmPath: string;
+    
+    if (isDevelopment) {
+      // Development mode: WASM is in dist directory
       wasmPath = "./dist/rendertree.wasm";
+    } else {
+      // Production/Preview mode: WASM is processed by Vite build
+      wasmPath = "./assets/rendertree.wasm";
     }
 
-    logger.debug('WASM path:', wasmPath);
+    logger.debug('WASM path resolved to:', wasmPath);
 
     // Never add cache-busting query parameter as it interferes with MIME type detection
     const wasmUrl = wasmPath;
