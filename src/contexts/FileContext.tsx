@@ -2,12 +2,32 @@ import React, { createContext, useContext, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { logger } from '../utils/logger';
 
+/**
+ * Interface for file operation callbacks and methods.
+ * Uses callback pattern for clean error handling and state management.
+ */
 interface FileContextType {
+  /**
+   * Handles file upload from input element.
+   * 
+   * @param event - File input change event
+   * @param onSuccess - Callback called with file content on successful read
+   * @param onError - Callback called with error message on failure
+   */
   handleFileUpload: (
     event: React.ChangeEvent<HTMLInputElement>,
     onSuccess: (content: string) => void,
     onError: (message: string) => void
   ) => void;
+  
+  /**
+   * Loads sample file from public directory.
+   * 
+   * @param filename - Path to sample file (e.g., "testdata/sample.yaml")
+   * @param onSuccess - Callback called with file content on successful load
+   * @param onError - Callback called with error message on failure
+   * @param onLoading - Callback called with loading message during fetch
+   */
   loadSampleFile: (
     filename: string,
     onSuccess: (content: string) => void,
@@ -16,12 +36,26 @@ interface FileContextType {
   ) => Promise<void>;
 }
 
+/**
+ * React context for file operations.
+ * Provides methods for file uploads and sample file loading.
+ */
 const FileContext = createContext<FileContextType | null>(null);
 
+/**
+ * Props for the FileProvider component.
+ */
 interface FileProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Provider component for file operations.
+ * Manages file uploads and sample file loading with proper error handling.
+ * 
+ * @param children - Child components that will have access to file operations
+ * @returns JSX provider element
+ */
 export const FileProvider: React.FC<FileProviderProps> = ({ children }) => {
   // Handle file upload
   const handleFileUpload = useCallback((
@@ -111,6 +145,35 @@ export const FileProvider: React.FC<FileProviderProps> = ({ children }) => {
   );
 };
 
+/**
+ * Custom hook to access the file operations context.
+ * 
+ * @returns Object containing:
+ *   - handleFileUpload: Function to handle file uploads with callbacks
+ *   - loadSampleFile: Function to load sample files with callbacks
+ * 
+ * @throws Error if used outside of FileProvider
+ * 
+ * @example
+ * ```typescript
+ * const { handleFileUpload, loadSampleFile } = useFileContext();
+ * 
+ * // Handle file upload
+ * handleFileUpload(
+ *   event,
+ *   (content) => setInput(content),
+ *   (error) => setMessage(`Upload error: ${error}`)
+ * );
+ * 
+ * // Load sample file
+ * await loadSampleFile(
+ *   'testdata/sample.yaml',
+ *   (content) => setInput(content),
+ *   (error) => setMessage(`Load error: ${error}`),
+ *   (msg) => setMessage(msg)
+ * );
+ * ```
+ */
 export const useFileContext = () => {
   const context = useContext(FileContext);
   if (!context) {
