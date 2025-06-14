@@ -16,7 +16,11 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { 
+        ...devices['Desktop Chrome'],
+        // Grant clipboard permissions for testing copy functionality
+        permissions: ['clipboard-read', 'clipboard-write'],
+      },
     },
     {
       name: 'firefox',

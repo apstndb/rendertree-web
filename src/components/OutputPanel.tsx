@@ -101,6 +101,7 @@ const OutputPanel: React.FC = () => {
   const [containerHeight, setContainerHeight] = useState<number>(300); // Default height
   const [scrollLeft, setScrollLeft] = useState<number>(0); // Track horizontal scroll position
   const [rulerWidth, setRulerWidth] = useState<number>(1000); // Initial width for ruler
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle'); // Track copy button state
   const preContainerRef = useRef<HTMLDivElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
   const codeRef = useRef<HTMLElement>(null);
@@ -232,26 +233,24 @@ const OutputPanel: React.FC = () => {
       logger.debug('Attempting to copy output to clipboard, length:', output.length);
       await navigator.clipboard.writeText(output);
 
-      const copyButton = document.querySelector('.copy-button');
-      if (copyButton) {
-        logger.debug('Updating copy button UI to show success');
-        copyButton.textContent = 'Copied!';
-        copyButton.classList.add('copied');
+      logger.debug('Clipboard write completed, updating copy button state to show success');
+      
+      // Use a small delay to ensure the clipboard operation is fully complete
+      // This helps with browser timing differences, especially in test environments
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      setCopyStatus('copied');
 
-        // Clear any existing timeout
-        if (copyTimeoutRef.current) {
-          clearTimeout(copyTimeoutRef.current);
-        }
-
-        copyTimeoutRef.current = window.setTimeout(() => {
-          logger.debug('Resetting copy button UI');
-          copyButton.textContent = 'Copy';
-          copyButton.classList.remove('copied');
-          copyTimeoutRef.current = null;
-        }, 2000);
-      } else {
-        logger.warn('Copy button element not found');
+      // Clear any existing timeout
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
       }
+
+      copyTimeoutRef.current = window.setTimeout(() => {
+        logger.debug('Resetting copy button state');
+        setCopyStatus('idle');
+        copyTimeoutRef.current = null;
+      }, 2000);
 
       logger.info('Output copied to clipboard successfully');
     } catch (err) {
@@ -328,11 +327,11 @@ const OutputPanel: React.FC = () => {
           </pre>
 
           <button 
-            className="copy-button"
+            className={`copy-button ${copyStatus === 'copied' ? 'copied' : ''}`}
             onClick={copyToClipboard}
             data-testid="copy-button"
           >
-            Copy
+            {copyStatus === 'copied' ? 'Copied!' : 'Copy'}
           </button>
 
           <div className="resize-handle" title="Drag to resize" />

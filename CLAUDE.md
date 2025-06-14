@@ -140,6 +140,17 @@ These commands include TypeScript compilation checks that will catch the type er
   - Include `"types": ["vite/client"]` in `tsconfig.json` for Vite environment variables support
 - **Verify CI status**: After pushing changes, check CI status with `gh run list --branch main` and `gh run watch <run-id>`
 
+### Cross-Browser Compatibility
+- **Avoid browser-specific code**: Write code that works across all modern browsers (Chromium, Firefox, WebKit)
+- **Use standard web APIs**: Prefer well-supported web standards over browser-specific features
+- **When browser-specific code is necessary**:
+  - Add detailed comments explaining why it's needed
+  - Include the specific browser/version that requires the workaround
+  - Document the standard behavior expected once browser support improves
+  - Consider feature detection over user agent sniffing
+- **Test across browsers**: All functionality should work in Chromium, Firefox, and WebKit
+- **Handle browser differences gracefully**: Use progressive enhancement and graceful degradation patterns
+
 ### Deployment and CI/CD
 - **Automatic deployment**: GitHub Pages automatically deploys from main branch when CI passes
 - **CI pipeline includes**:
