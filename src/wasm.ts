@@ -39,16 +39,26 @@ export async function initWasm(): Promise<WasmFunctions> {
   logger.info('Starting WASM initialization');
   const go = new Go();
   try {
-    // Determine if we're in development mode based on the URL
-    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    logger.debug('Development mode detected:', isDev);
+    // Check if we're in preview mode by looking for the base path in the URL
+    const isPreview = window.location.pathname.includes('/rendertree-web/');
+    logger.debug('Preview mode detected:', isPreview);
 
-    // In development mode, use a relative path to ensure proper MIME type handling
-    const wasmPath = isDev ? "./dist/rendertree.wasm" : "./assets/rendertree.wasm";
+    // Determine the correct path for the WASM file based on the environment
+    let wasmPath;
+
+    if (isPreview) {
+      // In preview mode, use the root directory (no dist or assets)
+      wasmPath = "./rendertree.wasm";
+    } else {
+      // In development mode, use the dist directory
+      // This works for both npm run dev and npm run preview:express
+      wasmPath = "./dist/rendertree.wasm";
+    }
+
     logger.debug('WASM path:', wasmPath);
 
-    // Add cache-busting query parameter in development mode to prevent caching issues
-    const wasmUrl = isDev ? `${wasmPath}?t=${Date.now()}` : wasmPath;
+    // Never add cache-busting query parameter as it interferes with MIME type detection
+    const wasmUrl = wasmPath;
 
     logger.info(`Loading WebAssembly from: ${wasmUrl}`);
 

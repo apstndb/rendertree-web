@@ -124,17 +124,17 @@ test.describe('Query Plan Rendering', () => {
     DEBUG && console.log('Found file picker, setting up file');
 
     // Set up the file to be uploaded
-    // We'll use the profile.yaml file that's in the project root
-    const filePath = path.join(process.cwd(), 'profile.yaml');
+    // We'll use the dca_profile.yaml file that's in the testdata directory
+    const filePath = path.join(process.cwd(), 'testdata', 'dca_profile.yaml');
     DEBUG && console.log('Using file path:', filePath);
 
     // Check if the file exists
     if (!fs.existsSync(filePath)) {
-      console.error('profile.yaml file not found at path:', filePath);
-      throw new Error('profile.yaml file not found');
+      console.error('dca_profile.yaml file not found at path:', filePath);
+      throw new Error('dca_profile.yaml file not found');
     }
 
-    DEBUG && console.log('profile.yaml file exists, uploading to file picker');
+    DEBUG && console.log('dca_profile.yaml file exists, uploading to file picker');
 
     // Set the file input. If this fails, the test will automatically fail,
     // which simplifies the code and removes the warning.

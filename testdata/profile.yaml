@@ -1,0 +1,769 @@
+metadata:
+    rowType:
+        fields:
+            - name: SingerId
+              type:
+                code: INT64
+            - name: FirstName
+              type:
+                code: STRING
+            - name: LastName
+              type:
+                code: STRING
+            - name: SingerInfo
+              type:
+                code: BYTES
+            - name: BirthDate
+              type:
+                code: DATE
+            - name: AlbumId
+              type:
+                code: INT64
+            - name: AlbumTitle
+              type:
+                code: STRING
+            - name: MarketingBudget
+              type:
+                code: INT64
+    transaction:
+        readTimestamp: "2025-06-14T08:57:11.185534Z"
+    undeclaredParameters: {}
+rows:
+    - - "3"
+      - Alice
+      - Trentor
+      - null
+      - "1991-10-02"
+      - "1"
+      - Nothing To Do With Me
+      - null
+stats:
+    queryPlan:
+        planNodes:
+            - childLinks:
+                - childIndex: 1
+                - childIndex: 58
+                  type: Split Range
+              displayName: Distributed Union
+              executionStats:
+                cpu_time:
+                    total: "0.51"
+                    unit: msecs
+                execution_summary:
+                    execution_end_timestamp: "1749891431.208925"
+                    execution_start_timestamp: "1749891431.206523"
+                    num_executions: "1"
+                latency:
+                    total: "2.38"
+                    unit: msecs
+                remote_calls:
+                    total: "0"
+                    unit: calls
+                rows:
+                    total: "1"
+                    unit: rows
+              kind: RELATIONAL
+              metadata:
+                distribution_table: SingersByFirstLastName
+                execution_method: Row
+                split_ranges_aligned: "false"
+                subquery_cluster_node: "1"
+            - childLinks:
+                - childIndex: 2
+                - childIndex: 18
+                  type: Map
+                - childIndex: 55
+                  type: Split Range
+              displayName: Distributed Cross Apply
+              executionStats:
+                Number of Batches:
+                    total: "1"
+                    unit: batches
+                cpu_time:
+                    total: "0.48"
+                    unit: msecs
+                execution_summary:
+                    execution_end_timestamp: "1749891431.208922"
+                    execution_start_timestamp: "1749891431.206566"
+                    num_executions: "1"
+                latency:
+                    total: "2.35"
+                    unit: msecs
+                remote_calls:
+                    total: "1"
+                    unit: calls
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 1
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                subquery_cluster_node: "18"
+            - childLinks:
+                - childIndex: 3
+                - childIndex: 17
+                  variable: v2.Batch
+              displayName: Create Batch
+              index: 2
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 4
+              displayName: Distributed Union
+              executionStats:
+                cpu_time:
+                    total: "0.13"
+                    unit: msecs
+                execution_summary:
+                    checkpoint_time: 0.01 msecs
+                    num_checkpoints: 1
+                    num_executions: "1"
+                latency:
+                    total: "0.13"
+                    unit: msecs
+                remote_calls:
+                    total: "0"
+                    unit: calls
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 3
+              kind: RELATIONAL
+              metadata:
+                call_type: Local
+                execution_method: Row
+                subquery_cluster_node: "4"
+            - childLinks:
+                - childIndex: 5
+                - childIndex: 14
+                  variable: v1.FirstName
+                - childIndex: 15
+                  variable: v1.LastName
+                - childIndex: 16
+                  variable: v1.SingerId
+              displayName: Compute Struct
+              executionStats:
+                cpu_time:
+                    total: "0.13"
+                    unit: msecs
+                execution_summary:
+                    checkpoint_time: 0 msecs
+                    num_checkpoints: 1
+                    num_executions: "1"
+                latency:
+                    total: "0.13"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 4
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 6
+              displayName: Filter Scan
+              executionStats:
+                cpu_time:
+                    total: "0.12"
+                    unit: msecs
+                execution_summary:
+                    checkpoint_time: 0 msecs
+                    num_checkpoints: 1
+                    num_executions: "1"
+                latency:
+                    total: "0.12"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 5
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                seekable_key_size: "1"
+            - childLinks:
+                - childIndex: 7
+                  variable: FirstName
+                - childIndex: 8
+                  variable: LastName
+                - childIndex: 9
+                  variable: SingerId
+                - childIndex: 13
+                  type: Seek Condition
+              displayName: Scan
+              executionStats:
+                Seek Count:
+                    total: "1"
+                    unit: times
+                cpu_time:
+                    total: "0.12"
+                    unit: msecs
+                deleted_rows:
+                    total: "0"
+                    unit: rows
+                execution_summary:
+                    checkpoint_time: 0 msecs
+                    num_checkpoints: 1
+                    num_executions: "1"
+                filesystem_delay_seconds:
+                    total: "0"
+                    unit: msecs
+                filtered_rows:
+                    total: "0"
+                    unit: rows
+                latency:
+                    total: "0.12"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+                scanned_rows:
+                    total: "1"
+                    unit: rows
+              index: 6
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                scan_method: Row
+                scan_target: SingersByFirstLastName
+                scan_type: IndexScan
+            - displayName: Reference
+              index: 7
+              kind: SCALAR
+              shortRepresentation:
+                description: FirstName
+            - displayName: Reference
+              index: 8
+              kind: SCALAR
+              shortRepresentation:
+                description: LastName
+            - displayName: Reference
+              index: 9
+              kind: SCALAR
+              shortRepresentation:
+                description: SingerId
+            - childLinks:
+                - childIndex: 11
+                - childIndex: 12
+              displayName: Function
+              index: 10
+              kind: SCALAR
+              shortRepresentation:
+                description: STARTS_WITH($FirstName, 'A')
+            - displayName: Reference
+              index: 11
+              kind: SCALAR
+              shortRepresentation:
+                description: $FirstName
+            - displayName: Constant
+              index: 12
+              kind: SCALAR
+              shortRepresentation:
+                description: '''A'''
+            - childLinks:
+                - childIndex: 10
+              displayName: Function
+              index: 13
+              kind: SCALAR
+              shortRepresentation:
+                description: STARTS_WITH($FirstName, 'A')
+            - displayName: Reference
+              index: 14
+              kind: SCALAR
+              shortRepresentation:
+                description: $FirstName
+            - displayName: Reference
+              index: 15
+              kind: SCALAR
+              shortRepresentation:
+                description: $LastName
+            - displayName: Reference
+              index: 16
+              kind: SCALAR
+              shortRepresentation:
+                description: $SingerId
+            - displayName: Reference
+              index: 17
+              kind: SCALAR
+              shortRepresentation:
+                description: $v1
+            - childLinks:
+                - childIndex: 19
+                - childIndex: 47
+                - childIndex: 48
+                - childIndex: 49
+                - childIndex: 50
+                - childIndex: 51
+                - childIndex: 52
+                - childIndex: 53
+                - childIndex: 54
+              displayName: Serialize Result
+              executionStats:
+                cpu_time:
+                    total: "0.08"
+                    unit: msecs
+                execution_summary:
+                    execution_end_timestamp: "1749891431.208593"
+                    execution_start_timestamp: "1749891431.208498"
+                    num_executions: "1"
+                latency:
+                    total: "0.08"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 18
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 20
+                - childIndex: 25
+                  type: Map
+              displayName: Cross Apply
+              executionStats:
+                cpu_time:
+                    total: "0.08"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.08"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 19
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 21
+              displayName: KeyRangeAccumulator
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+              index: 20
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 22
+                  variable: batched_FirstName
+                - childIndex: 23
+                  variable: batched_LastName
+                - childIndex: 24
+                  variable: batched_SingerId
+              displayName: Scan
+              index: 21
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                scan_method: Row
+                scan_target: $v2
+                scan_type: BatchScan
+            - displayName: Reference
+              index: 22
+              kind: SCALAR
+              shortRepresentation:
+                description: FirstName
+            - displayName: Reference
+              index: 23
+              kind: SCALAR
+              shortRepresentation:
+                description: LastName
+            - displayName: Reference
+              index: 24
+              kind: SCALAR
+              shortRepresentation:
+                description: SingerId
+            - childLinks:
+                - childIndex: 26
+              displayName: Distributed Union
+              executionStats:
+                cpu_time:
+                    total: "0.07"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.07"
+                    unit: msecs
+                remote_calls:
+                    total: "0"
+                    unit: calls
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 25
+              kind: RELATIONAL
+              metadata:
+                call_type: Local
+                execution_method: Row
+                subquery_cluster_node: "26"
+            - childLinks:
+                - childIndex: 27
+                - childIndex: 36
+                  type: Map
+              displayName: Cross Apply
+              executionStats:
+                cpu_time:
+                    total: "0.07"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.07"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 26
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 28
+              displayName: Filter Scan
+              index: 27
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                seekable_key_size: "0"
+            - childLinks:
+                - childIndex: 29
+                  variable: BirthDate
+                - childIndex: 30
+                  variable: SingerInfo
+                - childIndex: 31
+                  variable: SingerId'
+                - childIndex: 35
+                  type: Seek Condition
+              displayName: Scan
+              executionStats:
+                cpu_time:
+                    total: "0.05"
+                    unit: msecs
+                deleted_rows:
+                    mean: "0"
+                    std_deviation: "0"
+                    total: "0"
+                    unit: rows
+                execution_summary:
+                    num_executions: "1"
+                filesystem_delay_seconds:
+                    mean: "0"
+                    std_deviation: "0"
+                    total: "0"
+                    unit: msecs
+                filtered_rows:
+                    mean: "0"
+                    std_deviation: "0"
+                    total: "0"
+                    unit: rows
+                latency:
+                    total: "0.05"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+                scanned_rows:
+                    histogram:
+                        - count: "1"
+                          lower_bound: "0"
+                          percentage: "50"
+                          upper_bound: "1"
+                        - count: "1"
+                          lower_bound: "1"
+                          percentage: "50"
+                          upper_bound: "4"
+                    mean: "0.5"
+                    std_deviation: "0.5"
+                    total: "1"
+                    unit: rows
+              index: 28
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                scan_method: Row
+                scan_target: Singers
+                scan_type: TableScan
+            - displayName: Reference
+              index: 29
+              kind: SCALAR
+              shortRepresentation:
+                description: BirthDate
+            - displayName: Reference
+              index: 30
+              kind: SCALAR
+              shortRepresentation:
+                description: SingerInfo
+            - displayName: Reference
+              index: 31
+              kind: SCALAR
+              shortRepresentation:
+                description: SingerId
+            - childLinks:
+                - childIndex: 33
+                - childIndex: 34
+              displayName: Function
+              index: 32
+              kind: SCALAR
+              shortRepresentation:
+                description: ($SingerId' = $batched_SingerId)
+            - displayName: Reference
+              index: 33
+              kind: SCALAR
+              shortRepresentation:
+                description: $SingerId'
+            - displayName: Reference
+              index: 34
+              kind: SCALAR
+              shortRepresentation:
+                description: $batched_SingerId
+            - childLinks:
+                - childIndex: 32
+              displayName: Function
+              index: 35
+              kind: SCALAR
+              shortRepresentation:
+                description: ($SingerId' = $batched_SingerId)
+            - childLinks:
+                - childIndex: 37
+              displayName: Distributed Union
+              executionStats:
+                cpu_time:
+                    total: "0.02"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.02"
+                    unit: msecs
+                remote_calls:
+                    total: "0"
+                    unit: calls
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 36
+              kind: RELATIONAL
+              metadata:
+                call_type: Local
+                execution_method: Row
+                subquery_cluster_node: "37"
+            - childLinks:
+                - childIndex: 38
+              displayName: Filter Scan
+              index: 37
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                seekable_key_size: "0"
+            - childLinks:
+                - childIndex: 39
+                  variable: SingerId_1
+                - childIndex: 40
+                  variable: AlbumId
+                - childIndex: 41
+                  variable: AlbumTitle
+                - childIndex: 42
+                  variable: MarketingBudget
+                - childIndex: 46
+                  type: Seek Condition
+              displayName: Scan
+              executionStats:
+                cpu_time:
+                    total: "0.02"
+                    unit: msecs
+                deleted_rows:
+                    mean: "0"
+                    std_deviation: "0"
+                    total: "0"
+                    unit: rows
+                execution_summary:
+                    num_executions: "1"
+                filesystem_delay_seconds:
+                    mean: "0"
+                    std_deviation: "0"
+                    total: "0"
+                    unit: msecs
+                filtered_rows:
+                    mean: "0"
+                    std_deviation: "0"
+                    total: "0"
+                    unit: rows
+                latency:
+                    total: "0.02"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+                scanned_rows:
+                    histogram:
+                        - count: "1"
+                          lower_bound: "0"
+                          percentage: "50"
+                          upper_bound: "1"
+                        - count: "1"
+                          lower_bound: "1"
+                          percentage: "50"
+                          upper_bound: "4"
+                    mean: "0.5"
+                    std_deviation: "0.5"
+                    total: "1"
+                    unit: rows
+              index: 38
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                scan_method: Row
+                scan_target: Albums
+                scan_type: TableScan
+            - displayName: Reference
+              index: 39
+              kind: SCALAR
+              shortRepresentation:
+                description: SingerId
+            - displayName: Reference
+              index: 40
+              kind: SCALAR
+              shortRepresentation:
+                description: AlbumId
+            - displayName: Reference
+              index: 41
+              kind: SCALAR
+              shortRepresentation:
+                description: AlbumTitle
+            - displayName: Reference
+              index: 42
+              kind: SCALAR
+              shortRepresentation:
+                description: MarketingBudget
+            - childLinks:
+                - childIndex: 44
+                - childIndex: 45
+              displayName: Function
+              index: 43
+              kind: SCALAR
+              shortRepresentation:
+                description: ($SingerId_1 = $batched_SingerId)
+            - displayName: Reference
+              index: 44
+              kind: SCALAR
+              shortRepresentation:
+                description: $SingerId_1
+            - displayName: Reference
+              index: 45
+              kind: SCALAR
+              shortRepresentation:
+                description: $batched_SingerId
+            - childLinks:
+                - childIndex: 43
+              displayName: Function
+              index: 46
+              kind: SCALAR
+              shortRepresentation:
+                description: ($SingerId_1 = $batched_SingerId)
+            - displayName: Reference
+              index: 47
+              kind: SCALAR
+              shortRepresentation:
+                description: $batched_SingerId
+            - displayName: Reference
+              index: 48
+              kind: SCALAR
+              shortRepresentation:
+                description: $batched_FirstName
+            - displayName: Reference
+              index: 49
+              kind: SCALAR
+              shortRepresentation:
+                description: $batched_LastName
+            - displayName: Reference
+              index: 50
+              kind: SCALAR
+              shortRepresentation:
+                description: $SingerInfo
+            - displayName: Reference
+              index: 51
+              kind: SCALAR
+              shortRepresentation:
+                description: $BirthDate
+            - displayName: Reference
+              index: 52
+              kind: SCALAR
+              shortRepresentation:
+                description: $AlbumId
+            - displayName: Reference
+              index: 53
+              kind: SCALAR
+              shortRepresentation:
+                description: $AlbumTitle
+            - displayName: Reference
+              index: 54
+              kind: SCALAR
+              shortRepresentation:
+                description: $MarketingBudget
+            - childLinks:
+                - childIndex: 56
+                - childIndex: 57
+              displayName: Function
+              index: 55
+              kind: SCALAR
+              shortRepresentation:
+                description: ($SingerId' = $SingerId)
+            - displayName: Reference
+              index: 56
+              kind: SCALAR
+              shortRepresentation:
+                description: $SingerId'
+            - displayName: Reference
+              index: 57
+              kind: SCALAR
+              shortRepresentation:
+                description: $SingerId
+            - childLinks:
+                - childIndex: 59
+                - childIndex: 60
+              displayName: Function
+              index: 58
+              kind: SCALAR
+              shortRepresentation:
+                description: STARTS_WITH($FirstName, 'A')
+            - displayName: Reference
+              index: 59
+              kind: SCALAR
+              shortRepresentation:
+                description: $FirstName
+            - displayName: Constant
+              index: 60
+              kind: SCALAR
+              shortRepresentation:
+                description: '''A'''
+    queryStats:
+        bytes_returned: "52"
+        cpu_time: 21.8 msecs
+        data_bytes_read: "65694"
+        deleted_rows_scanned: "0"
+        elapsed_time: 23.03 msecs
+        filesystem_delay_seconds: 0 msecs
+        is_graph_query: "false"
+        locking_delay: 0 msecs
+        memory_peak_usage_bytes: "48"
+        memory_usage_percentage: "0.000"
+        optimizer_statistics_package: auto_20250611_13_08_45UTC
+        optimizer_version: "8"
+        query_plan_creation_time: 19.61 msecs
+        query_text: SELECT * FROM Singers JOIN Albums USING (SingerId) WHERE FirstName LIKE 'A%'
+        remote_server_calls: 1/1
+        rows_returned: "1"
+        rows_scanned: "3"
+        runtime_creation_time: 0.93 msecs
+        server_queue_delay: 0.03 msecs
+        statistics_load_time: "0"
+        total_memory_peak_usage_byte: "48"

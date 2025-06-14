@@ -20,7 +20,8 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     fontSize,
     setFontSize,
     handleRender,
-    handleFileUpload
+    handleFileUpload,
+    loadSampleFile
   } = useAppContext();
   return (
     <div className={`left-pane ${disabled ? 'disabled' : ''}`}>
@@ -36,7 +37,24 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             disabled={disabled}
             data-testid="file-picker"
           />
-          <p className="file-hint">Tip: Use the profile.yaml file in this directory</p>
+          <p className="file-hint">Tip: Use the sample files in the testdata directory</p>
+          <div className="sample-files">
+            <p>Sample files:</p>
+            <button 
+              className="sample-file-button" 
+              onClick={() => loadSampleFile('testdata/dca_profile.yaml')}
+              disabled={disabled}
+            >
+              Load dca_profile.yaml
+            </button>
+            <button 
+              className="sample-file-button" 
+              onClick={() => loadSampleFile('testdata/dca_plan.yaml')}
+              disabled={disabled}
+            >
+              Load dca_plan.yaml
+            </button>
+          </div>
         </div>
       </div>
       <textarea

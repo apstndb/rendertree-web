@@ -26,6 +26,7 @@ interface AppContextType extends AppState {
   setFontSize: (fontSize: number) => void;
   handleRender: () => Promise<void>;
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  loadSampleFile: (filename: string) => Promise<void>;
 }
 
 // Create the context with a default value of null
@@ -180,6 +181,31 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     reader.readAsText(file);
   }, [handleRender]);
 
+  // Load sample file
+  const loadSampleFile = useCallback(async (filename: string) => {
+    logger.debug(`loadSampleFile called with filename: ${filename}`);
+
+    try {
+      logger.info(`Fetching sample file: ${filename}`);
+      setMessage(`Loading sample file: ${filename}...`);
+
+      const response = await fetch(filename);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${filename}: ${response.status} ${response.statusText}`);
+      }
+
+      const content = await response.text();
+      logger.debug(`Sample file loaded successfully, length: ${content.length} characters`);
+
+      setInput(content);
+      setMessage(`Sample file ${filename} loaded successfully. Click Render to visualize.`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logger.error(`Error loading sample file ${filename}:`, errorMsg);
+      setMessage(`Error loading sample file: ${errorMsg}`);
+    }
+  }, []);
+
   // Context value
   const contextValue: AppContextType = {
     input,
@@ -198,7 +224,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     message,
     isRendering,
     handleRender,
-    handleFileUpload
+    handleFileUpload,
+    loadSampleFile
   };
 
   return (
