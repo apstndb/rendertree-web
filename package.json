@@ -16,6 +16,9 @@
     "test:verbose": "DEBUG=true playwright test",
     "test:preview": "playwright test --config=playwright.preview.config.ts",
     "test:preview:verbose": "DEBUG=true playwright test --config=playwright.preview.config.ts",
+    "test:unit": "vitest",
+    "test:unit:ui": "vitest --ui",
+    "test:unit:coverage": "vitest --coverage",
     "clean": "rm -rf dist/*"
   },
   "repository": {
@@ -31,19 +34,24 @@
   "devDependencies": {
     "@eslint/js": "^9.29.0",
     "@playwright/test": "^1.53.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@typescript-eslint/eslint-plugin": "^8.34.0",
     "@typescript-eslint/parser": "^8.34.0",
     "@vitejs/plugin-react": "^4.2.0",
+    "@vitest/ui": "^3.2.3",
     "eslint": "^9.29.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
+    "jsdom": "^26.1.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.34.0",
-    "vite": "^5.0.0"
+    "vite": "^5.0.0",
+    "vitest": "^3.2.3"
   },
   "dependencies": {
     "loglevel": "^1.9.2",

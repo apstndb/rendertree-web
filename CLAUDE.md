@@ -100,5 +100,30 @@ When implementing changes or fixes, follow this workflow:
 ### Issue Tracking
 - Use `KNOWN_ISSUES.md` to track known problems, technical debt, and improvement opportunities
 - Categorize issues by priority (🔴 High, 🟡 Medium, 🟢 Low)
-- Mark issues as resolved with ✅ when fixed
+- **Resolving Issues**: When fixing documented issues:
+  1. Complete the implementation and verify all tests pass
+  2. **Delete the resolved issue** from `KNOWN_ISSUES.md` entirely
+  3. Issue numbers can remain as gaps (e.g., if Issue #8 is resolved, it's deleted and numbers jump from #7 to #9)
+  4. Update improvement recommendation checklists to mark items as completed with ✅
+  5. Update the "Last Updated" date at the bottom of the file
 - Include file paths and line numbers for easy navigation
+
+### TypeScript and CI Compatibility
+- **Ensure TypeScript compilation**: All code must compile without errors for CI to pass
+- **Use proper types**: 
+  - Use `window.setTimeout()` instead of `setTimeout()` for timeout operations to get correct return type
+  - Include `"types": ["vite/client"]` in `tsconfig.json` for Vite environment variables support
+- **Verify CI status**: After pushing changes, check CI status with `gh run list --branch main` and `gh run watch <run-id>`
+
+### Deployment and CI/CD
+- **Automatic deployment**: GitHub Pages automatically deploys from main branch when CI passes
+- **CI pipeline includes**:
+  - TypeScript compilation (`npm run build`)
+  - Code quality checks (`npm run lint`)
+  - Cross-browser testing (`npm test`)
+  - Production build verification (`npm run test:preview`)
+- **Monitor CI**: Use GitHub CLI to check build status after pushing
+  ```bash
+  gh run list --branch main --limit 5  # Check recent runs
+  gh run watch [run-id]                 # Watch specific run in real-time
+  ```
