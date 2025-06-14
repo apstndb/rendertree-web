@@ -94,11 +94,6 @@ This document tracks known issues, technical debt, and areas requiring improveme
 
 ## 📋 Technical Debt
 
-### Go Version Requirement
-**File**: `go.mod:3`
-- Uses Go 1.24 which may not be stable/available
-- Should specify minimum required version
-
 ### TypeScript Strict Mode Issues
 **File**: `src/wasm.ts`
 - Extensive use of `unknown[]` type indicates incomplete typing
