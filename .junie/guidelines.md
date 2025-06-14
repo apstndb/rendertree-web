@@ -22,7 +22,13 @@ The main components are:
 
 ## Testing
 * Run `npm run build` before submitting changes to ensure the build completes successfully
-* Currently, no automated tests are implemented
+* Automated tests are implemented using Playwright
+* Run tests with the following commands:
+  - `npm test` - Run all tests (with minimal logging)
+  - `npm run test:verbose` - Run all tests with verbose debug logging
+  - `npm run test:ui` - Run tests with UI (requires user intervention, not suitable for automated testing)
+  - `npm run test:debug` - Run tests in debug mode (requires user intervention, not suitable for automated testing)
+  - `npm run test:with-build` - Build the project and run tests
 
 ## Notes
 * WebAssembly file building is automated by the Vite plugin

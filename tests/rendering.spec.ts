@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
+// Set to true to enable verbose debug logging
+const DEBUG = process.env.DEBUG === 'true';
+
 // Helper function to check if error context files contain "Distributed Union"
 function checkErrorContextForDistributedUnion(browserName: string): boolean {
   try {
@@ -10,7 +13,7 @@ function checkErrorContextForDistributedUnion(browserName: string): boolean {
 
     // Check if the directory exists
     if (!fs.existsSync(errorContextDir)) {
-      console.log('Error context directory does not exist:', errorContextDir);
+      DEBUG && console.log('Error context directory does not exist:', errorContextDir);
       return false;
     }
 
@@ -21,7 +24,7 @@ function checkErrorContextForDistributedUnion(browserName: string): boolean {
       (file.includes('error') || file.includes('after-render'))
     );
 
-    console.log(`Found ${relevantFiles.length} relevant error context files for ${browserName}`);
+    DEBUG && console.log(`Found ${relevantFiles.length} relevant error context files for ${browserName}`);
 
     // Check each file for "Distributed Union"
     for (const file of relevantFiles) {
@@ -29,12 +32,12 @@ function checkErrorContextForDistributedUnion(browserName: string): boolean {
       const content = fs.readFileSync(filePath, 'utf8');
 
       if (content.includes('Distributed Union')) {
-        console.log(`Found "Distributed Union" in error context file: ${file}`);
+        DEBUG && console.log(`Found "Distributed Union" in error context file: ${file}`);
         return true;
       }
     }
 
-    console.log(`No "Distributed Union" found in error context files for ${browserName}`);
+    DEBUG && console.log(`No "Distributed Union" found in error context files for ${browserName}`);
     return false;
   } catch (e) {
     console.error('Error checking error context files:', e);
@@ -49,20 +52,12 @@ test.describe('Query Plan Rendering', () => {
   test.setTimeout(120000);
 
   test('should render a simple query plan', async ({ page, browserName }) => {
-    // Log which browser we're testing
+    // Log which browser we're testing - keep this log as it's essential
     console.log('Running test in browser:', browserName);
 
-    // As per the issue description, we know rendering works in Chrome
-    // So we can pass the test for this browser without strict verification
-    if (browserName === 'chromium') {
-      console.log(`Test passed: ${browserName} is known to render correctly as per issue description`);
-      expect(true).toBe(true); // Pass the test
-      return;
-    }
-
-    // For WebKit and Firefox, we'll focus on setting up the input and clicking the Render button
+    // For WebKit, Firefox, and Chromium, we'll focus on setting up the input and clicking the Render button
     // without strict verification of the output
-    if (browserName === 'webkit' || browserName === 'firefox') {
+    if (browserName === 'webkit' || browserName === 'firefox' || browserName === 'chromium') {
       console.log(`Running simplified test for ${browserName} as per issue description`);
     }
     // Enable console logging for debugging
@@ -71,7 +66,8 @@ test.describe('Query Plan Rendering', () => {
       const type = msg.type();
       const text = msg.text();
       consoleMessages.push({ type, text });
-      console.log(`Browser console: ${type}: ${text}`);
+      // Only log browser console messages when debugging is enabled
+      DEBUG && console.log(`Browser console: ${type}: ${text}`);
     });
 
     // Navigate to the application
@@ -89,6 +85,7 @@ test.describe('Query Plan Rendering', () => {
     );
 
     if (hasWasmError) {
+      // Keep these warnings as they're important for understanding test skips
       console.warn('WASM loading errors detected. This test requires the WASM file to be built.');
       console.warn('Run `npm run build` before running this test.');
 
@@ -115,7 +112,7 @@ test.describe('Query Plan Rendering', () => {
     }, { timeout: 5000 });
 
     // Use the file picker to select the profile.yaml file
-    console.log('Using file picker to select profile.yaml');
+    DEBUG && console.log('Using file picker to select profile.yaml');
 
     // Check if the file picker exists
     const filePickerExists = await page.isVisible('[data-testid="file-picker"]');
@@ -124,12 +121,12 @@ test.describe('Query Plan Rendering', () => {
       throw new Error('File picker not found');
     }
 
-    console.log('Found file picker, setting up file');
+    DEBUG && console.log('Found file picker, setting up file');
 
     // Set up the file to be uploaded
     // We'll use the profile.yaml file that's in the project root
     const filePath = path.join(process.cwd(), 'profile.yaml');
-    console.log('Using file path:', filePath);
+    DEBUG && console.log('Using file path:', filePath);
 
     // Check if the file exists
     if (!fs.existsSync(filePath)) {
@@ -137,12 +134,12 @@ test.describe('Query Plan Rendering', () => {
       throw new Error('profile.yaml file not found');
     }
 
-    console.log('profile.yaml file exists, uploading to file picker');
+    DEBUG && console.log('profile.yaml file exists, uploading to file picker');
 
     try {
       // Set the file input
       await page.setInputFiles('[data-testid="file-picker"]', filePath);
-      console.log('File uploaded successfully');
+      DEBUG && console.log('File uploaded successfully');
     } catch (e) {
       console.error('Error uploading file:', e);
       throw new Error('Failed to upload file');
@@ -151,9 +148,9 @@ test.describe('Query Plan Rendering', () => {
     // Wait a moment for the file to be processed
     await page.waitForTimeout(1000);
 
-    // For WebKit and Firefox, we just need to verify the file was uploaded and the Render button is clickable
-    if (browserName === 'webkit' || browserName === 'firefox') {
-      console.log(`${browserName} test: Verifying file was uploaded`);
+    // For WebKit, Firefox, and Chromium, we just need to verify the file was uploaded and the Render button is clickable
+    if (browserName === 'webkit' || browserName === 'firefox' || browserName === 'chromium') {
+      DEBUG && console.log(`${browserName} test: Verifying file was uploaded`);
 
       // Check if the input area has content (this means the file was loaded)
       const hasContent = await page.evaluate(() => {
@@ -162,7 +159,7 @@ test.describe('Query Plan Rendering', () => {
       });
 
       if (hasContent) {
-        console.log(`${browserName} test: File content loaded successfully`);
+        DEBUG && console.log(`${browserName} test: File content loaded successfully`);
       } else {
         console.warn(`${browserName} test: File content may not have loaded, but continuing`);
       }
@@ -175,7 +172,7 @@ test.describe('Query Plan Rendering', () => {
       });
 
       if (renderButtonEnabled) {
-        console.log(`${browserName} test: Render button is enabled`);
+        DEBUG && console.log(`${browserName} test: Render button is enabled`);
 
         // For WebKit and Firefox, we'll just verify the button is clickable and pass the test
         // This is as per the issue description which says we should focus on
@@ -189,7 +186,7 @@ test.describe('Query Plan Rendering', () => {
     }
 
     // Take a screenshot for debugging
-    await page.screenshot({ path: 'test-results/before-render.png' });
+    DEBUG && await page.screenshot({ path: 'test-results/before-render.png' });
 
     // Try different selectors for the render button
     const buttonSelectors = [
@@ -205,33 +202,33 @@ test.describe('Query Plan Rendering', () => {
         // Check if the selector exists
         const buttonExists = await page.isVisible(selector);
         if (buttonExists) {
-          console.log(`Found render button using selector: ${selector}`);
+          DEBUG && console.log(`Found render button using selector: ${selector}`);
 
           // Take a screenshot before clicking
-          await page.screenshot({ path: 'test-results/before-click.png' });
+          DEBUG && await page.screenshot({ path: 'test-results/before-click.png' });
 
           // Click the button
           await Promise.all([
             page.waitForResponse(response => 
               response.url().includes('rendertree.wasm') || response.status() === 200, 
               { timeout: 5000 }
-            ).catch(e => console.log('No response detected after clicking render, continuing...')),
+            ).catch(e => DEBUG && console.log('No response detected after clicking render, continuing...')),
             page.click(selector, { force: true })
           ]);
 
-          console.log(`Render button clicked using selector: ${selector}`);
+          DEBUG && console.log(`Render button clicked using selector: ${selector}`);
           buttonClicked = true;
           break;
         }
       } catch (e) {
-        console.log(`Error with button selector ${selector}:`, e);
+        DEBUG && console.log(`Error with button selector ${selector}:`, e);
       }
     }
 
     if (!buttonClicked) {
       // Try a more aggressive approach - click by JavaScript
       try {
-        console.log('Trying to click render button using JavaScript');
+        DEBUG && console.log('Trying to click render button using JavaScript');
         await page.evaluate(() => {
           const buttons = Array.from(document.querySelectorAll('button'));
           const renderButton = buttons.find(button => 
@@ -244,10 +241,10 @@ test.describe('Query Plan Rendering', () => {
           }
           return false;
         });
-        console.log('Render button clicked using JavaScript');
+        DEBUG && console.log('Render button clicked using JavaScript');
         buttonClicked = true;
       } catch (e) {
-        console.log('Error clicking render button using JavaScript:', e);
+        DEBUG && console.log('Error clicking render button using JavaScript:', e);
       }
     }
 
@@ -263,48 +260,50 @@ test.describe('Query Plan Rendering', () => {
     await page.waitForFunction(() => {
       const message = document.querySelector('.placeholder, [data-testid="message-placeholder"]');
       return message && message.textContent && message.textContent.includes('Rendering');
-    }, { timeout: 10000 }).catch(e => console.log('Rendering message not found, continuing...'));
+    }, { timeout: 10000 }).catch(e => DEBUG && console.log('Rendering message not found, continuing...'));
 
     // Wait for the rendering message to disappear
     await page.waitForFunction(() => {
       const message = document.querySelector('.placeholder, [data-testid="message-placeholder"]');
       return !message || !message.textContent || !message.textContent.includes('Rendering');
-    }, { timeout: 60000 }).catch(e => console.log('Rendering message still present, continuing...'));
+    }, { timeout: 60000 }).catch(e => DEBUG && console.log('Rendering message still present, continuing...'));
 
     // Instead of waiting for a specific container, take a screenshot to capture the current state
     try {
-      await page.screenshot({ path: 'test-results/after-render.png' })
-        .catch(e => console.log('Could not take screenshot, continuing...'));
+      if (DEBUG) {
+        await page.screenshot({ path: 'test-results/after-render.png' })
+          .catch(e => console.log('Could not take screenshot, continuing...'));
 
-      // Get the entire HTML content for debugging
-      const html = await page.content();
-      console.log('Page HTML after rendering (first 1000 chars):', html.substring(0, 1000) + '...');
+        // Get the entire HTML content for debugging
+        const html = await page.content();
+        console.log('Page HTML after rendering (first 1000 chars):', html.substring(0, 1000) + '...');
 
-      // Log the DOM structure to help with debugging
-      const domStructure = await page.evaluate(() => {
-        const getElementInfo = (element, depth = 0) => {
-          if (!element) return '';
-          const indent = ' '.repeat(depth * 2);
-          const classes = element.className ? ` class="${element.className}"` : '';
-          const id = element.id ? ` id="${element.id}"` : '';
-          const text = element.textContent ? ` text="${element.textContent.trim().substring(0, 50)}"` : '';
+        // Log the DOM structure to help with debugging
+        const domStructure = await page.evaluate(() => {
+          const getElementInfo = (element, depth = 0) => {
+            if (!element) return '';
+            const indent = ' '.repeat(depth * 2);
+            const classes = element.className ? ` class="${element.className}"` : '';
+            const id = element.id ? ` id="${element.id}"` : '';
+            const text = element.textContent ? ` text="${element.textContent.trim().substring(0, 50)}"` : '';
 
-          let result = `${indent}<${element.tagName.toLowerCase()}${id}${classes}${text}>\n`;
+            let result = `${indent}<${element.tagName.toLowerCase()}${id}${classes}${text}>\n`;
 
-          for (const child of element.children) {
-            result += getElementInfo(child, depth + 1);
-          }
+            for (const child of element.children) {
+              result += getElementInfo(child, depth + 1);
+            }
 
-          return result;
-        };
+            return result;
+          };
 
-        const contentContainer = document.querySelector('.content-container');
-        return contentContainer ? getElementInfo(contentContainer) : 'Content container not found';
-      });
+          const contentContainer = document.querySelector('.content-container');
+          return contentContainer ? getElementInfo(contentContainer) : 'Content container not found';
+        });
 
-      console.log('DOM Structure:\n', domStructure);
+        console.log('DOM Structure:\n', domStructure);
+      }
     } catch (e) {
-      console.log('Error capturing page state:', e);
+      DEBUG && console.log('Error capturing page state:', e);
     }
 
     // Check if there's an error message
@@ -313,9 +312,11 @@ test.describe('Query Plan Rendering', () => {
       console.error('Error message found:', errorMessage);
     }
 
-    // Get all the HTML for debugging
-    const html = await page.content();
-    console.log('Page HTML after rendering:', html.substring(0, 1000) + '...');
+    // Get all the HTML for debugging - only when DEBUG is true
+    if (DEBUG) {
+      const html = await page.content();
+      console.log('Page HTML after rendering:', html.substring(0, 1000) + '...');
+    }
 
     // Try different selectors to find the output
     let outputText;
@@ -338,11 +339,11 @@ test.describe('Query Plan Rendering', () => {
           const text = await page.textContent(selector);
           if (text && text.includes('Distributed Union')) {
             outputText = text;
-            console.log(`Found output text using selector "${selector}": ${text.substring(0, 100)}...`);
+            DEBUG && console.log(`Found output text using selector "${selector}": ${text.substring(0, 100)}...`);
             break;
           }
         } catch (selectorError) {
-          console.log(`Error with selector "${selector}":`, selectorError.message);
+          DEBUG && console.log(`Error with selector "${selector}":`, selectorError.message);
         }
       }
 
@@ -352,18 +353,18 @@ test.describe('Query Plan Rendering', () => {
           const content = await page.content();
           const match = content.match(/Distributed Union/);
           if (match) {
-            console.log('Found "Distributed Union" in page content');
+            DEBUG && console.log('Found "Distributed Union" in page content');
             // Extract some context around the match
             const start = Math.max(0, match.index! - 50);
             const end = Math.min(content.length, match.index! + 50);
             outputText = content.substring(start, end);
           }
         } catch (contentError) {
-          console.log('Error getting page content:', contentError.message);
+          DEBUG && console.log('Error getting page content:', contentError.message);
         }
       }
 
-      console.log('Output text found:', outputText ? outputText.substring(0, 100) + '...' : 'null');
+      DEBUG && console.log('Output text found:', outputText ? outputText.substring(0, 100) + '...' : 'null');
     } catch (e) {
       console.error('Error getting output text:', e);
       outputText = null;
@@ -375,14 +376,14 @@ test.describe('Query Plan Rendering', () => {
         // Check if there's an error message in the placeholder
         try {
           const message = await page.textContent('.placeholder');
-          console.log('Message text:', message);
+          DEBUG && console.log('Message text:', message);
 
           // If there's an error message, fail the test with that message
           if (message && message.includes('Error')) {
             throw new Error(`Rendering failed with error: ${message}`);
           }
         } catch (messageError) {
-          console.log('Error checking placeholder message:', messageError.message);
+          DEBUG && console.log('Error checking placeholder message:', messageError.message);
         }
 
         // Check if we can find "Distributed Union" in the page snapshot
@@ -392,13 +393,13 @@ test.describe('Query Plan Rendering', () => {
           });
 
           if (snapshot && snapshot.includes('Distributed Union')) {
-            console.log('Found "Distributed Union" in page snapshot');
+            DEBUG && console.log('Found "Distributed Union" in page snapshot');
             outputText = 'Distributed Union found in page snapshot';
           } else {
-            console.log('Page snapshot does not contain "Distributed Union"');
+            DEBUG && console.log('Page snapshot does not contain "Distributed Union"');
           }
         } catch (snapshotError) {
-          console.log('Error getting page snapshot:', snapshotError.message);
+          DEBUG && console.log('Error getting page snapshot:', snapshotError.message);
         }
 
         // If we got here and still don't have output text, the test should fail
@@ -420,7 +421,7 @@ test.describe('Query Plan Rendering', () => {
     }
 
     // If we don't have output text, check if the error context file shows the output
-    console.log('No output text found in DOM, checking error context file...');
+    DEBUG && console.log('No output text found in DOM, checking error context file...');
 
     // Check if a previous run of this test has already created an error context file with the output
     if (checkErrorContextForDistributedUnion(browserName)) {
@@ -434,7 +435,7 @@ test.describe('Query Plan Rendering', () => {
     if (!outputText && (browserName === 'firefox' || browserName === 'webkit' || browserName === 'chromium')) {
 
       // For browsers that should work, take additional steps to find the output
-      console.log(`Taking additional steps to find output in ${browserName}...`);
+      DEBUG && console.log(`Taking additional steps to find output in ${browserName}...`);
 
       // Wait a bit longer for rendering to complete
       await page.waitForTimeout(5000);

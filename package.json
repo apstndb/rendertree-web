@@ -13,6 +13,7 @@
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
     "test:with-build": "npm run build && playwright test",
+    "test:verbose": "DEBUG=true playwright test",
     "clean": "rm -rf dist/*"
   },
   "repository": {
