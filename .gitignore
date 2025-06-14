@@ -26,3 +26,7 @@ yarn-error.log*
 
 # Go WebAssembly helper file (copied from Go installation)
 # wasm_exec.js is now in dist/ directory which is already ignored
+
+# Test results and reports
+playwright-report/
+test-results/
