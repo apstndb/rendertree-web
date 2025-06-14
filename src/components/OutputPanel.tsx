@@ -69,7 +69,10 @@ const OutputPanel: React.FC = () => {
   const { isLoading: isWasmLoading } = useWasmContext();
   const isLoading = isWasmLoading || isRendering;
 
-  logger.debug('OutputPanel rendering - isWasmLoading:', isWasmLoading, 'isRendering:', isRendering, 'hasOutput:', !!output, 'message:', message);
+  // Reduced verbose logging - only log significant state changes
+  if (isWasmLoading || isRendering) {
+    logger.debug('OutputPanel loading state:', { isWasmLoading, isRendering });
+  }
 
   const [containerHeight, setContainerHeight] = useState<number>(300); // Default height
   const [scrollLeft, setScrollLeft] = useState<number>(0); // Track horizontal scroll position
@@ -82,7 +85,6 @@ const OutputPanel: React.FC = () => {
 
   // Handle scroll tracking for the ruler
   useEffect(() => {
-    logger.debug('OutputPanel useEffect for scroll tracking and ruler width triggered');
 
     const handleScroll = () => {
       if (preRef.current) {
@@ -113,8 +115,6 @@ const OutputPanel: React.FC = () => {
       logger.debug('Setting up scroll event listener');
       preElement.addEventListener('scroll', handleScroll);
       calculateRulerWidth();
-    } else {
-      logger.debug('preElement ref is not available yet');
     }
 
     return () => {
@@ -127,7 +127,6 @@ const OutputPanel: React.FC = () => {
 
   // Handle resize functionality
   useEffect(() => {
-    logger.debug('OutputPanel useEffect for resize functionality initialized');
 
     const handleMouseMove = (e: Event) => {
       if (!resizeStartRef.current) return;
@@ -249,7 +248,6 @@ const OutputPanel: React.FC = () => {
     }
   }, [isLoading, message, output]);
 
-  logger.debug('OutputPanel rendering return statement');
 
   return (
     <div className="content-container">
