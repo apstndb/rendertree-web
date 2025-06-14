@@ -1,13 +1,33 @@
 # Rendertree Web
 
-A web-based tool for visualizing Google Cloud Spanner execution plans.
+A **client-side** web tool for visualizing Google Cloud Spanner execution plans.
+
+## Overview
+
+Rendertree Web is a privacy-focused, client-side application that processes Google Cloud Spanner query plans and execution profiles entirely in your browser using WebAssembly technology.
+
+### Key Features
+
+- **Client-side processing**: All data processing happens locally in your browser
+- **Privacy-first**: Your query plans never leave your device
+- **No server required**: Works offline once loaded
+- **Real-time visualization**: Interactive ASCII tree rendering of execution plans
+- **Multiple formats**: Supports YAML and JSON input formats
+- **Execution profiling**: Visualizes both query plans and execution statistics
+
+### Target Users
+
+- **Database administrators** optimizing Spanner query performance
+- **Developers** analyzing query execution patterns
+- **Performance analysts** investigating database bottlenecks
+- **Anyone** working with Google Cloud Spanner execution plans
 
 ## Project Structure
 
 This project consists of:
-* TypeScript + React frontend
-* Go WebAssembly backend
-* Vite build system
+* **Frontend**: TypeScript + React application built with Vite
+* **Backend**: Go WebAssembly module for plan processing
+* **Build system**: Vite with custom WASM integration
 
 ## Development
 
@@ -28,11 +48,6 @@ npm install
 ```bash
 # Start the development server
 npm run dev
-# or
-./dev.sh
-
-# Stop the development server (if started with dev.sh)
-./stop-dev.sh
 ```
 
 ## Building for Production

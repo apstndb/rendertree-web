@@ -4,10 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Rendertree Web is a web-based tool for visualizing Google Cloud Spanner execution plans. It consists of:
+Rendertree Web is a **client-side** web tool for visualizing Google Cloud Spanner execution plans. It consists of:
 - **Frontend**: TypeScript + React application built with Vite
 - **Backend**: Go WebAssembly module that processes Spanner query plans
 - **Architecture**: Hybrid web app where Go WASM handles plan parsing/rendering, React handles UI
+
+### Project Positioning
+
+This is a **client-side visualization tool** designed for users who need to analyze Spanner query plans and execution profiles. Key characteristics:
+
+- **Client-side processing**: All processing happens in the browser via WebAssembly
+- **No server dependencies**: No backend infrastructure or server-side load considerations
+- **User data privacy**: Query plans are processed locally, never sent to external servers
+- **Offline capability**: Works without internet connection once loaded
+- **Target users**: Database administrators, developers, and performance analysts working with Google Cloud Spanner
+- **Input format**: Accepts Spanner query plan/profile data in YAML or JSON format
+- **Use case**: Local analysis and visualization of query execution plans for performance optimization
 
 ## Key Commands
 

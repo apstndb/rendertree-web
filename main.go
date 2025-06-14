@@ -161,6 +161,9 @@ const (
 )
 
 // Custom error types for better classification
+// These correspond to WasmErrorType constants in TypeScript
+
+// ParseError represents JSON/YAML parsing failures
 type ParseError struct {
 	msg string
 }
@@ -169,6 +172,7 @@ func (e ParseError) Error() string {
 	return e.msg
 }
 
+// InvalidSpannerFormatError represents invalid Spanner query plan format or structure
 type InvalidSpannerFormatError struct {
 	msg string
 }
@@ -177,6 +181,7 @@ func (e InvalidSpannerFormatError) Error() string {
 	return e.msg
 }
 
+// RenderError represents general rendering failures
 type RenderError struct {
 	msg string
 }
@@ -185,6 +190,7 @@ func (e RenderError) Error() string {
 	return e.msg
 }
 
+// InvalidParametersError represents invalid function parameters
 type InvalidParametersError struct {
 	msg string
 }
@@ -193,6 +199,9 @@ func (e InvalidParametersError) Error() string {
 	return e.msg
 }
 
+// renderASCII is the main WASM function exposed to JavaScript
+// It takes JSON string parameters and returns structured JSON responses
+// instead of throwing JavaScript errors directly
 func renderASCII(this js.Value, args []js.Value) any {
 	// Helper function to return structured error response
 	errorResponse := func(errorType, message, details string) string {
@@ -292,6 +301,8 @@ func classifyError(err error) string {
 	return ErrorTypeRenderError
 }
 
+// renderASCIIImpl implements the core rendering logic
+// Validates parameters, extracts query plan, and renders ASCII output
 func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int) (string, error) {
 	stats, _, err := queryplan.ExtractQueryPlan([]byte(j))
 	if err != nil {
