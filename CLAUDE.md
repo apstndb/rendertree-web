@@ -67,3 +67,38 @@ Sample files in `testdata/` directory are automatically copied to build output a
 - Context files have relaxed react-refresh rules
 - Test files allow console usage
 - WASM types defined in `src/types/wasm.ts`
+
+## Development Workflow
+
+### Making Changes
+When implementing changes or fixes, follow this workflow:
+
+1. **Identify the issue**: Check `KNOWN_ISSUES.md` for documented problems or create a plan for new features
+2. **Implement the fix**: Make necessary code changes following existing patterns and conventions
+3. **Test thoroughly**: Run the full test suite to ensure no regressions
+   ```bash
+   npm test             # Run all Playwright tests (development mode)
+   npm run lint         # Check code quality with ESLint
+   npm run test:preview # Test against production build to ensure build works
+   ```
+4. **Commit changes**: Create a descriptive commit message following the existing style
+   - Use present tense ("Fix memory leak" not "Fixed memory leak")
+   - Include context about what problem is being solved
+   - Reference issue numbers when applicable
+   - Include the standard footer with Claude Code attribution
+
+### Quality Assurance
+- **Always run tests before committing**: All three commands must pass:
+  - `npm test` - Development mode tests
+  - `npm run lint` - Code quality checks 
+  - `npm run test:preview` - Production build tests
+- **Fix linting errors**: Address all ESLint warnings and errors
+- **Update documentation**: Update `KNOWN_ISSUES.md` when fixing documented issues
+- **Test across browsers**: Playwright tests automatically run on Chromium, Firefox, and WebKit
+- **Verify production builds**: `test:preview` ensures changes work in production environment
+
+### Issue Tracking
+- Use `KNOWN_ISSUES.md` to track known problems, technical debt, and improvement opportunities
+- Categorize issues by priority (🔴 High, 🟡 Medium, 🟢 Low)
+- Mark issues as resolved with ✅ when fixed
+- Include file paths and line numbers for easy navigation
