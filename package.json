@@ -9,7 +9,9 @@
     "build": "mkdir -p dist && tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "test": "echo \"No tests specified\" && exit 0",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
     "clean": "rm -rf dist/*"
   },
   "repository": {
@@ -23,6 +25,7 @@
   },
   "homepage": "https://github.com/apstndb/rendertree-web#readme",
   "devDependencies": {
+    "@playwright/test": "^1.53.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
