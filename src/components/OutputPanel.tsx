@@ -79,7 +79,7 @@ const CharacterRuler: React.FC<{
       style={{ 
         transform: `translateX(-${scrollLeft}px)`,
         fontSize: `${fontSize * 0.7}px`, // Smaller font for the ruler
-        paddingLeft: '10px' // Match the padding of the pre element
+        marginLeft: '10px' // Match the padding of the pre element exactly
       }}
     >
       {generateRulerMarks()}

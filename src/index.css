@@ -528,6 +528,8 @@ pre::-webkit-scrollbar-corner {
   overflow: hidden;
   box-sizing: border-box;
   margin: 0;
+  /* Align with pre element border and padding */
+  margin-left: 1px; /* Account for pre element's left border */
 }
 
 .character-ruler {
