@@ -66,16 +66,6 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
         disabled={disabled}
       />
       <div className="render-controls">
-        <div className="file-input-container" style={{ display: 'none' }}>
-          <label htmlFor="fileInput" className="file-input-label">Upload:</label>
-          <input
-            type="file"
-            id="hiddenFileInput"
-            accept=".yaml,.yml,.json"
-            aria-label="Hidden upload plan file"
-            disabled={disabled}
-          />
-        </div>
         <div className="select-container">
           <label htmlFor="renderType" className="control-group-label">Type:</label>
           <select
