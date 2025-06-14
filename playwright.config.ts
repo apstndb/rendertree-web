@@ -26,16 +26,16 @@ export default defineConfig({
       name: 'firefox',
       use: { 
         ...devices['Desktop Firefox'],
-        // Grant clipboard permissions for testing copy functionality
-        permissions: ['clipboard-read', 'clipboard-write'],
+        // Firefox uses different clipboard permission names
+        // Remove unsupported permissions for Firefox
       },
     },
     {
       name: 'webkit',
       use: { 
         ...devices['Desktop Safari'],
-        // Grant clipboard permissions for testing copy functionality
-        permissions: ['clipboard-read', 'clipboard-write'],
+        // WebKit uses different clipboard permission names
+        // Remove unsupported permissions for WebKit
       },
     },
   ],

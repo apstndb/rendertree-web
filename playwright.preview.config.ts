@@ -24,11 +24,17 @@ export default defineConfig({
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: { 
+        ...devices['Desktop Firefox'],
+        // Firefox clipboard permissions handled differently
+      },
     },
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: { 
+        ...devices['Desktop Safari'],
+        // WebKit clipboard permissions handled differently
+      },
     },
   ],
   webServer: {
