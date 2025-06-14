@@ -11,10 +11,11 @@ This document tracks known issues, technical debt, and areas requiring improveme
 - ~~Could fail in edge cases or different deployment scenarios~~
 - **Fixed**: Simplified to use Vite environment variables (import.meta.env.DEV, import.meta.env.VITE_PREVIEW) instead of URL parsing
 
-### 2. Dual WASM Building
+### 2. ~~Dual WASM Building~~ ✅ **FIXED**
 **File**: `src/vite-plugin-go-wasm.ts`
-- WASM is built in both `buildStart` and `closeBundle` hooks
-- Inefficient and may cause race conditions
+- ~~WASM is built in both `buildStart` and `closeBundle` hooks~~
+- ~~Inefficient and may cause race conditions~~
+- **Fixed**: Consolidated build logic with race condition prevention using `isBuilding` flag and single shared function
 
 ### 3. File Upload Security Validation Gap
 **File**: `src/contexts/AppContext.tsx`

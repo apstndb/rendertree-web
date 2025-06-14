@@ -16,6 +16,7 @@
     "test:verbose": "DEBUG=true playwright test",
     "test:preview": "playwright test --config=playwright.preview.config.ts",
     "test:preview:verbose": "DEBUG=true playwright test --config=playwright.preview.config.ts",
+    "test:prod": "BASE_URL=https://apstndb.github.io/rendertree-web/ playwright test",
     "test:unit": "vitest",
     "test:unit:ui": "vitest --ui",
     "test:unit:coverage": "vitest --coverage",

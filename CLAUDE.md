@@ -36,6 +36,7 @@ npm run test:verbose          # Test with debug logging
 npm run test:unit             # Run unit tests with Vitest
 npm run test:all              # Run all tests (lint + typecheck + unit + e2e)
 npm run test:ci               # Run CI-equivalent tests (lint + typecheck + unit + preview)
+npm run test:prod             # Test against production site (https://apstndb.github.io/rendertree-web/)
 ```
 
 ## Architecture
@@ -144,3 +145,14 @@ These commands include TypeScript compilation checks that will catch the type er
   gh run list --branch main --limit 5  # Check recent runs
   gh run watch [run-id]                 # Watch specific run in real-time
   ```
+
+### Production Testing Workflow
+After CI completes and deploys to production, validate the deployment:
+1. **Monitor CI completion**: Watch CI status with `gh run watch` until deployment completes
+2. **Wait for deployment**: Allow 2-3 minutes for GitHub Pages to update (deployment lag)
+3. **Test production site**: Run end-to-end tests against the live production environment
+   ```bash
+   npm run test:prod    # Test against https://apstndb.github.io/rendertree-web/
+   ```
+4. **Verify functionality**: Ensure all features work correctly in the production environment
+5. **Fix deployment issues**: If production tests fail, investigate and fix issues promptly
