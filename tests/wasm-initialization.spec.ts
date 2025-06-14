@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-// Skip this test for now as it requires the WASM file to be built
-// which is not happening in the test environment
-test.describe.skip('WebAssembly Initialization', () => {
+// This test requires the WASM file to be built
+// Run with npm run test:with-build to ensure the WASM file is available
+test.describe('WebAssembly Initialization', () => {
   // Increase timeout for the entire test
   test.setTimeout(60000);
 

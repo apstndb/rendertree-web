@@ -1,5 +1,7 @@
 // No need to import wasm_exec.js as it's loaded from GOROOT in index.html
 import type { WasmFunctions, RenderParams, RenderMode, FormatType } from './types/wasm';
+import { logger } from './utils/logger';
+import { WasmInitializationError, WasmRenderingError } from './errors/WasmErrors';
 
 // Declare Go class from wasm_exec.js
 declare class Go {
@@ -27,29 +29,54 @@ let wasmInitialized = false;
  * @returns Object containing WASM functions
  */
 export async function initWasm(): Promise<WasmFunctions> {
+  logger.debug('initWasm called, wasmInitialized:', wasmInitialized);
+
   if (wasmInitialized) {
+    logger.info('WASM already initialized, returning existing instance');
     return { renderASCII };
   }
 
+  logger.info('Starting WASM initialization');
   const go = new Go();
   try {
     // Determine if we're in development mode based on the URL
     const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    logger.debug('Development mode detected:', isDev);
 
     // In development mode, use a relative path to ensure proper MIME type handling
     const wasmPath = isDev ? "./dist/rendertree.wasm" : "./assets/rendertree.wasm";
+    logger.debug('WASM path:', wasmPath);
 
     // Add cache-busting query parameter in development mode to prevent caching issues
     const wasmUrl = isDev ? `${wasmPath}?t=${Date.now()}` : wasmPath;
 
-    console.log(`Loading WebAssembly from: ${wasmUrl}`);
-    const result = await WebAssembly.instantiateStreaming(fetch(wasmUrl), go.importObject);
+    logger.info(`Loading WebAssembly from: ${wasmUrl}`);
+
+    // Start fetch
+    logger.debug('Starting fetch for WASM file');
+    const fetchResponse = await fetch(wasmUrl);
+
+    if (!fetchResponse.ok) {
+      const errorMsg = `Failed to fetch WASM file: ${fetchResponse.status} ${fetchResponse.statusText}`;
+      logger.error(errorMsg);
+      throw new WasmInitializationError(errorMsg);
+    }
+
+    logger.debug('WASM file fetched successfully, starting instantiation');
+    const result = await WebAssembly.instantiateStreaming(fetchResponse, go.importObject);
+
+    logger.debug('WASM instantiated, starting Go runtime');
     go.run(result.instance);
+
+    logger.info('WASM initialization completed successfully');
     wasmInitialized = true;
     return { renderASCII };
   } catch (e) {
-    console.error("Error initializing WebAssembly:", e);
-    throw e;
+    const errorMsg = e instanceof Error ? e.message : String(e);
+    logger.error("Error initializing WebAssembly:", errorMsg);
+
+    // Wrap the error in our custom error class for better identification
+    throw new WasmInitializationError(errorMsg, e instanceof Error ? e : undefined);
   }
 }
 
@@ -67,14 +94,37 @@ export async function renderASCIITree(
   format: FormatType = 'CURRENT', 
   wrapWidth: number = 0
 ): Promise<string> {
-  const wasmFunctions = await initWasm();
+  logger.info('renderASCIITree called with mode:', mode, 'format:', format, 'wrapWidth:', wrapWidth);
+  logger.debug('Input length:', input.length, 'characters');
 
-  const params: RenderParams = {
-    input,
-    mode,
-    format,
-    wrapWidth
-  };
+  try {
+    logger.debug('Initializing WASM for rendering');
+    const wasmFunctions = await initWasm();
 
-  return wasmFunctions.renderASCII(JSON.stringify(params));
+    const params: RenderParams = {
+      input,
+      mode,
+      format,
+      wrapWidth
+    };
+
+    logger.debug('Calling WASM renderASCII function');
+    const paramsJson = JSON.stringify(params);
+    logger.debug('Params JSON length:', paramsJson.length, 'characters');
+
+    const startTime = performance.now();
+    const result = wasmFunctions.renderASCII(paramsJson);
+    const endTime = performance.now();
+
+    logger.info(`Rendering completed in ${(endTime - startTime).toFixed(2)}ms`);
+    logger.debug('Result length:', result.length, 'characters');
+
+    return result;
+  } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : String(e);
+    logger.error('Error during rendering:', errorMsg);
+
+    // Wrap the error in our custom error class for better identification
+    throw new WasmRenderingError(errorMsg, e instanceof Error ? e : undefined);
+  }
 }

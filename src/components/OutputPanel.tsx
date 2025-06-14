@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useWasmContext } from '../contexts/WasmContext';
+import { logger } from '../utils/logger';
 
 // Component for the character ruler
 const CharacterRuler: React.FC<{ 
@@ -67,6 +68,9 @@ const OutputPanel: React.FC = () => {
   const { output, message, fontSize, isRendering } = useAppContext();
   const { isLoading: isWasmLoading } = useWasmContext();
   const isLoading = isWasmLoading || isRendering;
+
+  logger.debug('OutputPanel rendering - isWasmLoading:', isWasmLoading, 'isRendering:', isRendering, 'hasOutput:', !!output, 'message:', message);
+
   const [containerHeight, setContainerHeight] = useState<number>(300); // Default height
   const [scrollLeft, setScrollLeft] = useState<number>(0); // Track horizontal scroll position
   const [rulerWidth, setRulerWidth] = useState<number>(1000); // Initial width for ruler
@@ -77,6 +81,8 @@ const OutputPanel: React.FC = () => {
 
   // Handle scroll tracking for the ruler
   useEffect(() => {
+    logger.debug('OutputPanel useEffect for scroll tracking and ruler width triggered');
+
     const handleScroll = () => {
       if (preRef.current) {
         setScrollLeft(preRef.current.scrollLeft);
@@ -89,23 +95,30 @@ const OutputPanel: React.FC = () => {
         // Find the longest line in the output
         const lines = output.split('\n');
         const maxLineLength = Math.max(...lines.map(line => line.length));
+        logger.debug('Calculating ruler width - maxLineLength:', maxLineLength, 'fontSize:', fontSize);
 
         // Estimate the width based on the font size and character count
         // Add some extra width for safety
         const estimatedWidth = maxLineLength * fontSize * 0.6 + 100;
-        setRulerWidth(Math.max(1000, estimatedWidth));
+        const newWidth = Math.max(1000, estimatedWidth);
+        logger.debug('Setting ruler width to:', newWidth);
+        setRulerWidth(newWidth);
       }
     };
 
     // Set up scroll event listener
     const preElement = preRef.current;
     if (preElement) {
+      logger.debug('Setting up scroll event listener');
       preElement.addEventListener('scroll', handleScroll);
       calculateRulerWidth();
+    } else {
+      logger.debug('preElement ref is not available yet');
     }
 
     return () => {
       if (preElement) {
+        logger.debug('Cleaning up scroll event listener');
         preElement.removeEventListener('scroll', handleScroll);
       }
     };
@@ -113,6 +126,8 @@ const OutputPanel: React.FC = () => {
 
   // Handle resize functionality
   useEffect(() => {
+    logger.debug('OutputPanel useEffect for resize functionality initialized');
+
     const handleMouseMove = (e: Event) => {
       if (!resizeStartRef.current) return;
 
@@ -120,24 +135,32 @@ const OutputPanel: React.FC = () => {
       const mouseEvent = e as globalThis.MouseEvent;
 
       const newHeight = Math.max(100, resizeStartRef.current.height + mouseEvent.clientY - resizeStartRef.current.y);
+      logger.debug('Resizing container to height:', newHeight);
       setContainerHeight(newHeight);
     };
 
     const handleMouseUp = () => {
+      logger.debug('Mouse up event, ending resize operation');
       resizeStartRef.current = null;
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
 
     const handleMouseDown = (e: Event) => {
-      if (!preContainerRef.current) return;
+      if (!preContainerRef.current) {
+        logger.debug('Mouse down on resize handle, but preContainerRef is not available');
+        return;
+      }
 
       // Cast the event to MouseEvent
       const mouseEvent = e as globalThis.MouseEvent;
 
+      const startHeight = preContainerRef.current.clientHeight;
+      logger.debug('Starting resize operation, current height:', startHeight);
+
       resizeStartRef.current = {
         y: mouseEvent.clientY,
-        height: preContainerRef.current.clientHeight
+        height: startHeight
       };
 
       document.addEventListener('mousemove', handleMouseMove);
@@ -146,11 +169,15 @@ const OutputPanel: React.FC = () => {
 
     const resizeHandle = document.querySelector('.resize-handle');
     if (resizeHandle) {
+      logger.debug('Adding resize handle event listener');
       resizeHandle.addEventListener('mousedown', handleMouseDown);
+    } else {
+      logger.debug('Resize handle element not found');
     }
 
     return () => {
       if (resizeHandle) {
+        logger.debug('Cleaning up resize handle event listener');
         resizeHandle.removeEventListener('mousedown', handleMouseDown);
       }
       document.removeEventListener('mousemove', handleMouseMove);
@@ -160,24 +187,53 @@ const OutputPanel: React.FC = () => {
 
   // Copy output to clipboard
   const copyToClipboard = async () => {
-    if (!output) return;
+    logger.debug('copyToClipboard called');
+
+    if (!output) {
+      logger.warn('Copy to clipboard attempted with no output');
+      return;
+    }
 
     try {
+      logger.debug('Attempting to copy output to clipboard, length:', output.length);
       await navigator.clipboard.writeText(output);
+
       const copyButton = document.querySelector('.copy-button');
       if (copyButton) {
+        logger.debug('Updating copy button UI to show success');
         copyButton.textContent = 'Copied!';
         copyButton.classList.add('copied');
 
         setTimeout(() => {
+          logger.debug('Resetting copy button UI');
           copyButton.textContent = 'Copy';
           copyButton.classList.remove('copied');
         }, 2000);
+      } else {
+        logger.warn('Copy button element not found');
       }
+
+      logger.info('Output copied to clipboard successfully');
     } catch (err) {
-      console.error('Failed to copy text to clipboard:', err);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      logger.error('Failed to copy text to clipboard:', errorMsg);
     }
   };
+
+  // Log what's being rendered
+  useEffect(() => {
+    if (isLoading) {
+      logger.debug('OutputPanel is showing loading indicator');
+    } else if (message && !output) {
+      logger.info('OutputPanel is showing message:', message);
+    } else if (output) {
+      logger.info('OutputPanel is showing output, length:', output.length);
+    } else {
+      logger.debug('OutputPanel is in an undefined state - no loading, no message, no output');
+    }
+  }, [isLoading, message, output]);
+
+  logger.debug('OutputPanel rendering return statement');
 
   return (
     <div className="content-container">
@@ -186,7 +242,7 @@ const OutputPanel: React.FC = () => {
       )}
 
       {message && !output && (
-        <div className="placeholder">{message}</div>
+        <div className="placeholder" data-testid="message-placeholder">{message}</div>
       )}
 
       {output && (
@@ -194,6 +250,7 @@ const OutputPanel: React.FC = () => {
           className="pre-container" 
           ref={preContainerRef}
           style={{ height: `${containerHeight}px` }}
+          data-testid="output-container"
         >
           <div className="ruler-container">
             <CharacterRuler 
@@ -224,6 +281,7 @@ const OutputPanel: React.FC = () => {
                 fontFamily: "Consolas, 'Courier New', Courier, monospace",
                 fontSize: `${fontSize}px`
               }}
+              data-testid="output-code"
             >
               {output}
             </code>
@@ -232,6 +290,7 @@ const OutputPanel: React.FC = () => {
           <button 
             className="copy-button"
             onClick={copyToClipboard}
+            data-testid="copy-button"
           >
             Copy
           </button>

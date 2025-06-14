@@ -19,13 +19,56 @@ body {
   width: 100%;
 }
 
+/* File picker container styles */
+.file-picker-container {
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border: 2px dashed #007bff;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.file-picker-container h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #007bff;
+  font-size: 16px;
+}
+
+.file-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.file-input-wrapper input[type="file"] {
+  margin-bottom: 10px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.file-hint {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Make textarea less prominent */
 textarea.input-area {
   width: calc(100% - 20px); /* Adjust width for padding */
   margin-bottom: 10px;
-  flex: 1; /* Fill available space */
-  min-height: 150px; /* Set minimum height */
+  flex: 0.5; /* Reduce the flex value to make it less prominent */
+  min-height: 100px; /* Reduce minimum height */
+  max-height: 150px; /* Add maximum height */
   resize: vertical; /* Allow resize only in vertical direction */
   box-sizing: border-box; /* Include padding and border in width and height */
+  font-size: 12px; /* Smaller font size */
+  opacity: 0.8; /* Slightly transparent */
 }
 
 .main-container {

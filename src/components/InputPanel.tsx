@@ -24,6 +24,21 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   } = useAppContext();
   return (
     <div className={`left-pane ${disabled ? 'disabled' : ''}`}>
+      <div className="file-picker-container">
+        <h3>Select a file to render:</h3>
+        <div className="file-input-wrapper">
+          <input
+            type="file"
+            id="fileInput"
+            accept=".yaml,.yml,.json"
+            aria-label="Upload plan file"
+            onChange={handleFileUpload}
+            disabled={disabled}
+            data-testid="file-picker"
+          />
+          <p className="file-hint">Tip: Use the profile.yaml file in this directory</p>
+        </div>
+      </div>
       <textarea
         className="input-area"
         value={input}
@@ -33,14 +48,13 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
         disabled={disabled}
       />
       <div className="render-controls">
-        <div className="file-input-container">
+        <div className="file-input-container" style={{ display: 'none' }}>
           <label htmlFor="fileInput" className="file-input-label">Upload:</label>
           <input
             type="file"
-            id="fileInput"
+            id="hiddenFileInput"
             accept=".yaml,.yml,.json"
-            aria-label="Upload plan file"
-            onChange={handleFileUpload}
+            aria-label="Hidden upload plan file"
             disabled={disabled}
           />
         </div>

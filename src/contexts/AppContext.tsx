@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useWasmContext } from './WasmContext';
+import { logger } from '../utils/logger';
 
 // Define types for the application state
 interface AppState {
@@ -66,26 +67,41 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   // Update message based on WASM loading state
   useEffect(() => {
+    logger.debug('AppContext useEffect triggered - isLoading:', isLoading, 'hasError:', !!error);
+
     if (error) {
-      setMessage(`Error: ${error.message}`);
+      const errorMsg = `Error: ${error.message}`;
+      logger.error('Setting error message in UI:', errorMsg);
+      setMessage(errorMsg);
     } else if (!isLoading) {
+      logger.info('WASM loading completed, setting ready message in UI');
       setMessage('Ready. Please enter a query plan and click Render.');
+    } else {
+      logger.debug('Still loading, message remains unchanged');
     }
   }, [isLoading, error]);
 
   // Handle rendering
   const handleRender = useCallback(async () => {
+    logger.debug('handleRender called');
+
     if (!input.trim()) {
+      logger.warn('Render attempted with empty input');
       setMessage('Please provide input for the query plan.');
       return;
     }
 
     if (!renderASCII) {
+      logger.error('Render attempted but renderASCII function is not available');
       setMessage('Rendering engine not initialized.');
       return;
     }
 
+    logger.info('Starting rendering process');
+    logger.debug('Setting isRendering to true');
     setIsRendering(true);
+
+    logger.debug('Setting message to "Rendering..."');
     setMessage('Rendering...');
 
     try {
@@ -96,51 +112,71 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         wrapWidth
       };
 
+      logger.debug('Rendering with params:', { mode: renderMode, format, wrapWidth, inputLength: input.length });
+
+      const startTime = performance.now();
       const result = renderASCII(JSON.stringify(params));
+      const endTime = performance.now();
+
+      logger.info(`Rendering completed in ${(endTime - startTime).toFixed(2)}ms`);
+      logger.debug('Result length:', result.length, 'characters');
+
+      logger.debug('Setting output and clearing message');
       setOutput(result);
       setMessage('');
     } catch (error) {
-      console.error('Error during rendering:', error);
-      setMessage(`Error during rendering: ${error}`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logger.error('Error during rendering:', errorMsg);
+      setMessage(`Error during rendering: ${errorMsg}`);
     } finally {
+      logger.debug('Setting isRendering to false');
       setIsRendering(false);
     }
   }, [input, renderMode, format, wrapWidth, renderASCII]);
 
   // Handle file upload
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    logger.debug('handleFileUpload called');
+
     const files = event.target.files;
     if (!files || files.length === 0) {
-      console.log('No file selected');
+      logger.warn('No file selected in file upload');
       return;
     }
 
     const file = files[0];
     if (!file) {
-      console.log('No file selected, or file is not accessible.');
+      logger.warn('No file selected, or file is not accessible');
       return;
     }
 
-    console.log(`File selected: ${file.name}`);
+    logger.info(`File selected for upload: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
 
     const reader = new FileReader();
     reader.onload = (e) => {
+      logger.debug('FileReader onload event triggered');
+
       const content = e.target?.result;
       if (typeof content !== 'string') {
-        console.error('Empty or invalid file content');
+        logger.error('Empty or invalid file content from FileReader');
         setMessage('Error: Could not read file content.');
         return;
       }
 
+      logger.debug(`File content loaded successfully, length: ${content.length} characters`);
       setInput(content);
+
+      logger.info('File content loaded into input, triggering render');
       handleRender();
     };
 
     reader.onerror = () => {
-      console.error('Error reading file:', reader.error);
-      setMessage(`Error reading file: ${reader.error?.message || 'Unknown error'}`);
+      const errorMsg = reader.error?.message || 'Unknown error';
+      logger.error('Error reading file:', errorMsg);
+      setMessage(`Error reading file: ${errorMsg}`);
     };
 
+    logger.debug('Starting to read file as text');
     reader.readAsText(file);
   }, [handleRender]);
 

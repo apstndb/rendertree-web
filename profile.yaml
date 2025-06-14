@@ -1,0 +1,1745 @@
+metadata:
+    rowType:
+        fields:
+            - name: color
+              type:
+                code: STRING
+            - name: length
+              type:
+                code: INT64
+            - name: width
+              type:
+                code: INT64
+            - name: hgt
+              type:
+                code: INT64
+    transaction:
+        readTimestamp: "2025-05-24T13:17:36.371566Z"
+    undeclaredParameters: {}
+rows:
+    - - GRAY
+      - "9"
+      - "67"
+      - "25"
+stats:
+    queryPlan:
+        planNodes:
+            - childLinks:
+                - childIndex: 1
+                - childIndex: 120
+                - childIndex: 129
+                - childIndex: 138
+                - childIndex: 147
+              displayName: Serialize Result
+              executionStats:
+                cpu_time:
+                    total: "0.41"
+                    unit: msecs
+                execution_summary:
+                    execution_end_timestamp: "1748092656.388834"
+                    execution_start_timestamp: "1748092656.387640"
+                    num_executions: "1"
+                latency:
+                    total: "1.14"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 2
+                - childIndex: 101
+                  type: Map
+              displayName: Cross Apply
+              executionStats:
+                cpu_time:
+                    total: "0.39"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "1.12"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 1
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 3
+                - childIndex: 82
+                  type: Map
+              displayName: Cross Apply
+              executionStats:
+                cpu_time:
+                    total: "0.38"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "1.11"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 2
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 4
+                - childIndex: 63
+                  type: Map
+              displayName: Cross Apply
+              executionStats:
+                cpu_time:
+                    total: "0.37"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "1.1"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 3
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 5
+                - childIndex: 44
+                  type: Map
+              displayName: Cross Apply
+              executionStats:
+                cpu_time:
+                    total: "0.36"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "1.09"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 4
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 6
+                - childIndex: 36
+                  type: Agg
+                  variable: array
+                - childIndex: 38
+                  type: Agg
+                  variable: array_1
+                - childIndex: 40
+                  type: Agg
+                  variable: array_2
+                - childIndex: 42
+                  type: Agg
+                  variable: array_3
+              displayName: Aggregate
+              executionStats:
+                cpu_time:
+                    total: "0.34"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "1.07"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 5
+              kind: RELATIONAL
+              metadata:
+                call_type: Global
+                execution_method: Row
+                iterator_type: Stream
+                scalar_aggregate: "true"
+            - childLinks:
+                - childIndex: 7
+                - childIndex: 35
+                  type: Split Range
+              displayName: Distributed Union
+              executionStats:
+                cpu_time:
+                    total: "0.31"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "1.04"
+                    unit: msecs
+                remote_calls:
+                    total: "0"
+                    unit: calls
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 6
+              kind: RELATIONAL
+              metadata:
+                distribution_table: Elements
+                execution_method: Row
+                split_ranges_aligned: "false"
+                subquery_cluster_node: "7"
+            - childLinks:
+                - childIndex: 8
+                - childIndex: 27
+                  type: Agg
+                  variable: v21
+                - childIndex: 29
+                  type: Agg
+                  variable: v22
+                - childIndex: 31
+                  type: Agg
+                  variable: v23
+                - childIndex: 33
+                  type: Agg
+                  variable: v24
+              displayName: Aggregate
+              executionStats:
+                cpu_time:
+                    total: "0.29"
+                    unit: msecs
+                execution_summary:
+                    execution_end_timestamp: "1748092656.388751"
+                    execution_start_timestamp: "1748092656.387711"
+                    num_executions: "1"
+                latency:
+                    total: "1.02"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 7
+              kind: RELATIONAL
+              metadata:
+                call_type: Local
+                execution_method: Row
+                iterator_type: Stream
+                scalar_aggregate: "true"
+            - childLinks:
+                - childIndex: 9
+              displayName: Distributed Union
+              executionStats:
+                cpu_time:
+                    total: "0.27"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.99"
+                    unit: msecs
+                remote_calls:
+                    total: "0"
+                    unit: calls
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 8
+              kind: RELATIONAL
+              metadata:
+                call_type: Local
+                execution_method: Row
+                subquery_cluster_node: "9"
+            - childLinks:
+                - childIndex: 10
+                - childIndex: 25
+                  variable: v4.lvl_0
+                - childIndex: 26
+                  variable: v4.hgt_1
+              displayName: Compute Struct
+              executionStats:
+                cpu_time:
+                    total: "0.26"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.98"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 9
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 11
+                - childIndex: 23
+                  variable: v3.lvl_0
+                - childIndex: 24
+                  variable: v3.width_1
+              displayName: Compute Struct
+              executionStats:
+                cpu_time:
+                    total: "0.25"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.98"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 10
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 12
+                - childIndex: 21
+                  variable: v2.lvl_0
+                - childIndex: 22
+                  variable: v2.length_1
+              displayName: Compute Struct
+              executionStats:
+                cpu_time:
+                    total: "0.25"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.98"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 11
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 13
+                - childIndex: 19
+                  variable: v1.lvl_0
+                - childIndex: 20
+                  variable: v1.color_1
+              displayName: Compute Struct
+              executionStats:
+                cpu_time:
+                    total: "0.25"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.97"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 12
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 14
+                  variable: lvl
+                - childIndex: 15
+                  variable: color
+                - childIndex: 16
+                  variable: length
+                - childIndex: 17
+                  variable: width
+                - childIndex: 18
+                  variable: hgt
+              displayName: Scan
+              executionStats:
+                cpu_time:
+                    total: "0.24"
+                    unit: msecs
+                deleted_rows:
+                    mean: "0"
+                    std_deviation: "0"
+                    total: "0"
+                    unit: rows
+                execution_summary:
+                    num_executions: "1"
+                filesystem_delay_seconds:
+                    mean: "0.35"
+                    std_deviation: "0.35"
+                    total: "0.69"
+                    unit: msecs
+                filtered_rows:
+                    mean: "0"
+                    std_deviation: "0"
+                    total: "0"
+                    unit: rows
+                latency:
+                    total: "0.97"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+                scanned_rows:
+                    histogram:
+                        - count: "1"
+                          lower_bound: "0"
+                          percentage: "50"
+                          upper_bound: "1"
+                        - count: "1"
+                          lower_bound: "4"
+                          percentage: "50"
+                          upper_bound: "16"
+                    mean: "2.5"
+                    std_deviation: "2.5"
+                    total: "5"
+                    unit: rows
+              index: 13
+              kind: RELATIONAL
+              metadata:
+                Full scan: "true"
+                execution_method: Row
+                scan_method: Automatic
+                scan_target: Elements
+                scan_type: TableScan
+            - displayName: Reference
+              index: 14
+              kind: SCALAR
+              shortRepresentation:
+                description: lvl
+            - displayName: Reference
+              index: 15
+              kind: SCALAR
+              shortRepresentation:
+                description: color
+            - displayName: Reference
+              index: 16
+              kind: SCALAR
+              shortRepresentation:
+                description: length
+            - displayName: Reference
+              index: 17
+              kind: SCALAR
+              shortRepresentation:
+                description: width
+            - displayName: Reference
+              index: 18
+              kind: SCALAR
+              shortRepresentation:
+                description: hgt
+            - displayName: Reference
+              index: 19
+              kind: SCALAR
+              shortRepresentation:
+                description: $lvl
+            - displayName: Reference
+              index: 20
+              kind: SCALAR
+              shortRepresentation:
+                description: $color
+            - displayName: Reference
+              index: 21
+              kind: SCALAR
+              shortRepresentation:
+                description: $lvl
+            - displayName: Reference
+              index: 22
+              kind: SCALAR
+              shortRepresentation:
+                description: $length
+            - displayName: Reference
+              index: 23
+              kind: SCALAR
+              shortRepresentation:
+                description: $lvl
+            - displayName: Reference
+              index: 24
+              kind: SCALAR
+              shortRepresentation:
+                description: $width
+            - displayName: Reference
+              index: 25
+              kind: SCALAR
+              shortRepresentation:
+                description: $lvl
+            - displayName: Reference
+              index: 26
+              kind: SCALAR
+              shortRepresentation:
+                description: $hgt
+            - childLinks:
+                - childIndex: 28
+              displayName: Function
+              index: 27
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_AGG($v1)
+            - displayName: Reference
+              index: 28
+              kind: SCALAR
+              shortRepresentation:
+                description: $v1
+            - childLinks:
+                - childIndex: 30
+              displayName: Function
+              index: 29
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_AGG($v2)
+            - displayName: Reference
+              index: 30
+              kind: SCALAR
+              shortRepresentation:
+                description: $v2
+            - childLinks:
+                - childIndex: 32
+              displayName: Function
+              index: 31
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_AGG($v3)
+            - displayName: Reference
+              index: 32
+              kind: SCALAR
+              shortRepresentation:
+                description: $v3
+            - childLinks:
+                - childIndex: 34
+              displayName: Function
+              index: 33
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_AGG($v4)
+            - displayName: Reference
+              index: 34
+              kind: SCALAR
+              shortRepresentation:
+                description: $v4
+            - displayName: Constant
+              index: 35
+              kind: SCALAR
+              shortRepresentation:
+                description: "true"
+            - childLinks:
+                - childIndex: 37
+              displayName: Function
+              index: 36
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_CONCAT_AGG($v21)
+            - displayName: Reference
+              index: 37
+              kind: SCALAR
+              shortRepresentation:
+                description: $v21
+            - childLinks:
+                - childIndex: 39
+              displayName: Function
+              index: 38
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_CONCAT_AGG($v22)
+            - displayName: Reference
+              index: 39
+              kind: SCALAR
+              shortRepresentation:
+                description: $v22
+            - childLinks:
+                - childIndex: 41
+              displayName: Function
+              index: 40
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_CONCAT_AGG($v23)
+            - displayName: Reference
+              index: 41
+              kind: SCALAR
+              shortRepresentation:
+                description: $v23
+            - childLinks:
+                - childIndex: 43
+              displayName: Function
+              index: 42
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_CONCAT_AGG($v24)
+            - displayName: Reference
+              index: 43
+              kind: SCALAR
+              shortRepresentation:
+                description: $v24
+            - childLinks:
+                - childIndex: 45
+                - childIndex: 61
+                  type: Agg
+                  variable: v13
+              displayName: Aggregate
+              executionStats:
+                cpu_time:
+                    total: "0.02"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.02"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 44
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                iterator_type: Stream
+                scalar_aggregate: "true"
+            - childLinks:
+                - childIndex: 46
+                - childIndex: 58
+                  type: Limit
+                - childIndex: 59
+                  type: Key
+                  variable: sort_lvl_1
+                - childIndex: 60
+                  type: Value
+                  variable: sort_struct_<1>
+              displayName: Sort Limit
+              executionStats:
+                Disk Usage (KBytes):
+                    total: "0"
+                    unit: KiB
+                Disk Write Latency (msecs):
+                    total: "0"
+                    unit: msecs
+                Peak Buffering Memory Usage (KBytes):
+                    total: "64.04"
+                    unit: KiB
+                Peak Memory Usage (KBytes):
+                    total: "0"
+                    unit: KiB
+                Rows Spooled:
+                    total: "0"
+                    unit: rows
+                cpu_time:
+                    total: "0.02"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.02"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 45
+              kind: RELATIONAL
+              metadata:
+                call_type: Global
+                execution_method: Row
+            - childLinks:
+                - childIndex: 47
+                - childIndex: 56
+                  variable: lvl_1
+              displayName: Compute
+              executionStats:
+                cpu_time:
+                    total: "0.01"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.01"
+                    unit: msecs
+                rows:
+                    total: "3"
+                    unit: rows
+              index: 46
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 48
+                - childIndex: 54
+                  type: Condition
+              displayName: Filter
+              executionStats:
+                cpu_time:
+                    total: "0.01"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.01"
+                    unit: msecs
+                rows:
+                    total: "3"
+                    unit: rows
+              index: 47
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 49
+                - childIndex: 52
+                  variable: struct_<1>
+              displayName: Compute
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 48
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 50
+                  variable: struct
+                - childIndex: 51
+                  variable: struct_unnest_pos
+              displayName: Array Unnest
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 49
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - displayName: Reference
+              index: 50
+              kind: SCALAR
+              shortRepresentation:
+                description: $array
+            - displayName: Constant
+              index: 51
+              kind: SCALAR
+              shortRepresentation:
+                description: NONE
+            - childLinks:
+                - childIndex: 53
+              displayName: Field
+              index: 52
+              kind: SCALAR
+              metadata:
+                name: color_1
+              shortRepresentation:
+                description: $struct.color_1
+            - displayName: Reference
+              index: 53
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct
+            - childLinks:
+                - childIndex: 55
+              displayName: Function
+              index: 54
+              kind: SCALAR
+              shortRepresentation:
+                description: ISNOTNULL($struct_<1>)
+            - displayName: Reference
+              index: 55
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_<1>
+            - childLinks:
+                - childIndex: 57
+              displayName: Field
+              index: 56
+              kind: SCALAR
+              metadata:
+                name: lvl_0
+              shortRepresentation:
+                description: $struct.lvl_0
+            - displayName: Reference
+              index: 57
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct
+            - displayName: Constant
+              index: 58
+              kind: SCALAR
+              shortRepresentation:
+                description: "1"
+            - displayName: Reference
+              index: 59
+              kind: SCALAR
+              shortRepresentation:
+                description: $lvl_1 (DESC)
+            - displayName: Reference
+              index: 60
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_<1>
+            - childLinks:
+                - childIndex: 62
+              displayName: Function
+              index: 61
+              kind: SCALAR
+              shortRepresentation:
+                description: NEST($sort_struct_<1>)
+            - displayName: Reference
+              index: 62
+              kind: SCALAR
+              shortRepresentation:
+                description: $sort_struct_<1>
+            - childLinks:
+                - childIndex: 64
+                - childIndex: 80
+                  type: Agg
+                  variable: v14
+              displayName: Aggregate
+              executionStats:
+                cpu_time:
+                    total: "0.01"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.01"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 63
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                iterator_type: Stream
+                scalar_aggregate: "true"
+            - childLinks:
+                - childIndex: 65
+                - childIndex: 77
+                  type: Limit
+                - childIndex: 78
+                  type: Key
+                  variable: sort_lvl_3
+                - childIndex: 79
+                  type: Value
+                  variable: sort_struct_1_<1>
+              displayName: Sort Limit
+              executionStats:
+                Disk Usage (KBytes):
+                    total: "0"
+                    unit: KiB
+                Disk Write Latency (msecs):
+                    total: "0"
+                    unit: msecs
+                Peak Buffering Memory Usage (KBytes):
+                    total: "64.03"
+                    unit: KiB
+                Peak Memory Usage (KBytes):
+                    total: "0"
+                    unit: KiB
+                Rows Spooled:
+                    total: "0"
+                    unit: rows
+                cpu_time:
+                    total: "0.01"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.01"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 64
+              kind: RELATIONAL
+              metadata:
+                call_type: Global
+                execution_method: Row
+            - childLinks:
+                - childIndex: 66
+                - childIndex: 75
+                  variable: lvl_3
+              displayName: Compute
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "2"
+                    unit: rows
+              index: 65
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 67
+                - childIndex: 73
+                  type: Condition
+              displayName: Filter
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "2"
+                    unit: rows
+              index: 66
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 68
+                - childIndex: 71
+                  variable: struct_1_<1>
+              displayName: Compute
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 67
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 69
+                  variable: struct_1
+                - childIndex: 70
+                  variable: struct_1_unnest_pos
+              displayName: Array Unnest
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 68
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - displayName: Reference
+              index: 69
+              kind: SCALAR
+              shortRepresentation:
+                description: $array_1
+            - displayName: Constant
+              index: 70
+              kind: SCALAR
+              shortRepresentation:
+                description: NONE
+            - childLinks:
+                - childIndex: 72
+              displayName: Field
+              index: 71
+              kind: SCALAR
+              metadata:
+                name: length_1
+              shortRepresentation:
+                description: $struct_1.length_1
+            - displayName: Reference
+              index: 72
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_1
+            - childLinks:
+                - childIndex: 74
+              displayName: Function
+              index: 73
+              kind: SCALAR
+              shortRepresentation:
+                description: ISNOTNULL($struct_1_<1>)
+            - displayName: Reference
+              index: 74
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_1_<1>
+            - childLinks:
+                - childIndex: 76
+              displayName: Field
+              index: 75
+              kind: SCALAR
+              metadata:
+                name: lvl_0
+              shortRepresentation:
+                description: $struct_1.lvl_0
+            - displayName: Reference
+              index: 76
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_1
+            - displayName: Constant
+              index: 77
+              kind: SCALAR
+              shortRepresentation:
+                description: "1"
+            - displayName: Reference
+              index: 78
+              kind: SCALAR
+              shortRepresentation:
+                description: $lvl_3 (DESC)
+            - displayName: Reference
+              index: 79
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_1_<1>
+            - childLinks:
+                - childIndex: 81
+              displayName: Function
+              index: 80
+              kind: SCALAR
+              shortRepresentation:
+                description: NEST($sort_struct_1_<1>)
+            - displayName: Reference
+              index: 81
+              kind: SCALAR
+              shortRepresentation:
+                description: $sort_struct_1_<1>
+            - childLinks:
+                - childIndex: 83
+                - childIndex: 99
+                  type: Agg
+                  variable: v15
+              displayName: Aggregate
+              executionStats:
+                cpu_time:
+                    total: "0.01"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.01"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 82
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                iterator_type: Stream
+                scalar_aggregate: "true"
+            - childLinks:
+                - childIndex: 84
+                - childIndex: 96
+                  type: Limit
+                - childIndex: 97
+                  type: Key
+                  variable: sort_lvl_5
+                - childIndex: 98
+                  type: Value
+                  variable: sort_struct_2_<1>
+              displayName: Sort Limit
+              executionStats:
+                Disk Usage (KBytes):
+                    total: "0"
+                    unit: KiB
+                Disk Write Latency (msecs):
+                    total: "0"
+                    unit: msecs
+                Peak Buffering Memory Usage (KBytes):
+                    total: "64.03"
+                    unit: KiB
+                Peak Memory Usage (KBytes):
+                    total: "0"
+                    unit: KiB
+                Rows Spooled:
+                    total: "0"
+                    unit: rows
+                cpu_time:
+                    total: "0.01"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.01"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 83
+              kind: RELATIONAL
+              metadata:
+                call_type: Global
+                execution_method: Row
+            - childLinks:
+                - childIndex: 85
+                - childIndex: 94
+                  variable: lvl_5
+              displayName: Compute
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "3"
+                    unit: rows
+              index: 84
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 86
+                - childIndex: 92
+                  type: Condition
+              displayName: Filter
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "3"
+                    unit: rows
+              index: 85
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 87
+                - childIndex: 90
+                  variable: struct_2_<1>
+              displayName: Compute
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 86
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 88
+                  variable: struct_2
+                - childIndex: 89
+                  variable: struct_2_unnest_pos
+              displayName: Array Unnest
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 87
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - displayName: Reference
+              index: 88
+              kind: SCALAR
+              shortRepresentation:
+                description: $array_2
+            - displayName: Constant
+              index: 89
+              kind: SCALAR
+              shortRepresentation:
+                description: NONE
+            - childLinks:
+                - childIndex: 91
+              displayName: Field
+              index: 90
+              kind: SCALAR
+              metadata:
+                name: width_1
+              shortRepresentation:
+                description: $struct_2.width_1
+            - displayName: Reference
+              index: 91
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_2
+            - childLinks:
+                - childIndex: 93
+              displayName: Function
+              index: 92
+              kind: SCALAR
+              shortRepresentation:
+                description: ISNOTNULL($struct_2_<1>)
+            - displayName: Reference
+              index: 93
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_2_<1>
+            - childLinks:
+                - childIndex: 95
+              displayName: Field
+              index: 94
+              kind: SCALAR
+              metadata:
+                name: lvl_0
+              shortRepresentation:
+                description: $struct_2.lvl_0
+            - displayName: Reference
+              index: 95
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_2
+            - displayName: Constant
+              index: 96
+              kind: SCALAR
+              shortRepresentation:
+                description: "1"
+            - displayName: Reference
+              index: 97
+              kind: SCALAR
+              shortRepresentation:
+                description: $lvl_5 (DESC)
+            - displayName: Reference
+              index: 98
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_2_<1>
+            - childLinks:
+                - childIndex: 100
+              displayName: Function
+              index: 99
+              kind: SCALAR
+              shortRepresentation:
+                description: NEST($sort_struct_2_<1>)
+            - displayName: Reference
+              index: 100
+              kind: SCALAR
+              shortRepresentation:
+                description: $sort_struct_2_<1>
+            - childLinks:
+                - childIndex: 102
+                - childIndex: 118
+                  type: Agg
+                  variable: v16
+              displayName: Aggregate
+              executionStats:
+                cpu_time:
+                    total: "0.01"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.01"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 101
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+                iterator_type: Stream
+                scalar_aggregate: "true"
+            - childLinks:
+                - childIndex: 103
+                - childIndex: 115
+                  type: Limit
+                - childIndex: 116
+                  type: Key
+                  variable: sort_lvl_7
+                - childIndex: 117
+                  type: Value
+                  variable: sort_struct_3_<1>
+              displayName: Sort Limit
+              executionStats:
+                Disk Usage (KBytes):
+                    total: "0"
+                    unit: KiB
+                Disk Write Latency (msecs):
+                    total: "0"
+                    unit: msecs
+                Peak Buffering Memory Usage (KBytes):
+                    total: "64.03"
+                    unit: KiB
+                Peak Memory Usage (KBytes):
+                    total: "0"
+                    unit: KiB
+                Rows Spooled:
+                    total: "0"
+                    unit: rows
+                cpu_time:
+                    total: "0.01"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0.01"
+                    unit: msecs
+                rows:
+                    total: "1"
+                    unit: rows
+              index: 102
+              kind: RELATIONAL
+              metadata:
+                call_type: Global
+                execution_method: Row
+            - childLinks:
+                - childIndex: 104
+                - childIndex: 113
+                  variable: lvl_7
+              displayName: Compute
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "3"
+                    unit: rows
+              index: 103
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 105
+                - childIndex: 111
+                  type: Condition
+              displayName: Filter
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "3"
+                    unit: rows
+              index: 104
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 106
+                - childIndex: 109
+                  variable: struct_3_<1>
+              displayName: Compute
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 105
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - childLinks:
+                - childIndex: 107
+                  variable: struct_3
+                - childIndex: 108
+                  variable: struct_3_unnest_pos
+              displayName: Array Unnest
+              executionStats:
+                cpu_time:
+                    total: "0"
+                    unit: msecs
+                execution_summary:
+                    num_executions: "1"
+                latency:
+                    total: "0"
+                    unit: msecs
+                rows:
+                    total: "5"
+                    unit: rows
+              index: 106
+              kind: RELATIONAL
+              metadata:
+                execution_method: Row
+            - displayName: Reference
+              index: 107
+              kind: SCALAR
+              shortRepresentation:
+                description: $array_3
+            - displayName: Constant
+              index: 108
+              kind: SCALAR
+              shortRepresentation:
+                description: NONE
+            - childLinks:
+                - childIndex: 110
+              displayName: Field
+              index: 109
+              kind: SCALAR
+              metadata:
+                name: hgt_1
+              shortRepresentation:
+                description: $struct_3.hgt_1
+            - displayName: Reference
+              index: 110
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_3
+            - childLinks:
+                - childIndex: 112
+              displayName: Function
+              index: 111
+              kind: SCALAR
+              shortRepresentation:
+                description: ISNOTNULL($struct_3_<1>)
+            - displayName: Reference
+              index: 112
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_3_<1>
+            - childLinks:
+                - childIndex: 114
+              displayName: Field
+              index: 113
+              kind: SCALAR
+              metadata:
+                name: lvl_0
+              shortRepresentation:
+                description: $struct_3.lvl_0
+            - displayName: Reference
+              index: 114
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_3
+            - displayName: Constant
+              index: 115
+              kind: SCALAR
+              shortRepresentation:
+                description: "1"
+            - displayName: Reference
+              index: 116
+              kind: SCALAR
+              shortRepresentation:
+                description: $lvl_7 (DESC)
+            - displayName: Reference
+              index: 117
+              kind: SCALAR
+              shortRepresentation:
+                description: $struct_3_<1>
+            - childLinks:
+                - childIndex: 119
+              displayName: Function
+              index: 118
+              kind: SCALAR
+              shortRepresentation:
+                description: NEST($sort_struct_3_<1>)
+            - displayName: Reference
+              index: 119
+              kind: SCALAR
+              shortRepresentation:
+                description: $sort_struct_3_<1>
+            - childLinks:
+                - childIndex: 121
+                - childIndex: 128
+              displayName: Function
+              index: 120
+              kind: SCALAR
+              shortRepresentation:
+                description: SAFE_ARRAY_AT_OFFSET(IF((ARRAY_LENGTH($v13) >= 1), $v13, <typed null>), 0)
+            - childLinks:
+                - childIndex: 122
+                - childIndex: 126
+                - childIndex: 127
+              displayName: Function
+              index: 121
+              kind: SCALAR
+              shortRepresentation:
+                description: IF((ARRAY_LENGTH($v13) >= 1), $v13, <typed null>)
+            - childLinks:
+                - childIndex: 123
+                - childIndex: 125
+              displayName: Function
+              index: 122
+              kind: SCALAR
+              shortRepresentation:
+                description: (ARRAY_LENGTH($v13) >= 1)
+            - childLinks:
+                - childIndex: 124
+              displayName: Function
+              index: 123
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_LENGTH($v13)
+            - displayName: Reference
+              index: 124
+              kind: SCALAR
+              shortRepresentation:
+                description: $v13
+            - displayName: Constant
+              index: 125
+              kind: SCALAR
+              shortRepresentation:
+                description: "1"
+            - displayName: Reference
+              index: 126
+              kind: SCALAR
+              shortRepresentation:
+                description: $v13
+            - displayName: Constant
+              index: 127
+              kind: SCALAR
+              shortRepresentation:
+                description: <typed null>
+            - displayName: Constant
+              index: 128
+              kind: SCALAR
+              shortRepresentation:
+                description: "0"
+            - childLinks:
+                - childIndex: 130
+                - childIndex: 137
+              displayName: Function
+              index: 129
+              kind: SCALAR
+              shortRepresentation:
+                description: SAFE_ARRAY_AT_OFFSET(IF((ARRAY_LENGTH($v14) >= 1), $v14, <typed null>), 0)
+            - childLinks:
+                - childIndex: 131
+                - childIndex: 135
+                - childIndex: 136
+              displayName: Function
+              index: 130
+              kind: SCALAR
+              shortRepresentation:
+                description: IF((ARRAY_LENGTH($v14) >= 1), $v14, <typed null>)
+            - childLinks:
+                - childIndex: 132
+                - childIndex: 134
+              displayName: Function
+              index: 131
+              kind: SCALAR
+              shortRepresentation:
+                description: (ARRAY_LENGTH($v14) >= 1)
+            - childLinks:
+                - childIndex: 133
+              displayName: Function
+              index: 132
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_LENGTH($v14)
+            - displayName: Reference
+              index: 133
+              kind: SCALAR
+              shortRepresentation:
+                description: $v14
+            - displayName: Constant
+              index: 134
+              kind: SCALAR
+              shortRepresentation:
+                description: "1"
+            - displayName: Reference
+              index: 135
+              kind: SCALAR
+              shortRepresentation:
+                description: $v14
+            - displayName: Constant
+              index: 136
+              kind: SCALAR
+              shortRepresentation:
+                description: <typed null>
+            - displayName: Constant
+              index: 137
+              kind: SCALAR
+              shortRepresentation:
+                description: "0"
+            - childLinks:
+                - childIndex: 139
+                - childIndex: 146
+              displayName: Function
+              index: 138
+              kind: SCALAR
+              shortRepresentation:
+                description: SAFE_ARRAY_AT_OFFSET(IF((ARRAY_LENGTH($v15) >= 1), $v15, <typed null>), 0)
+            - childLinks:
+                - childIndex: 140
+                - childIndex: 144
+                - childIndex: 145
+              displayName: Function
+              index: 139
+              kind: SCALAR
+              shortRepresentation:
+                description: IF((ARRAY_LENGTH($v15) >= 1), $v15, <typed null>)
+            - childLinks:
+                - childIndex: 141
+                - childIndex: 143
+              displayName: Function
+              index: 140
+              kind: SCALAR
+              shortRepresentation:
+                description: (ARRAY_LENGTH($v15) >= 1)
+            - childLinks:
+                - childIndex: 142
+              displayName: Function
+              index: 141
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_LENGTH($v15)
+            - displayName: Reference
+              index: 142
+              kind: SCALAR
+              shortRepresentation:
+                description: $v15
+            - displayName: Constant
+              index: 143
+              kind: SCALAR
+              shortRepresentation:
+                description: "1"
+            - displayName: Reference
+              index: 144
+              kind: SCALAR
+              shortRepresentation:
+                description: $v15
+            - displayName: Constant
+              index: 145
+              kind: SCALAR
+              shortRepresentation:
+                description: <typed null>
+            - displayName: Constant
+              index: 146
+              kind: SCALAR
+              shortRepresentation:
+                description: "0"
+            - childLinks:
+                - childIndex: 148
+                - childIndex: 155
+              displayName: Function
+              index: 147
+              kind: SCALAR
+              shortRepresentation:
+                description: SAFE_ARRAY_AT_OFFSET(IF((ARRAY_LENGTH($v16) >= 1), $v16, <typed null>), 0)
+            - childLinks:
+                - childIndex: 149
+                - childIndex: 153
+                - childIndex: 154
+              displayName: Function
+              index: 148
+              kind: SCALAR
+              shortRepresentation:
+                description: IF((ARRAY_LENGTH($v16) >= 1), $v16, <typed null>)
+            - childLinks:
+                - childIndex: 150
+                - childIndex: 152
+              displayName: Function
+              index: 149
+              kind: SCALAR
+              shortRepresentation:
+                description: (ARRAY_LENGTH($v16) >= 1)
+            - childLinks:
+                - childIndex: 151
+              displayName: Function
+              index: 150
+              kind: SCALAR
+              shortRepresentation:
+                description: ARRAY_LENGTH($v16)
+            - displayName: Reference
+              index: 151
+              kind: SCALAR
+              shortRepresentation:
+                description: $v16
+            - displayName: Constant
+              index: 152
+              kind: SCALAR
+              shortRepresentation:
+                description: "1"
+            - displayName: Reference
+              index: 153
+              kind: SCALAR
+              shortRepresentation:
+                description: $v16
+            - displayName: Constant
+              index: 154
+              kind: SCALAR
+              shortRepresentation:
+                description: <typed null>
+            - displayName: Constant
+              index: 155
+              kind: SCALAR
+              shortRepresentation:
+                description: "0"
+    queryStats:
+        bytes_returned: "18"
+        cpu_time: 15.16 msecs
+        data_bytes_read: "0"
+        deleted_rows_scanned: "0"
+        elapsed_time: 17.07 msecs
+        filesystem_delay_seconds: 0.69 msecs
+        is_graph_query: "false"
+        locking_delay: 0 msecs
+        memory_peak_usage_bytes: "169"
+        memory_usage_percentage: "0.000"
+        optimizer_statistics_package: auto_20250521_18_02_30UTC
+        optimizer_version: "7"
+        query_plan_creation_time: 13.16 msecs
+        query_text: |4-
+             SELECT ARRAY_AGG(color IGNORE NULLS ORDER BY lvl DESC LIMIT 1)[SAFE_OFFSET(0)] AS color,
+                            ARRAY_AGG(length IGNORE NULLS ORDER BY lvl DESC LIMIT 1)[SAFE_OFFSET(0)] AS length,
+                            ARRAY_AGG(width IGNORE NULLS ORDER BY lvl DESC LIMIT 1)[SAFE_OFFSET(0)] AS width,
+                            ARRAY_AGG(hgt IGNORE NULLS ORDER BY lvl DESC LIMIT 1)[sAFE_OFFSET(0)] AS hgt,
+                     FROM Elements
+        remote_server_calls: 0/0
+        rows_returned: "1"
+        rows_scanned: "5"
+        runtime_creation_time: 0.84 msecs
+        server_queue_delay: 0.03 msecs
+        statistics_load_time: "0"
+        total_memory_peak_usage_byte: "65737"
