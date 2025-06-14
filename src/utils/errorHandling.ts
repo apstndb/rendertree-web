@@ -4,7 +4,7 @@
 
 /**
  * Safely extracts error message from unknown error type
- * @param error - Unknown error object
+ * @param error - Unknown error object (unknown is appropriate here as catch blocks and error callbacks can receive any type)
  * @returns Error message string and whether it was an Error instance
  */
 export function extractErrorInfo(error: unknown): { message: string; isError: boolean; originalError?: Error } {
@@ -39,7 +39,7 @@ export function extractErrorInfo(error: unknown): { message: string; isError: bo
 /**
  * Creates a standardized error message with context
  * @param context - Context where the error occurred
- * @param error - The original error
+ * @param error - The original error (unknown is appropriate here as errors can be any type)
  * @returns Formatted error message
  */
 export function createErrorMessage(context: string, error: unknown): string {

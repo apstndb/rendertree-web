@@ -94,11 +94,6 @@ This document tracks known issues, technical debt, and areas requiring improveme
 
 ## 📋 Technical Debt
 
-### TypeScript Strict Mode Issues
-**File**: `src/wasm.ts`
-- Extensive use of `unknown[]` type indicates incomplete typing
-- More specific type definitions needed
-
 ### ~~Environment Variable Exposure~~ ✅ **FIXED**
 **File**: `src/utils/logger.ts:4`
 - ~~Uses `process.env.NODE_ENV` in client-side code without proper Vite configuration~~
