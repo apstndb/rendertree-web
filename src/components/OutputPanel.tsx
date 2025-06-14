@@ -77,6 +77,7 @@ const OutputPanel: React.FC = () => {
   const preContainerRef = useRef<HTMLDivElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
   const codeRef = useRef<HTMLElement>(null);
+  const copyTimeoutRef = useRef<number | null>(null);
   const resizeStartRef = useRef<{ y: number; height: number } | null>(null);
 
   // Handle scroll tracking for the ruler
@@ -185,6 +186,15 @@ const OutputPanel: React.FC = () => {
     };
   }, []);
 
+  // Clean up copy timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Copy output to clipboard
   const copyToClipboard = async () => {
     logger.debug('copyToClipboard called');
@@ -204,10 +214,16 @@ const OutputPanel: React.FC = () => {
         copyButton.textContent = 'Copied!';
         copyButton.classList.add('copied');
 
-        setTimeout(() => {
+        // Clear any existing timeout
+        if (copyTimeoutRef.current) {
+          clearTimeout(copyTimeoutRef.current);
+        }
+
+        copyTimeoutRef.current = setTimeout(() => {
           logger.debug('Resetting copy button UI');
           copyButton.textContent = 'Copy';
           copyButton.classList.remove('copied');
+          copyTimeoutRef.current = null;
         }, 2000);
       } else {
         logger.warn('Copy button element not found');
