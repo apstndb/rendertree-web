@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { createContextWithHook } from '../utils/createContextWithHook';
 
 interface SettingsState {
   fontSize: number;
@@ -9,7 +10,9 @@ interface SettingsContextType extends SettingsState {
   setFontSize: (fontSize: number) => void;
 }
 
-const SettingsContext = createContext<SettingsContextType | null>(null);
+// Create context with generic utility
+const { Provider: SettingsContextProvider, useContext: useSettingsContext } = 
+  createContextWithHook<SettingsContextType>('SettingsContext');
 
 interface SettingsProviderProps {
   children: ReactNode;
@@ -37,16 +40,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   };
 
   return (
-    <SettingsContext.Provider value={contextValue}>
+    <SettingsContextProvider value={contextValue}>
       {children}
-    </SettingsContext.Provider>
+    </SettingsContextProvider>
   );
 };
 
-export const useSettingsContext = () => {
-  const context = useContext(SettingsContext);
-  if (!context) {
-    throw new Error('useSettingsContext must be used within a SettingsProvider');
-  }
-  return context;
-};
+export { useSettingsContext };

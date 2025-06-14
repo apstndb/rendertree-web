@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { createContextWithHook } from '../utils/createContextWithHook';
 import { useWasmContext } from './WasmContext';
 import { useFileContext } from './FileContext';
 import { logger } from '../utils/logger';
@@ -28,8 +29,9 @@ interface AppContextType extends AppState {
   loadSampleFile: (filename: string) => Promise<void>;
 }
 
-// Create the context with a default value of null
-const AppContext = createContext<AppContextType | null>(null);
+// Create context with generic utility
+const { Provider: AppContextProvider, useContext: useAppContext } = 
+  createContextWithHook<AppContextType>('AppContext');
 
 // Props for the AppProvider component
 interface AppProviderProps {
@@ -196,17 +198,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   return (
-    <AppContext.Provider value={contextValue}>
+    <AppContextProvider value={contextValue}>
       {children}
-    </AppContext.Provider>
+    </AppContextProvider>
   );
 };
 
-// Custom hook to use the app context
-export const useAppContext = () => {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
-  return context;
-};
+export { useAppContext };

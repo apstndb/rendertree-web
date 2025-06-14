@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import type { WasmResponse, WasmError, RenderParams } from '../wasm.js';
+import type { WasmResponse, RenderParams } from '../wasm.js';
 
 // Global declarations for WASM environment
 declare global {
@@ -35,11 +35,11 @@ describe('WASM Node.js Integration Tests', () => {
     // Setup Node.js globals that wasm_exec.js expects
     const setupNodeGlobals = () => {
       // Create minimal global environment for Go WASM
-      (global as any).globalThis = global;
+      (globalThis as Record<string, unknown>).globalThis = global;
       
       // Mock crypto for Node.js
-      if (!(global as any).crypto) {
-        (global as any).crypto = {
+      if (!(globalThis as Record<string, unknown>).crypto) {
+        (globalThis as Record<string, unknown>).crypto = {
           getRandomValues: (arr: Uint8Array) => {
             for (let i = 0; i < arr.length; i++) {
               arr[i] = Math.floor(Math.random() * 256);
@@ -50,17 +50,18 @@ describe('WASM Node.js Integration Tests', () => {
       }
       
       // Mock performance for Node.js  
-      if (!(global as any).performance) {
-        (global as any).performance = {
+      if (!(globalThis as Record<string, unknown>).performance) {
+        (globalThis as Record<string, unknown>).performance = {
           now: () => Date.now()
         };
       }
       
       // Mock TextEncoder/TextDecoder if not available
       if (typeof TextEncoder === 'undefined') {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { TextEncoder, TextDecoder } = require('util');
-        (global as any).TextEncoder = TextEncoder;
-        (global as any).TextDecoder = TextDecoder;
+        (globalThis as Record<string, unknown>).TextEncoder = TextEncoder;
+        (globalThis as Record<string, unknown>).TextDecoder = TextDecoder;
       }
     };
     
@@ -70,26 +71,31 @@ describe('WASM Node.js Integration Tests', () => {
     eval(wasmExecScript);
     
     // Initialize Go WASM module
-    const go = new (global as any).Go();
+    const GoClass = (globalThis as Record<string, unknown>).Go as new () => {
+      importObject: WebAssembly.Imports;
+      run: (instance: WebAssembly.Instance) => Promise<void>;
+      exited: boolean;
+    };
+    const go = new GoClass();
     const wasmBytes = readFileSync(wasmPath);
     
     // Instantiate WASM module
     const wasmModule = await WebAssembly.instantiate(wasmBytes, go.importObject);
     
     // Start Go runtime (this will expose renderASCII globally)
-    const runPromise = go.run(wasmModule.instance);
+    const _runPromise = go.run(wasmModule.instance);
     
     // Wait a bit for Go runtime to initialize
     await new Promise(resolve => setTimeout(resolve, 100));
     
     // Get renderASCII function from global scope
-    renderASCII = (global as any).renderASCII;
+    renderASCII = (globalThis as Record<string, unknown>).renderASCII as (paramsJson: string) => string;
     
     if (typeof renderASCII !== 'function') {
       throw new Error('renderASCII function not available after WASM initialization');
     }
     
-    console.log('WASM module initialized successfully in Node.js');
+    // WASM module initialized successfully in Node.js
   });
 
   describe('Successful Response Validation', () => {

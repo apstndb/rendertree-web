@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { createContextWithHook } from '../utils/createContextWithHook';
 import { logger } from '../utils/logger';
 
 /**
@@ -131,11 +132,9 @@ interface FileContextType {
   ) => Promise<void>;
 }
 
-/**
- * React context for file operations.
- * Provides methods for file uploads and sample file loading.
- */
-const FileContext = createContext<FileContextType | null>(null);
+// Create context with generic utility
+const { Provider: FileContextProvider, useContext: useFileContext } = 
+  createContextWithHook<FileContextType>('FileContext');
 
 /**
  * Props for the FileProvider component.
@@ -251,9 +250,9 @@ export const FileProvider: React.FC<FileProviderProps> = ({ children }) => {
   };
 
   return (
-    <FileContext.Provider value={contextValue}>
+    <FileContextProvider value={contextValue}>
       {children}
-    </FileContext.Provider>
+    </FileContextProvider>
   );
 };
 
@@ -286,10 +285,4 @@ export const FileProvider: React.FC<FileProviderProps> = ({ children }) => {
  * );
  * ```
  */
-export const useFileContext = () => {
-  const context = useContext(FileContext);
-  if (!context) {
-    throw new Error('useFileContext must be used within a FileProvider');
-  }
-  return context;
-};
+export { useFileContext };

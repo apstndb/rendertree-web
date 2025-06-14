@@ -1,5 +1,6 @@
-import React, { createContext, useContext } from 'react';
+import React from 'react';
 import type { ReactNode } from 'react';
+import { createContextWithHook } from '../utils/createContextWithHook';
 import { useWasm } from '../hooks/useWasm';
 
 /**
@@ -8,11 +9,9 @@ import { useWasm } from '../hooks/useWasm';
  */
 type WasmContextType = ReturnType<typeof useWasm>;
 
-/**
- * React context for WebAssembly state management.
- * Provides access to WASM loading state and Go functions.
- */
-const WasmContext = createContext<WasmContextType | null>(null);
+// Create context with generic utility
+const { Provider: WasmContextProvider, useContext: useWasmContext } = 
+  createContextWithHook<WasmContextType>('WasmContext');
 
 /**
  * Props for the WasmProvider component.
@@ -32,9 +31,9 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({ children }) => {
   const wasmState = useWasm();
 
   return (
-    <WasmContext.Provider value={wasmState}>
+    <WasmContextProvider value={wasmState}>
       {children}
-    </WasmContext.Provider>
+    </WasmContextProvider>
   );
 };
 
@@ -60,10 +59,4 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({ children }) => {
  * }
  * ```
  */
-export const useWasmContext = () => {
-  const context = useContext(WasmContext);
-  if (!context) {
-    throw new Error('useWasmContext must be used within a WasmProvider');
-  }
-  return context;
-};
+export { useWasmContext };
