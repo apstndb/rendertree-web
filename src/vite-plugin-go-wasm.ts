@@ -24,7 +24,17 @@ export default function goWasm(): Plugin {
         console.log('wasm_exec.js copied');
       } catch (error) {
         console.error('Error in buildStart:', error);
-        this.error('Failed in buildStart hook');
+        
+        // Provide helpful error information
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+          throw new Error('Go WASM build failed: Go compiler not found. Please ensure Go is installed and in PATH.');
+        }
+        
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const stderr = error instanceof Error && 'stderr' in error ? ` STDERR: ${error.stderr}` : '';
+        
+        // Throw error to stop the build process completely
+        throw new Error(`Go WASM build failed in buildStart: ${errorMessage}${stderr}`);
       }
     },
     async closeBundle() {
@@ -45,7 +55,17 @@ export default function goWasm(): Plugin {
         console.log('Go WASM build completed and copied to assets directory');
       } catch (error) {
         console.error('Error building Go WASM:', error);
-        this.error('Failed to build Go WASM');
+        
+        // Provide helpful error information
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+          throw new Error('Go WASM build failed: Go compiler not found. Please ensure Go is installed and in PATH.');
+        }
+        
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const stderr = error instanceof Error && 'stderr' in error ? ` STDERR: ${error.stderr}` : '';
+        
+        // Throw error to stop the build process completely
+        throw new Error(`Go WASM build failed in closeBundle: ${errorMessage}${stderr}`);
       }
     }
   };
