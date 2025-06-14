@@ -21,6 +21,7 @@ The main components are:
 * `npm run preview` - Preview the built application
 
 ## Testing
+* **IMPORTANT**: When making changes, always ensure that `npm test` and `npm run test:preview` run successfully to completion
 * Run `npm run build` before submitting changes to ensure the build completes successfully
 * Automated tests are implemented using Playwright
 * Run tests with the following commands:
