@@ -25,6 +25,7 @@ npm run preview     # Preview production build
 npm test            # Run Playwright tests
 npm run test:ui     # Run tests with UI
 npm run lint        # Run ESLint
+npm run typecheck   # TypeScript compilation check (no emit)
 ```
 
 ### Test Variants
@@ -32,6 +33,9 @@ npm run lint        # Run ESLint
 npm run test:preview          # Test against preview server
 npm run test:with-build       # Build then test
 npm run test:verbose          # Test with debug logging
+npm run test:unit             # Run unit tests with Vitest
+npm run test:all              # Run all tests (lint + typecheck + unit + e2e)
+npm run test:ci               # Run CI-equivalent tests (lint + typecheck + unit + preview)
 ```
 
 ## Architecture
@@ -77,9 +81,13 @@ When implementing changes or fixes, follow this workflow:
 2. **Implement the fix**: Make necessary code changes following existing patterns and conventions
 3. **Test thoroughly**: Run the full test suite to ensure no regressions
    ```bash
-   npm test             # Run all Playwright tests (development mode)
-   npm run lint         # Check code quality with ESLint
+   npm run test:ci      # Recommended: Run CI-equivalent tests (lint + typecheck + unit + preview)
+   # OR run individual commands:
+   npm run lint         # Check code quality with ESLint  
+   npm run typecheck    # Verify TypeScript compilation (detects CI build errors)
+   npm run test:unit    # Run unit tests
    npm run test:preview # Test against production build to ensure build works
+   npm test             # Run all Playwright tests (development mode)
    ```
 4. **Commit changes**: Create a descriptive commit message following the existing style
    - Use present tense ("Fix memory leak" not "Fixed memory leak")
@@ -88,14 +96,23 @@ When implementing changes or fixes, follow this workflow:
    - Include the standard footer with Claude Code attribution
 
 ### Quality Assurance
-- **Always run tests before committing**: All three commands must pass:
-  - `npm test` - Development mode tests
+- **Always run tests before committing**: **CRITICAL** - Run `npm run test:ci` to catch CI build errors locally
   - `npm run lint` - Code quality checks 
+  - `npm run typecheck` - TypeScript compilation verification (prevents CI failures)
+  - `npm run test:unit` - Unit tests
   - `npm run test:preview` - Production build tests
-- **Fix linting errors**: Address all ESLint warnings and errors
+- **Fix all errors**: Address ESLint warnings, TypeScript compilation errors, and test failures
 - **Update documentation**: Update `KNOWN_ISSUES.md` when fixing documented issues
 - **Test across browsers**: Playwright tests automatically run on Chromium, Firefox, and WebKit
 - **Verify production builds**: `test:preview` ensures changes work in production environment
+
+### Pre-Push Validation
+**IMPORTANT**: Before pushing changes, run one of these to prevent CI failures:
+```bash
+npm run test:ci      # Full CI validation (recommended)
+npm run test:all     # All tests including development mode
+```
+These commands include TypeScript compilation checks that will catch the type errors that cause CI build failures.
 
 ### Issue Tracking
 - Use `KNOWN_ISSUES.md` to track known problems, technical debt, and improvement opportunities

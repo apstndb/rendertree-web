@@ -10,8 +10,8 @@ Object.defineProperty(window, 'location', {
 });
 
 // Mock performance API for WASM timing tests
-global.performance = global.performance || {
+global.performance = global.performance || ({
   now: () => Date.now(),
   mark: () => {},
   measure: () => {},
-} as Performance;
+} as unknown as Performance);
