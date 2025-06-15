@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 
@@ -24,10 +24,73 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   } = useAppContext();
 
   const { fontSize, setFontSize } = useSettingsContext();
+  
+  // Local state for wrap width input
+  const [localWrapWidth, setLocalWrapWidth] = useState(wrapWidth.toString());
+  const wrapWidthTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Update local wrap width when external wrap width changes
+  useEffect(() => {
+    setLocalWrapWidth(wrapWidth.toString());
+  }, [wrapWidth]);
+
+  // Auto-render when settings change (except wrapWidth which is handled separately)
+  useEffect(() => {
+    if (input.trim() && !disabled) {
+      const timeoutId = setTimeout(() => {
+        handleRender();
+      }, 200); // Faster response for dropdown changes
+      
+      return () => clearTimeout(timeoutId);
+    }
+    return undefined;
+  }, [renderMode, format, input, disabled, handleRender]);
+
+  // Handle wrap width input with debouncing and special keys
+  const handleWrapWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalWrapWidth(value);
+    
+    // Clear existing timeout
+    if (wrapWidthTimeoutRef.current) {
+      clearTimeout(wrapWidthTimeoutRef.current);
+    }
+    
+    // Set new timeout for auto-update after 2 seconds
+    wrapWidthTimeoutRef.current = setTimeout(() => {
+      const numValue = parseInt(value, 10) || 0;
+      setWrapWidth(numValue);
+    }, 2000);
+  };
+
+  // Handle wrap width on Enter key or blur
+  const handleWrapWidthSubmit = () => {
+    if (wrapWidthTimeoutRef.current) {
+      clearTimeout(wrapWidthTimeoutRef.current);
+    }
+    const numValue = parseInt(localWrapWidth, 10) || 0;
+    setWrapWidth(numValue);
+  };
+
+  const handleWrapWidthKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleWrapWidthSubmit();
+    }
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (wrapWidthTimeoutRef.current) {
+        clearTimeout(wrapWidthTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className={`left-pane ${disabled ? 'disabled' : ''}`}>
       <div className="file-picker-container">
-        <h3>Select a file to render:</h3>
+        <h3>Select a file to visualize:</h3>
         <div className="file-input-wrapper">
           <input
             type="file"
@@ -38,7 +101,7 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             disabled={disabled}
             data-testid="file-picker"
           />
-          <p className="file-hint">Tip: Use the sample files in the testdata directory</p>
+          <p className="file-hint">Files are automatically rendered when selected</p>
           <div className="sample-files">
             <p>Sample files:</p>
             <button 
@@ -67,6 +130,10 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
         disabled={disabled}
       />
       <div className="render-controls">
+        <div className="settings-header">
+          <h4>Rendering Settings</h4>
+          <p className="auto-render-note">Changes are automatically applied</p>
+        </div>
         <div className="select-container">
           <label htmlFor="renderType" className="control-group-label">Type:</label>
           <select
@@ -113,18 +180,22 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             type="number"
             id="wrapWidth"
             min="0"
-            value={wrapWidth}
-            onChange={(e) => setWrapWidth(parseInt(e.target.value, 10) || 0)}
-            aria-label="Wrap Width"
+            value={localWrapWidth}
+            onChange={handleWrapWidthChange}
+            onBlur={handleWrapWidthSubmit}
+            onKeyDown={handleWrapWidthKeyDown}
+            aria-label="Wrap Width (press Enter or wait 2 seconds to apply)"
             disabled={disabled}
+            title="Press Enter or wait 2 seconds to apply changes"
           />
         </div>
         <button
           className="primary-button"
           onClick={handleRender}
           disabled={disabled}
+          title="Refresh the current visualization with current settings"
         >
-          Render
+          🔄 Refresh
         </button>
         <FontSizeControls 
           fontSize={fontSize}

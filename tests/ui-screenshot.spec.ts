@@ -29,10 +29,10 @@ test.describe('UI Screenshot Tests', () => {
     await uploadTestFile(page, 'profile.yaml');
     await screenshots.captureAfterUpload();
 
-    // Stage 4: Render button active
-    const renderButton = page.locator('button:has-text("Render")');
-    await expect(renderButton).toBeEnabled();
-    await screenshots.captureStep('render-ready');
+    // Stage 4: Refresh button active
+    const refreshButton = page.locator('button:has-text("Refresh")');
+    await expect(refreshButton).toBeEnabled();
+    await screenshots.captureStep('refresh-ready');
 
     // Stage 5: Click render and wait for output
     await clickRenderButton(page);

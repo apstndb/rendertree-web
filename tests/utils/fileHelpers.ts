@@ -38,7 +38,8 @@ export async function clickRenderButton(
 ): Promise<void> {
   if (!useComplexFallback) {
     // Simple approach - works for most cases
-    const renderButton = page.locator('button:has-text("Render")');
+    // Button text changed from "Render" to "🔄 Refresh"
+    const renderButton = page.locator('button:has-text("Refresh")');
     await renderButton.click();
     return;
   }
@@ -47,8 +48,8 @@ export async function clickRenderButton(
   const browserName = page.context().browser()?.browserType().name() || 'unknown';
   
   try {
-    // Try to find and click the render button
-    const renderButton = page.locator('button:has-text("Render")');
+    // Try to find and click the refresh button (previously "Render")
+    const renderButton = page.locator('button:has-text("Refresh")');
     await renderButton.waitFor({ timeout: 5000 });
     
     const isVisible = await renderButton.isVisible();

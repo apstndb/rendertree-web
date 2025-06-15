@@ -40,7 +40,7 @@ test.describe('Query Plan Rendering', () => {
 async function verifyFileUploadAndRenderButton(page: Page, browserName: string) {
   const renderButtonEnabled = await page.evaluate(() => {
     const button = Array.from(document.querySelectorAll('button'))
-      .find(btn => btn.textContent?.includes('Render'));
+      .find(btn => btn.textContent?.includes('Refresh') || btn.textContent?.includes('Render'));
     return button && !button.disabled;
   });
 

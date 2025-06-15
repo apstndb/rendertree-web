@@ -165,8 +165,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     await sampleFileLoader(
       filename,
       (content) => {
+        logger.info('Sample file content loaded into input, triggering render');
         setInput(content);
-        setMessage(`Sample file ${filename} loaded successfully. Click Render to visualize.`);
+        setMessage(`Sample file ${filename} loaded successfully. Rendering...`);
+        // Auto-render after loading sample file
+        setTimeout(() => {
+          handleRender();
+        }, 100); // Small delay to ensure state is updated
       },
       (errorMsg) => {
         setMessage(`Error loading sample file: ${errorMsg}`);
@@ -175,7 +180,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setMessage(loadingMsg);
       }
     );
-  }, [sampleFileLoader]);
+  }, [sampleFileLoader, handleRender]);
 
   // Context value
   const contextValue: AppContextType = {
