@@ -1,6 +1,10 @@
-import { test, expect, type Page } from '@playwright/test';
-import * as fs from 'fs';
-import * as path from 'path';
+import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import {
+  setupCompleteTest,
+  uploadTestFile,
+  clickRenderButton
+} from './utils';
 
 const DEBUG = process.env.DEBUG === 'true';
 
@@ -10,49 +14,11 @@ test.describe('Query Plan Rendering', () => {
   test('should render a simple query plan', async ({ page, browserName }) => {
     console.log('Running test in browser:', browserName);
 
-    // Set up console logging for debugging
-    const consoleMessages: { type: string; text: string }[] = [];
-    page.on('console', msg => {
-      const type = msg.type();
-      const text = msg.text();
-      consoleMessages.push({ type, text });
-      DEBUG && console.log(`Browser console: ${type}: ${text}`);
-    });
-
-    await page.goto('/');
-    await page.waitForSelector('#root', { timeout: 10000 });
-
-    // Check for WASM loading errors
-    const hasWasmError = consoleMessages.some(
-      msg => msg.type === 'error' && 
-             (msg.text.includes('WebAssembly') || 
-              msg.text.includes('WASM') || 
-              msg.text.includes('404'))
-    );
-
-    if (hasWasmError) {
-      console.warn('WASM loading errors detected. Run `npm run build` before running this test.');
-      test.skip(true, 'WASM file not found. Run `npm run build` before running this test.');
-      return;
-    }
-
-    // Wait for WASM initialization
-    await page.waitForFunction(() => {
-      return !document.querySelector('.loading-container .loading-indicator');
-    }, { timeout: 30000 });
-
-    await page.waitForFunction(() => {
-      const message = document.querySelector('.placeholder');
-      return message && message.textContent && message.textContent.includes('Ready');
-    }, { timeout: 10000 });
-
-    await page.waitForFunction(() => {
-      const textarea = document.querySelector('.input-area');
-      return textarea && !(textarea as HTMLTextAreaElement).disabled;
-    }, { timeout: 5000 });
+    // Complete test setup with WASM initialization
+    await setupCompleteTest(page, test, { debug: DEBUG });
 
     // Upload test file
-    await uploadTestFile(page);
+    await uploadTestFile(page, 'dca_profile.yaml');
 
     // For simplified browsers, just verify upload and button
     if (['webkit', 'firefox', 'chromium'].includes(browserName)) {
@@ -62,28 +28,15 @@ test.describe('Query Plan Rendering', () => {
     }
 
     // Full test for other browsers
-    await clickRenderButton(page);
+    await clickRenderButton(page, true); // Use complex fallback
     await waitForRendering(page);
     await verifyOutput(page);
   });
 });
 
-async function uploadTestFile(page: Page) {
-  const filePickerExists = await page.isVisible('[data-testid="file-picker"]');
-  if (!filePickerExists) {
-    throw new Error('File picker not found');
-  }
-
-  const filePath = path.join(process.cwd(), 'testdata', 'dca_profile.yaml');
-  if (!fs.existsSync(filePath)) {
-    throw new Error('dca_profile.yaml file not found');
-  }
-
-  await page.setInputFiles('[data-testid="file-picker"]', filePath);
-  await page.waitForTimeout(1000);
-  DEBUG && console.log('File uploaded successfully');
-}
-
+/**
+ * Verifies that file upload worked and render button is enabled
+ */
 async function verifyFileUploadAndRenderButton(page: Page, browserName: string) {
   const renderButtonEnabled = await page.evaluate(() => {
     const button = Array.from(document.querySelectorAll('button'))
@@ -99,42 +52,9 @@ async function verifyFileUploadAndRenderButton(page: Page, browserName: string) 
   }
 }
 
-async function clickRenderButton(page: Page) {
-  const buttonSelectors = [
-    '.primary-button',
-    'button:has-text("Render")',
-    '[data-testid="render-button"]',
-    'button.primary-button'
-  ];
-
-  for (const selector of buttonSelectors) {
-    const buttonExists = await page.isVisible(selector);
-    if (buttonExists) {
-      await page.click(selector, { force: true });
-      DEBUG && console.log(`Render button clicked using selector: ${selector}`);
-      return;
-    }
-  }
-
-  // Fallback to JavaScript click
-  const clicked = await page.evaluate(() => {
-    const buttons = Array.from(document.querySelectorAll('button'));
-    const renderButton = buttons.find(button => 
-      button.textContent?.includes('Render') || 
-      button.className.includes('primary')
-    );
-    if (renderButton) {
-      renderButton.click();
-      return true;
-    }
-    return false;
-  });
-
-  if (!clicked) {
-    throw new Error('Failed to click render button');
-  }
-}
-
+/**
+ * Waits for rendering process to complete
+ */
 async function waitForRendering(page: Page) {
   // Wait for rendering to start
   await page.waitForFunction(() => {
@@ -149,6 +69,9 @@ async function waitForRendering(page: Page) {
   }, { timeout: 60000 }).catch(() => DEBUG && console.log('Rendering timeout'));
 }
 
+/**
+ * Verifies that output contains expected content
+ */
 async function verifyOutput(page: Page) {
   const selectors = [
     '[data-testid="output-code"]',
