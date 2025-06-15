@@ -10,7 +10,11 @@ export default [
   {
     ignores: ['dist/**', 'node_modules/**', '*.js', '.output.txt', '.eslintrc.cjs'],
   },
-  // Browser TypeScript files
+  // Browser TypeScript files with type checking
+  ...typescriptEslint.configs.recommendedTypeChecked.map(config => ({
+    ...config,
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
+  })),
   {
     files: ['src/**/*.ts', 'src/**/*.tsx'],
     plugins: {
@@ -22,6 +26,7 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
+        project: './tsconfig.json',
       },
       globals: {
         ...globals.browser,
@@ -47,7 +52,17 @@ export default [
           varsIgnorePattern: '^_',
           ignoreRestSiblings: true
         }
-      ]
+      ],
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off'
     },
   },
   // Context files - disable react-refresh/only-export-components
@@ -96,6 +111,7 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
+        project: './tsconfig.json',
       },
       globals: {
         ...globals.node,

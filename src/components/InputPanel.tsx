@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface InputPanelProps {
   disabled: boolean;
@@ -27,7 +28,15 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   
   // Local state for wrap width input
   const [localWrapWidth, setLocalWrapWidth] = useState(wrapWidth.toString());
-  const wrapWidthTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Debounced wrap width update with 2-second delay
+  const { debouncedCallback: debouncedSetWrapWidth, flush: flushWrapWidth } = useDebounce(
+    (value: string) => {
+      const numValue = parseInt(value, 10) || 0;
+      setWrapWidth(numValue);
+    },
+    2000
+  );
 
   // Update local wrap width when external wrap width changes
   useEffect(() => {
@@ -50,26 +59,12 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   const handleWrapWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setLocalWrapWidth(value);
-    
-    // Clear existing timeout
-    if (wrapWidthTimeoutRef.current) {
-      clearTimeout(wrapWidthTimeoutRef.current);
-    }
-    
-    // Set new timeout for auto-update after 2 seconds
-    wrapWidthTimeoutRef.current = setTimeout(() => {
-      const numValue = parseInt(value, 10) || 0;
-      setWrapWidth(numValue);
-    }, 2000);
+    debouncedSetWrapWidth(value);
   };
 
   // Handle wrap width on Enter key or blur
   const handleWrapWidthSubmit = () => {
-    if (wrapWidthTimeoutRef.current) {
-      clearTimeout(wrapWidthTimeoutRef.current);
-    }
-    const numValue = parseInt(localWrapWidth, 10) || 0;
-    setWrapWidth(numValue);
+    flushWrapWidth(localWrapWidth);
   };
 
   const handleWrapWidthKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -77,15 +72,6 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
       handleWrapWidthSubmit();
     }
   };
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (wrapWidthTimeoutRef.current) {
-        clearTimeout(wrapWidthTimeoutRef.current);
-      }
-    };
-  }, []);
 
   return (
     <div className={`left-pane ${disabled ? 'disabled' : ''}`}>
@@ -106,14 +92,14 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             <p>Sample files:</p>
             <button 
               className="sample-file-button" 
-              onClick={() => loadSampleFile('testdata/dca_profile.yaml')}
+              onClick={() => loadSampleFile('dca_profile.yaml')}
               disabled={disabled}
             >
               Load dca_profile.yaml
             </button>
             <button 
               className="sample-file-button" 
-              onClick={() => loadSampleFile('testdata/dca_plan.yaml')}
+              onClick={() => loadSampleFile('dca_plan.yaml')}
               disabled={disabled}
             >
               Load dca_plan.yaml

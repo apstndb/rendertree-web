@@ -2,42 +2,12 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import goWasm from './src/vite-plugin-go-wasm';
-import fs from 'fs';
-import path from 'path';
 
-// Custom plugin to copy testdata directory to build output
-function copyTestdataPlugin() {
-  return {
-    name: 'copy-testdata',
-    closeBundle() {
-      const testdataDir = path.resolve(__dirname, 'testdata');
-      const outputDir = path.resolve(__dirname, 'dist/testdata');
-
-      // Create output directory if it doesn't exist
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-      }
-
-      // Copy all files from testdata to output directory
-      const files = fs.readdirSync(testdataDir);
-      for (const file of files) {
-        const srcPath = path.join(testdataDir, file);
-        const destPath = path.join(outputDir, file);
-
-        // Skip directories, only copy files
-        if (fs.statSync(srcPath).isFile()) {
-          fs.copyFileSync(srcPath, destPath);
-          console.log(`Copied ${srcPath} to ${destPath}`);
-        }
-      }
-    }
-  };
-}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
   const config = {
-    plugins: [react(), goWasm(), copyTestdataPlugin()],
+    plugins: [react(), goWasm()],
     // Use different base paths for development and production/preview
     // In development mode, use the root path
     // In production/preview mode, use /rendertree-web/

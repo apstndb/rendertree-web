@@ -7,7 +7,7 @@ import { join } from 'path';
  * @returns Absolute path to the test file
  */
 export function getTestDataPath(fileName: string = 'simple.yaml'): string {
-  return join(process.cwd(), 'testdata', fileName);
+  return join(process.cwd(), 'public', 'testdata', fileName);
 }
 
 /**
