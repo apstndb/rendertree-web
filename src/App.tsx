@@ -6,6 +6,9 @@ import { AppProvider } from './contexts/AppContext';
 import { FileProvider } from './contexts/FileContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { useWasmContext } from './contexts/WasmContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { WasmErrorBoundary } from './components/WasmErrorBoundary';
+import { AppErrorFallback } from './components/AppErrorFallback';
 
 // Loading component to show while WASM is initializing
 const LoadingFallback = () => (
@@ -37,17 +40,30 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <WasmProvider>
-      <FileProvider>
-        <SettingsProvider>
-          <AppProvider>
-            <Suspense fallback={<LoadingFallback />}>
-              <AppContent />
-            </Suspense>
-          </AppProvider>
-        </SettingsProvider>
-      </FileProvider>
-    </WasmProvider>
+    <ErrorBoundary
+      fallback={AppErrorFallback}
+      title="Application Error"
+      description="The Rendertree Web application encountered an unexpected error"
+    >
+      <WasmErrorBoundary>
+        <WasmProvider>
+          <ErrorBoundary
+            title="Context Error"
+            description="An error occurred in the application context"
+          >
+            <FileProvider>
+              <SettingsProvider>
+                <AppProvider>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <AppContent />
+                  </Suspense>
+                </AppProvider>
+              </SettingsProvider>
+            </FileProvider>
+          </ErrorBoundary>
+        </WasmProvider>
+      </WasmErrorBoundary>
+    </ErrorBoundary>
   );
 }
 
