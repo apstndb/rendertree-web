@@ -1,263 +1,55 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useWasmContext } from '../contexts/WasmContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { logger } from '../utils/logger';
-import { extractErrorInfo } from '../utils/errorHandling';
+import { CharacterRuler } from './CharacterRuler';
+import { CopyButton } from './CopyButton';
+import { useResizeHandler } from '../hooks/useResizeHandler';
+import { useScrollTracking } from '../hooks/useScrollTracking';
 
 /**
- * Measures the actual character width for a given font and font size
+ * OutputPanel component responsible for displaying rendered query plan results.
+ * 
+ * Features:
+ * - Displays loading states during WASM initialization and rendering
+ * - Shows messages when no output is available
+ * - Renders ASCII output with character ruler for alignment
+ * - Supports resizable container with drag handle
+ * - Provides copy-to-clipboard functionality
+ * - Tracks horizontal scroll for ruler synchronization
+ * 
+ * The component has been refactored for better testability by extracting:
+ * - CharacterRuler: Handles ruler display and character measurement
+ * - CopyButton: Manages clipboard operations with visual feedback
+ * - useResizeHandler: Custom hook for container resizing
+ * - useScrollTracking: Custom hook for scroll position and ruler width
  */
-const measureCharacterWidth = (fontSize: number, fontFamily: string): number => {
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  if (!context) {
-    // Fallback to approximation if canvas is not available
-    return fontSize * 0.6;
-  }
-  
-  context.font = `${fontSize}px ${fontFamily}`;
-  // Measure a representative monospace character
-  const metrics = context.measureText('M');
-  return metrics.width;
-};
-
-// Component for the character ruler
-const CharacterRuler: React.FC<{ 
-  scrollLeft: number; 
-  fontSize: number;
-  width: number;
-  fontFamily?: string;
-}> = ({ scrollLeft, fontSize, width, fontFamily = 'Consolas, "Courier New", Courier, monospace' }) => {
-  // Memoize character width calculation
-  const charWidth = useCallback(() => {
-    return measureCharacterWidth(fontSize, fontFamily);
-  }, [fontSize, fontFamily])();
-
-  // Generate ruler marks
-  const generateRulerMarks = () => {
-    const marks = [];
-    const actualCharWidth = charWidth;
-    const numMarks = Math.ceil(width / actualCharWidth) + 50; // Add extra marks for scrolling
-
-    for (let i = 0; i <= numMarks; i += 10) {
-      // Add a major mark every 10 characters
-      marks.push(
-        <div 
-          key={`major-${i}`}
-          className="ruler-mark major"
-          style={{ 
-            left: `${i * actualCharWidth}px`,
-          }}
-        >
-          <div className="ruler-mark-label">{i}</div>
-        </div>
-      );
-
-      // Add minor marks between major marks
-      if (i < numMarks) {
-        for (let j = 1; j < 10 && i + j <= numMarks; j++) {
-          marks.push(
-            <div 
-              key={`minor-${i+j}`}
-              className="ruler-mark minor"
-              style={{ 
-                left: `${(i + j) * actualCharWidth}px`,
-              }}
-            />
-          );
-        }
-      }
-    }
-
-    return marks;
-  };
-
-  return (
-    <div 
-      className="character-ruler"
-      style={{ 
-        transform: `translateX(-${scrollLeft}px)`,
-        fontSize: `${fontSize * 0.7}px`, // Smaller font for the ruler
-        marginLeft: '10px' // Match the padding of the pre element exactly
-      }}
-    >
-      {generateRulerMarks()}
-    </div>
-  );
-};
-
 const OutputPanel: React.FC = () => {
   const { output, message, isRendering } = useAppContext();
   const { isLoading: isWasmLoading } = useWasmContext();
   const { fontSize } = useSettingsContext();
   const isLoading = isWasmLoading || isRendering;
 
+  // References for DOM elements
+  const preContainerRef = useRef<HTMLDivElement>(null);
+  const preRef = useRef<HTMLPreElement>(null);
+  const codeRef = useRef<HTMLElement>(null);
+
+  // Custom hooks for extracted functionality
+  const containerHeight = useResizeHandler(300, preContainerRef);
+  const { scrollLeft, rulerWidth } = useScrollTracking(
+    preRef,
+    codeRef,
+    output,
+    fontSize,
+    "Consolas, 'Courier New', Courier, monospace"
+  );
+
   // Reduced verbose logging - only log significant state changes
   if (isWasmLoading || isRendering) {
     logger.debug('OutputPanel loading state:', { isWasmLoading, isRendering });
   }
-
-  const [containerHeight, setContainerHeight] = useState<number>(300); // Default height
-  const [scrollLeft, setScrollLeft] = useState<number>(0); // Track horizontal scroll position
-  const [rulerWidth, setRulerWidth] = useState<number>(1000); // Initial width for ruler
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle'); // Track copy button state
-  const preContainerRef = useRef<HTMLDivElement>(null);
-  const preRef = useRef<HTMLPreElement>(null);
-  const codeRef = useRef<HTMLElement>(null);
-  const copyTimeoutRef = useRef<number | null>(null);
-  const resizeStartRef = useRef<{ y: number; height: number } | null>(null);
-
-  // Handle scroll tracking for the ruler
-  useEffect(() => {
-
-    const handleScroll = () => {
-      if (preRef.current) {
-        setScrollLeft(preRef.current.scrollLeft);
-      }
-    };
-
-    // Calculate the width of the content for the ruler
-    const calculateRulerWidth = () => {
-      if (codeRef.current && output) {
-        // Find the longest line in the output
-        const lines = output.split('\n');
-        const maxLineLength = Math.max(...lines.map(line => line.length));
-        logger.debug('Calculating ruler width - maxLineLength:', maxLineLength, 'fontSize:', fontSize);
-
-        // Use actual character width measurement for accuracy
-        // Add some extra width for safety
-        const actualCharWidth = measureCharacterWidth(fontSize, "Consolas, 'Courier New', Courier, monospace");
-        const estimatedWidth = maxLineLength * actualCharWidth + 100;
-        const newWidth = Math.max(1000, estimatedWidth);
-        logger.debug('Setting ruler width to:', newWidth);
-        setRulerWidth(newWidth);
-      }
-    };
-
-    // Set up scroll event listener
-    const preElement = preRef.current;
-    if (preElement) {
-      logger.debug('Setting up scroll event listener');
-      preElement.addEventListener('scroll', handleScroll);
-      calculateRulerWidth();
-    }
-
-    return () => {
-      if (preElement) {
-        logger.debug('Cleaning up scroll event listener');
-        preElement.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, [output, fontSize]);
-
-  // Handle resize functionality
-  useEffect(() => {
-
-    const handleMouseMove = (e: Event) => {
-      if (!resizeStartRef.current) return;
-
-      // Cast the event to MouseEvent
-      const mouseEvent = e as globalThis.MouseEvent;
-
-      const newHeight = Math.max(100, resizeStartRef.current.height + mouseEvent.clientY - resizeStartRef.current.y);
-      logger.debug('Resizing container to height:', newHeight);
-      setContainerHeight(newHeight);
-    };
-
-    const handleMouseUp = () => {
-      logger.debug('Mouse up event, ending resize operation');
-      resizeStartRef.current = null;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    const handleMouseDown = (e: Event) => {
-      if (!preContainerRef.current) {
-        logger.debug('Mouse down on resize handle, but preContainerRef is not available');
-        return;
-      }
-
-      // Cast the event to MouseEvent
-      const mouseEvent = e as globalThis.MouseEvent;
-
-      const startHeight = preContainerRef.current.clientHeight;
-      logger.debug('Starting resize operation, current height:', startHeight);
-
-      resizeStartRef.current = {
-        y: mouseEvent.clientY,
-        height: startHeight
-      };
-
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    };
-
-    const resizeHandle = document.querySelector('.resize-handle');
-    if (resizeHandle) {
-      logger.debug('Adding resize handle event listener');
-      resizeHandle.addEventListener('mousedown', handleMouseDown);
-    } else {
-      logger.debug('Resize handle element not found');
-    }
-
-    return () => {
-      if (resizeHandle) {
-        logger.debug('Cleaning up resize handle event listener');
-        resizeHandle.removeEventListener('mousedown', handleMouseDown);
-      }
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
-
-  // Clean up copy timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (copyTimeoutRef.current) {
-        clearTimeout(copyTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Copy output to clipboard
-  const copyToClipboard = async () => {
-    logger.debug('copyToClipboard called');
-
-    if (!output) {
-      logger.warn('Copy to clipboard attempted with no output');
-      return;
-    }
-
-    try {
-      logger.debug('Attempting to copy output to clipboard, length:', output.length);
-      await navigator.clipboard.writeText(output);
-
-      logger.debug('Clipboard write completed, updating copy button state to show success');
-      
-      // Use a small delay to ensure the clipboard operation is fully complete
-      // This helps with browser timing differences, especially in test environments
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
-      setCopyStatus('copied');
-
-      // Clear any existing timeout
-      if (copyTimeoutRef.current) {
-        clearTimeout(copyTimeoutRef.current);
-      }
-
-      copyTimeoutRef.current = window.setTimeout(() => {
-        logger.debug('Resetting copy button state');
-        setCopyStatus('idle');
-        copyTimeoutRef.current = null;
-      }, 2000);
-
-      logger.info('Output copied to clipboard successfully');
-    } catch (err) {
-      const { message } = extractErrorInfo(err);
-      logger.error('Failed to copy text to clipboard:', message);
-    }
-  };
 
   // Log what's being rendered
   useEffect(() => {
@@ -271,7 +63,6 @@ const OutputPanel: React.FC = () => {
       logger.debug('OutputPanel is in an undefined state - no loading, no message, no output');
     }
   }, [isLoading, message, output]);
-
 
   return (
     <div className="content-container">
@@ -326,13 +117,10 @@ const OutputPanel: React.FC = () => {
             </code>
           </pre>
 
-          <button 
-            className={`copy-button ${copyStatus === 'copied' ? 'copied' : ''}`}
-            onClick={copyToClipboard}
+          <CopyButton 
+            content={output}
             data-testid="copy-button"
-          >
-            {copyStatus === 'copied' ? 'Copied!' : 'Copy'}
-          </button>
+          />
 
           <div className="resize-handle" title="Drag to resize" />
         </div>
