@@ -4,132 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"slices"
-	"strings"
 	"syscall/js"
 
-	sppb "cloud.google.com/go/spanner/apiv1/spannerpb"
-	"github.com/apstndb/lox"
 	queryplan "github.com/apstndb/spannerplan"
-	"github.com/apstndb/spannerplan/plantree"
-	"github.com/mattn/go-runewidth"
-	"github.com/olekukonko/tablewriter"
-	"github.com/olekukonko/tablewriter/renderer"
-	"github.com/olekukonko/tablewriter/tw"
-	"github.com/samber/lo"
+	"github.com/apstndb/spannerplan/plantree/reference"
 )
 
-type RenderMode string
-
-const (
-	RenderModeAuto    RenderMode = "AUTO"
-	RenderModePlan    RenderMode = "PLAN"
-	RenderModeProfile RenderMode = "PROFILE"
-)
-
-func ParseRenderMode(s string) (RenderMode, error) {
-	switch strings.ToUpper(s) {
-	case "AUTO":
-		return RenderModeAuto, nil
-	case "PLAN":
-		return RenderModePlan, nil
-	case "PROFILE":
-		return RenderModeProfile, nil
-	default:
-		return "", fmt.Errorf("unknown render mode: %s", s)
-	}
-}
-
-func RenderTreeTable(planNodes []*sppb.PlanNode, mode RenderMode, format Format, wrapWidth int) (string, error) {
-	var withStats bool
-	switch mode {
-	case RenderModeAuto:
-		withStats = queryplan.HasStats(planNodes)
-	case RenderModePlan:
-		withStats = false
-	case RenderModeProfile:
-		withStats = true
-	default:
-		return "", fmt.Errorf("unknown render mode: %s", mode)
-	}
-
-	rendered, err := ProcessTree(planNodes, format, wrapWidth)
-	if err != nil {
-		return "", err
-	}
-
-	tablePart, err := renderTablePart(rendered, withStats)
-	if err != nil {
-		return "", err
-	}
-
-	predPart, err := renderPredicatesPart(rendered)
-	if err != nil {
-		return "", err
-	}
-
-	return tablePart + predPart, nil
-
-}
-
-func renderPredicatesPart(rendered []plantree.RowWithPredicates) (string, error) {
-	maxIDLength := len(fmt.Sprint(lo.LastOr(rendered, plantree.RowWithPredicates{}).ID))
-
-	var predicates []string
-	for _, row := range rendered {
-		for i, predicate := range row.Predicates {
-			prefix := runewidth.FillLeft(lox.IfOrEmpty(i == 0, fmt.Sprint(row.ID)+":"), maxIDLength+1)
-			predicates = append(predicates, fmt.Sprintf("%s %s", prefix, predicate))
-		}
-	}
-
-	var sb strings.Builder
-	if len(predicates) > 0 {
-		fmt.Fprintln(&sb, "Predicates(identified by ID):")
-		for _, s := range predicates {
-			fmt.Fprintln(&sb, " "+s)
-		}
-	}
-	return sb.String(), nil
-}
-
-func renderTablePart(rendered []plantree.RowWithPredicates, withStats bool, ) (string, error) {
-	var sb strings.Builder
-	table := tablewriter.NewTable(&sb,
-		tablewriter.WithRenderer(
-			renderer.NewBlueprint(tw.Rendition{Symbols: tw.NewSymbols(tw.StyleASCII)}),
-		),
-		tablewriter.WithTrimSpace(tw.Off),
-		tablewriter.WithHeaderAutoFormat(tw.Off),
-		tablewriter.WithHeaderAlignment(tw.AlignLeft),
-	)
-	table.Configure(func(config *tablewriter.Config) {
-		config.Header.Formatting.AutoFormat = tw.Off
-		config.Row.ColumnAligns = []tw.Align{tw.AlignRight, tw.AlignLeft}
-	})
-
-	header := []string{"ID", "Operator"}
-	if withStats {
-		header = append(header, "Rows", "Exec.", "Total Latency")
-	}
-	table.Header(header)
-
-	for _, n := range rendered {
-		rowData := []string{n.FormatID(), n.Text()}
-		if withStats {
-			rowData = append(rowData, n.ExecutionStats.Rows.Total, n.ExecutionStats.ExecutionSummary.NumExecutions, n.ExecutionStats.Latency.String())
-		}
-
-		if err := table.Append(rowData); err != nil {
-			return "", err
-		}
-	}
-
-	if err := table.Render(); err != nil {
-		return "", err
-	}
-	return sb.String(), nil
-}
 
 type params struct {
 	Input     string `json:"input"`
@@ -202,7 +82,7 @@ func (e InvalidParametersError) Error() string {
 // renderASCII is the main WASM function exposed to JavaScript
 // It takes JSON string parameters and returns structured JSON responses
 // instead of throwing JavaScript errors directly
-func renderASCII(this js.Value, args []js.Value) any {
+func renderASCII(_ js.Value, args []js.Value) any {
 	// Helper function to return structured error response
 	errorResponse := func(errorType, message, details string) string {
 		resp := Response{
@@ -286,12 +166,12 @@ func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int) 
 		return "", ParseError{msg: fmt.Sprintf("Failed to extract query plan: %v", err)}
 	}
 
-	mode, err := ParseRenderMode(modeStr)
+	mode, err := reference.ParseRenderMode(modeStr)
 	if err != nil {
 		return "", InvalidParametersError{msg: fmt.Sprintf("Invalid render mode: %v", err)}
 	}
 
-	format, err := ParseFormat(formatStr)
+	format, err := reference.ParseFormat(formatStr)
 	if err != nil {
 		return "", InvalidParametersError{msg: fmt.Sprintf("Invalid format type: %v", err)}
 	}
@@ -307,72 +187,13 @@ func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int) 
 		return "", InvalidSpannerFormatError{msg: "Plan nodes are missing from query plan"}
 	}
 
-	s, err := RenderTreeTable(planNodes, mode, format, wrapWidth)
+	s, err := reference.RenderTreeTable(planNodes, mode, format, wrapWidth)
 	if err != nil {
 		return "", RenderError{msg: fmt.Sprintf("Failed to render tree table: %v", err)}
 	}
 	return s, nil
 }
 
-type Format string
-
-const (
-	formatTraditional Format = "TRADITIONAL"
-	formatCurrent     Format = "CURRENT"
-	formatCompact     Format = "COMPACT"
-)
-
-func ParseFormat(str string) (Format, error) {
-	switch strings.ToUpper(str) {
-	case "TRADITIONAL":
-		return formatTraditional, nil
-	case "CURRENT":
-		return formatCurrent, nil
-	case "COMPACT":
-		return formatCompact, nil
-	default:
-		return "", fmt.Errorf("unknown Format: %s", str)
-	}
-
-}
-
-func ProcessTree(planNodes []*sppb.PlanNode, format Format, wrapWidth int) ([]plantree.RowWithPredicates, error) {
-	qp, err := queryplan.New(planNodes)
-	if err != nil {
-		return nil, err
-	}
-
-	var opts []plantree.Option
-	opts = append(opts, optsForFormat(format)...)
-
-	if wrapWidth > 0 {
-		opts = append(opts, plantree.WithWrapWidth(wrapWidth))
-	}
-
-	return plantree.ProcessPlan(qp, opts...)
-}
-
-func optsForFormat(format Format) []plantree.Option {
-	currentOpts := []plantree.Option{
-		plantree.WithQueryPlanOptions(
-			queryplan.WithKnownFlagFormat(queryplan.KnownFlagFormatLabel),
-			queryplan.WithExecutionMethodFormat(queryplan.ExecutionMethodFormatAngle),
-			queryplan.WithTargetMetadataFormat(queryplan.TargetMetadataFormatOn),
-		),
-	}
-
-	switch format {
-	case formatTraditional:
-		return nil
-	case formatCurrent:
-		return currentOpts
-	case formatCompact:
-		return slices.Concat(currentOpts,
-			[]plantree.Option{plantree.EnableCompact()})
-	default:
-		return nil
-	}
-}
 
 func main() {
 	js.Global().Set("renderASCII", js.FuncOf(renderASCII))
