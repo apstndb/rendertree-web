@@ -92,14 +92,14 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             <p>Sample files:</p>
             <button 
               className="sample-file-button" 
-              onClick={() => loadSampleFile('dca_profile.yaml')}
+              onClick={() => loadSampleFile('testdata/dca_profile.yaml')}
               disabled={disabled}
             >
               Load dca_profile.yaml
             </button>
             <button 
               className="sample-file-button" 
-              onClick={() => loadSampleFile('dca_plan.yaml')}
+              onClick={() => loadSampleFile('testdata/dca_plan.yaml')}
               disabled={disabled}
             >
               Load dca_plan.yaml
