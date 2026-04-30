@@ -191,7 +191,8 @@ describe('Go-TypeScript Type Synchronization', () => {
         input: 'test query plan',
         mode: 'AUTO' as RenderMode,
         format: 'CURRENT' as FormatType,
-        wrapWidth: 80
+        wrapWidth: 80,
+        hangingIndent: true
       };
 
       expect(typeof renderParams.input).toBe('string');
@@ -199,6 +200,7 @@ describe('Go-TypeScript Type Synchronization', () => {
       expect(['CURRENT', 'TRADITIONAL', 'COMPACT']).toContain(renderParams.format);
       expect(typeof renderParams.wrapWidth).toBe('number');
       expect(Number.isInteger(renderParams.wrapWidth)).toBe(true);
+      expect(typeof renderParams.hangingIndent).toBe('boolean');
     });
 
     it('should validate parameters with zero wrap width', () => {
@@ -207,11 +209,13 @@ describe('Go-TypeScript Type Synchronization', () => {
         input: 'test input',
         mode: 'PLAN' as RenderMode, 
         format: 'TRADITIONAL' as FormatType,
-        wrapWidth: 0
+        wrapWidth: 0,
+        hangingIndent: false
       };
 
       expect(noWrapParams.wrapWidth).toBe(0);
       expect(Number.isInteger(noWrapParams.wrapWidth)).toBe(true);
+      expect(noWrapParams.hangingIndent).toBe(false);
     });
   });
 });

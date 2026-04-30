@@ -10,12 +10,12 @@ import (
 	"github.com/apstndb/spannerplan/plantree/reference"
 )
 
-
 type params struct {
-	Input     string `json:"input"`
-	Mode      string `json:"mode"`
-	Format    string `json:"format"`
-	WrapWidth int    `json:"wrapWidth"`
+	Input         string `json:"input"`
+	Mode          string `json:"mode"`
+	Format        string `json:"format"`
+	WrapWidth     int    `json:"wrapWidth"`
+	HangingIndent bool   `json:"hangingIndent"`
 }
 
 // Response represents the structured response from WASM
@@ -108,25 +108,25 @@ func renderASCII(_ js.Value, args []js.Value) any {
 	}
 
 	if len(args) != 1 {
-		return errorResponse(ErrorTypeInvalidParameters, 
-			"Invalid number of arguments", 
+		return errorResponse(ErrorTypeInvalidParameters,
+			"Invalid number of arguments",
 			fmt.Sprintf("Expected 1 argument, got %d", len(args)))
 	}
 
 	par := params{}
 	if err := json.Unmarshal([]byte(args[0].String()), &par); err != nil {
-		return errorResponse(ErrorTypeParseError, 
-			"Failed to parse parameters", 
+		return errorResponse(ErrorTypeParseError,
+			"Failed to parse parameters",
 			err.Error())
 	}
 
-	s, err := renderASCIIImpl(par.Input, par.Mode, par.Format, par.WrapWidth)
+	s, err := renderASCIIImpl(par.Input, par.Mode, par.Format, par.WrapWidth, par.HangingIndent)
 	if err != nil {
 		// Classify error types using errors.As for type-safe error handling
 		errorType := classifyError(err)
 		return errorResponse(errorType, err.Error(), "")
 	}
-	
+
 	return successResponse(s)
 }
 
@@ -137,29 +137,29 @@ func classifyError(err error) string {
 	if errors.As(err, &parseErr) {
 		return ErrorTypeParseError
 	}
-	
+
 	var spannerErr InvalidSpannerFormatError
 	if errors.As(err, &spannerErr) {
 		return ErrorTypeInvalidSpannerFormat
 	}
-	
+
 	var renderErr RenderError
 	if errors.As(err, &renderErr) {
 		return ErrorTypeRenderError
 	}
-	
+
 	var paramErr InvalidParametersError
 	if errors.As(err, &paramErr) {
 		return ErrorTypeInvalidParameters
 	}
-	
+
 	// Default to render error for unknown error types
 	return ErrorTypeRenderError
 }
 
 // renderASCIIImpl implements the core rendering logic
 // Validates parameters, extracts query plan, and renders ASCII output
-func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int) (string, error) {
+func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int, hangingIndent bool) (string, error) {
 	stats, _, err := queryplan.ExtractQueryPlan([]byte(j))
 	if err != nil {
 		// Wrap external parsing errors in our custom type
@@ -181,19 +181,23 @@ func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int) 
 	if queryPlan == nil {
 		return "", InvalidSpannerFormatError{msg: "Query plan is missing from input"}
 	}
-	
+
 	planNodes := queryPlan.GetPlanNodes()
 	if len(planNodes) == 0 {
 		return "", InvalidSpannerFormatError{msg: "Plan nodes are missing from query plan"}
 	}
 
-	s, err := reference.RenderTreeTable(planNodes, mode, format, wrapWidth)
+	opts := []reference.Option{reference.WithWrapWidth(wrapWidth)}
+	if hangingIndent {
+		opts = append(opts, reference.WithHangingIndent())
+	}
+
+	s, err := reference.RenderTreeTableWithOptions(planNodes, mode, format, opts...)
 	if err != nil {
 		return "", RenderError{msg: fmt.Sprintf("Failed to render tree table: %v", err)}
 	}
 	return s, nil
 }
-
 
 func main() {
 	js.Global().Set("renderASCII", js.FuncOf(renderASCII))

@@ -14,6 +14,7 @@ Rendertree Web is a privacy-focused, client-side application that processes Goog
 - **Real-time visualization**: Interactive ASCII tree rendering of execution plans
 - **Multiple formats**: Supports YAML and JSON input formats
 - **Execution profiling**: Visualizes both query plans and execution statistics
+- **Wrapping controls**: Supports configurable wrap width and hanging indent for wrapped tree output
 
 ### Target Users
 

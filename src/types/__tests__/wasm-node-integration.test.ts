@@ -382,6 +382,50 @@ stats:
         }
       }
     });
+
+    it('should apply hanging indent for wrapped node-local prefixes', () => {
+      const testInput = `
+stats:
+  queryPlan:
+    planNodes:
+      - displayName: "Cross Apply"
+        kind: RELATIONAL
+        index: 0
+        childLinks:
+          - childIndex: 1
+          - childIndex: 2
+            type: "Map"
+      - displayName: "Batch Scan"
+        kind: RELATIONAL
+        index: 1
+        metadata:
+          execution_method: "Row"
+      - displayName: "Serialize Result"
+        kind: RELATIONAL
+        index: 2
+`;
+
+      const baseParams: RenderParams = {
+        input: testInput,
+        mode: 'PLAN',
+        format: 'CURRENT',
+        wrapWidth: 21
+      };
+
+      const withoutHanging: WasmResponse = JSON.parse(renderASCII(JSON.stringify({
+        ...baseParams,
+        hangingIndent: false
+      })));
+      const withHanging: WasmResponse = JSON.parse(renderASCII(JSON.stringify({
+        ...baseParams,
+        hangingIndent: true
+      })));
+
+      expect(withoutHanging.success).toBe(true);
+      expect(withHanging.success).toBe(true);
+      expect(withHanging.result).not.toBe(withoutHanging.result);
+      expect(withHanging.result).toContain('[Input] Batch Scan');
+    });
   });
 
   describe('JSON Serialization Validation', () => {

@@ -7,6 +7,7 @@ export interface AppState {
   renderMode: string;
   format: string;
   wrapWidth: number;
+  hangingIndent: boolean;
   fontSize: number;
   output: string;
   message: string;
@@ -20,6 +21,7 @@ export interface AppContextType extends AppState {
   setRenderMode: (renderMode: string) => void;
   setFormat: (format: string) => void;
   setWrapWidth: (wrapWidth: number) => void;
+  setHangingIndent: (hangingIndent: boolean) => void;
   setFontSize: (fontSize: number) => void;
   handleRender: () => Promise<void>;
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;

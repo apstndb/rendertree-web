@@ -112,15 +112,17 @@ export async function initWasm(): Promise<WasmFunctions> {
  * @param mode Render mode (AUTO, PLAN, PROFILE)
  * @param format Format (CURRENT, TRADITIONAL, COMPACT)
  * @param wrapWidth Wrap width (0 for no wrap)
+ * @param hangingIndent Whether wrapped lines should align after node-local prefixes
  * @returns ASCII representation of query plan
  */
 export async function renderASCIITree(
   input: string, 
   mode: RenderMode = 'AUTO', 
   format: FormatType = 'CURRENT', 
-  wrapWidth: number = 0
+  wrapWidth: number = 0,
+  hangingIndent: boolean = false
 ): Promise<string> {
-  logger.info('renderASCIITree called with mode:', mode, 'format:', format, 'wrapWidth:', wrapWidth);
+  logger.info('renderASCIITree called with mode:', mode, 'format:', format, 'wrapWidth:', wrapWidth, 'hangingIndent:', hangingIndent);
   logger.debug('Input length:', input.length, 'characters');
 
   try {
@@ -131,7 +133,8 @@ export async function renderASCIITree(
       input,
       mode,
       format,
-      wrapWidth
+      wrapWidth,
+      hangingIndent
     };
 
     logger.debug('Calling WASM renderASCII function');

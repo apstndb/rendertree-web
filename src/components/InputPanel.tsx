@@ -19,6 +19,8 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     setFormat,
     wrapWidth,
     setWrapWidth,
+    hangingIndent,
+    setHangingIndent,
     handleRender,
     handleFileUpload,
     loadSampleFile
@@ -53,7 +55,7 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
       return () => clearTimeout(timeoutId);
     }
     return undefined;
-  }, [renderMode, format, input, disabled, handleRender]);
+  }, [renderMode, format, hangingIndent, input, disabled, handleRender]);
 
   // Handle wrap width input with debouncing and special keys
   const handleWrapWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,6 +177,17 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             title="Press Enter or wait 2 seconds to apply changes"
           />
         </div>
+        <label className="checkbox-container" htmlFor="hangingIndent">
+          <input
+            type="checkbox"
+            id="hangingIndent"
+            checked={hangingIndent}
+            onChange={(e) => setHangingIndent(e.target.checked)}
+            aria-label="Enable hanging indent for wrapped lines"
+            disabled={disabled}
+          />
+          <span>Hanging indent for wrapped lines</span>
+        </label>
         <button
           className="primary-button"
           onClick={handleRender}

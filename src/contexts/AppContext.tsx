@@ -12,6 +12,7 @@ interface AppState {
   renderMode: string;
   format: string;
   wrapWidth: number;
+  hangingIndent: boolean;
   output: string;
   message: string;
   isRendering: boolean;
@@ -24,6 +25,7 @@ interface AppContextType extends AppState {
   setRenderMode: (renderMode: string) => void;
   setFormat: (format: string) => void;
   setWrapWidth: (wrapWidth: number) => void;
+  setHangingIndent: (hangingIndent: boolean) => void;
   handleRender: () => Promise<void>;
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   loadSampleFile: (filename: string) => Promise<void>;
@@ -46,6 +48,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [renderMode, setRenderMode] = useState<string>('AUTO');
   const [format, setFormat] = useState<string>('CURRENT');
   const [wrapWidth, setWrapWidth] = useState<number>(0);
+  const [hangingIndent, setHangingIndent] = useState<boolean>(false);
   const [output, setOutput] = useState<string>('');
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('Loading rendering engine... Please wait.');
@@ -100,10 +103,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         input,
         mode: renderMode,
         format,
-        wrapWidth
+        wrapWidth,
+        hangingIndent
       };
 
-      logger.debug('Rendering with params:', { mode: renderMode, format, wrapWidth, inputLength: input.length });
+      logger.debug('Rendering with params:', { mode: renderMode, format, wrapWidth, hangingIndent, inputLength: input.length });
 
       const startTime = performance.now();
       const resultStr = renderASCII(JSON.stringify(params));
@@ -143,7 +147,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       logger.debug('Setting isRendering to false');
       setIsRendering(false);
     }
-  }, [input, renderMode, format, wrapWidth, renderASCII]);
+  }, [input, renderMode, format, wrapWidth, hangingIndent, renderASCII]);
 
   // Handle file upload using FileContext
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,6 +198,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setFormat,
     wrapWidth,
     setWrapWidth,
+    hangingIndent,
+    setHangingIndent,
     output,
     message,
     isRendering,

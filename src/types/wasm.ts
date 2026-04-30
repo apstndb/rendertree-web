@@ -26,6 +26,8 @@ export interface RenderParams {
   format: FormatType; 
   /** Text wrapping width (0 = no wrap) */
   wrapWidth: number; 
+  /** Whether wrapped lines should align after node-local prefixes such as [Input] or [Map] */
+  hangingIndent?: boolean;
 }
 
 /**

@@ -460,6 +460,20 @@ pre::-webkit-scrollbar-corner {
   width: 100%; /* Make select full width */
 }
 
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: #495057;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin: 0;
+}
+
 /* Content container */
 .content-container {
   flex: 1;

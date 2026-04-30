@@ -26,12 +26,14 @@ describe('WASM types', () => {
       mode: 'AUTO',
       format: 'CURRENT',
       wrapWidth: 80,
+      hangingIndent: true,
     };
     
     expect(params.input).toBe('test input');
     expect(params.mode).toBe('AUTO');
     expect(params.format).toBe('CURRENT');
     expect(params.wrapWidth).toBe(80);
+    expect(params.hangingIndent).toBe(true);
   });
 
   it('should create valid WasmFunctions object', () => {
@@ -51,6 +53,7 @@ describe('WASM types', () => {
       mode: 'AUTO',
       format: 'CURRENT',
       wrapWidth: 0,
+      hangingIndent: false,
     });
     
     const result = wasmFunctions.renderASCII(testParams);
@@ -64,18 +67,21 @@ describe('WASM types', () => {
         mode: 'PLAN',
         format: 'TRADITIONAL',
         wrapWidth: 100,
+        hangingIndent: false,
       },
       {
         input: 'profile data',
         mode: 'PROFILE',
         format: 'COMPACT',
         wrapWidth: 0,
+        hangingIndent: true,
       },
       {
         input: 'auto detect',
         mode: 'AUTO',
         format: 'CURRENT',
         wrapWidth: 120,
+        hangingIndent: false,
       },
     ];
 
@@ -85,6 +91,7 @@ describe('WASM types', () => {
       expect(['CURRENT', 'TRADITIONAL', 'COMPACT']).toContain(params.format);
       expect(typeof params.wrapWidth).toBe('number');
       expect(params.wrapWidth).toBeGreaterThanOrEqual(0);
+      expect(typeof params.hangingIndent).toBe('boolean');
     });
   });
 });

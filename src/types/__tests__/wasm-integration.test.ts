@@ -17,7 +17,8 @@ describe('WASM Integration Type Validation', () => {
         input: 'test input',
         mode: 'AUTO',
         format: 'CURRENT',
-        wrapWidth: 80
+        wrapWidth: 80,
+        hangingIndent: true
       };
 
       // Should serialize without data loss
@@ -28,6 +29,7 @@ describe('WASM Integration Type Validation', () => {
       expect(deserialized.mode).toBe(params.mode);
       expect(deserialized.format).toBe(params.format);
       expect(deserialized.wrapWidth).toBe(params.wrapWidth);
+      expect(deserialized.hangingIndent).toBe(params.hangingIndent);
     });
 
     it('should validate all render mode values are properly typed', () => {
@@ -192,7 +194,8 @@ describe('WASM Integration Type Validation', () => {
         input: 'stats:\\n  queryPlan:\\n    planNodes: []',
         mode: 'AUTO',
         format: 'CURRENT',
-        wrapWidth: 80
+        wrapWidth: 80,
+        hangingIndent: false
       };
 
       // Serialize request (what would be sent to WASM)
@@ -204,6 +207,7 @@ describe('WASM Integration Type Validation', () => {
       expect(parsedRequest.mode).toBe(request.mode);
       expect(parsedRequest.format).toBe(request.format);
       expect(parsedRequest.wrapWidth).toBe(request.wrapWidth);
+      expect(parsedRequest.hangingIndent).toBe(request.hangingIndent);
 
       // Mock response (what would be returned from WASM)
       const response: WasmResponse = {
@@ -274,9 +278,11 @@ describe('WASM Integration Type Validation', () => {
         input: 'required',
         mode: 'AUTO',     // required
         format: 'CURRENT', // required  
-        wrapWidth: 80     // required
+        wrapWidth: 80,    // required
+        hangingIndent: true
       };
-      expect(Object.keys(params)).toHaveLength(4);
+      expect(Object.keys(params)).toHaveLength(5);
+      expect(params.hangingIndent).toBe(true);
 
       // WasmResponse requires success, optional result/error
       const response: WasmResponse = {
