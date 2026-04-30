@@ -3,14 +3,16 @@ import type { ReactNode } from 'react';
 import { createContextWithHook } from '../utils/createContextWithHook';
 import { useWasmContext } from './WasmContext';
 import { useFileContext } from './FileContext';
+import { renderASCIITree } from '../wasm';
+import type { FormatType, RenderMode } from '../types/wasm';
 import { logger } from '../utils/logger';
 
 // Define types for the application state
 interface AppState {
   input: string;
   renderType: string;
-  renderMode: string;
-  format: string;
+  renderMode: RenderMode;
+  format: FormatType;
   wrapWidth: number;
   hangingIndent: boolean;
   output: string;
@@ -22,8 +24,8 @@ interface AppState {
 interface AppContextType extends AppState {
   setInput: (input: string) => void;
   setRenderType: (renderType: string) => void;
-  setRenderMode: (renderMode: string) => void;
-  setFormat: (format: string) => void;
+  setRenderMode: (renderMode: RenderMode) => void;
+  setFormat: (format: FormatType) => void;
   setWrapWidth: (wrapWidth: number) => void;
   setHangingIndent: (hangingIndent: boolean) => void;
   handleRender: () => Promise<void>;
@@ -45,8 +47,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   // Application state
   const [input, setInput] = useState<string>('');
   const [renderType, setRenderType] = useState<string>('ascii');
-  const [renderMode, setRenderMode] = useState<string>('AUTO');
-  const [format, setFormat] = useState<string>('CURRENT');
+  const [renderMode, setRenderMode] = useState<RenderMode>('AUTO');
+  const [format, setFormat] = useState<FormatType>('CURRENT');
   const [wrapWidth, setWrapWidth] = useState<number>(0);
   const [hangingIndent, setHangingIndent] = useState<boolean>(false);
   const [output, setOutput] = useState<string>('');
@@ -99,46 +101,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setMessage('Rendering...');
 
     try {
-      const params = {
-        input,
-        mode: renderMode,
-        format,
-        wrapWidth,
-        hangingIndent
-      };
-
       logger.debug('Rendering with params:', { mode: renderMode, format, wrapWidth, hangingIndent, inputLength: input.length });
 
       const startTime = performance.now();
-      const resultStr = renderASCII(JSON.stringify(params));
+      const rendered = await renderASCIITree(input, renderMode, format, wrapWidth, hangingIndent);
       const endTime = performance.now();
 
       logger.info(`Rendering completed in ${(endTime - startTime).toFixed(2)}ms`);
-      logger.debug('Result string length:', resultStr.length, 'characters');
-
-      // Parse the structured response from WASM
-      try {
-        const response = JSON.parse(resultStr);
-        
-        if (response.success && response.result !== undefined) {
-          logger.debug('WASM returned successful result, setting output');
-          setOutput(response.result);
-          setMessage('');
-        } else if (response.error) {
-          logger.error('WASM returned error:', response.error);
-          const errorMsg = `${response.error.message}${response.error.details ? ': ' + response.error.details : ''}`;
-          setMessage(`Error: ${errorMsg}`);
-          setOutput('');
-        } else {
-          logger.error('Invalid WASM response structure:', response);
-          setMessage('Error: Invalid response from rendering engine');
-          setOutput('');
-        }
-      } catch (parseError) {
-        logger.error('Failed to parse WASM response JSON:', parseError instanceof Error ? parseError.message : String(parseError));
-        setMessage('Error: Invalid response format from rendering engine');
-        setOutput('');
-      }
+      logger.debug('Result string length:', rendered.length, 'characters');
+      setOutput(rendered);
+      setMessage('');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       logger.error('Error during rendering:', errorMsg);
@@ -154,28 +126,23 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     fileUpload(
       event,
       (content) => {
-        logger.info('File content loaded into input, triggering render');
+        logger.info('File content loaded into input');
         setInput(content);
-        handleRender();
       },
       (errorMsg) => {
         setMessage(`Error: ${errorMsg}`);
       }
     );
-  }, [fileUpload, handleRender]);
+  }, [fileUpload]);
 
   // Load sample file using FileContext
   const loadSampleFile = useCallback(async (filename: string) => {
     await sampleFileLoader(
       filename,
       (content) => {
-        logger.info('Sample file content loaded into input, triggering render');
+        logger.info('Sample file content loaded into input');
         setInput(content);
         setMessage(`Sample file ${filename} loaded successfully. Rendering...`);
-        // Auto-render after loading sample file
-        setTimeout(() => {
-          handleRender();
-        }, 100); // Small delay to ensure state is updated
       },
       (errorMsg) => {
         setMessage(`Error loading sample file: ${errorMsg}`);
@@ -184,7 +151,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setMessage(loadingMsg);
       }
     );
-  }, [sampleFileLoader, handleRender]);
+  }, [sampleFileLoader]);
 
   // Context value
   const contextValue: AppContextType = {

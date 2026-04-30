@@ -14,6 +14,7 @@ import { extractErrorInfo } from './utils/errorHandling';
 declare function renderASCII(paramsJson: string): string;
 
 let wasmInitialized = false;
+let initPromise: Promise<WasmFunctions> | null = null;
 
 /**
  * Wait for Go class to be available (loaded by wasm_exec.js)
@@ -45,24 +46,35 @@ export async function initWasm(): Promise<WasmFunctions> {
     return { renderASCII };
   }
 
+  if (initPromise) {
+    logger.info('WASM initialization already in progress, returning existing promise');
+    return initPromise;
+  }
+
+  initPromise = initializeWasm();
+  return initPromise;
+}
+
+async function initializeWasm(): Promise<WasmFunctions> {
   logger.info('Starting WASM initialization');
-  
-  // Wait for Go class to be available from wasm_exec.js
-  logger.debug('Waiting for Go class to be loaded...');
-  await waitForGo();
-  
-  const go = new ((globalThis as typeof globalThis & { Go: new () => { importObject: WebAssembly.Imports; run: (instance: WebAssembly.Instance) => Promise<void> } }).Go)();
+
   try {
+    // Wait for Go class to be available from wasm_exec.js
+    logger.debug('Waiting for Go class to be loaded...');
+    await waitForGo();
+
+    const go = new ((globalThis as typeof globalThis & { Go: new () => { importObject: WebAssembly.Imports; run: (instance: WebAssembly.Instance) => Promise<void> } }).Go)();
+
     // Simplified WASM path resolution using Vite environment detection
     // Use import.meta.env to determine the environment instead of URL parsing
     const isDevelopment = import.meta.env.DEV;
     const isPreview = import.meta.env.VITE_PREVIEW === 'true';
-    
+
     logger.debug('Environment detection:', { isDevelopment, isPreview });
 
     // Determine WASM path based on environment
     let wasmPath: string;
-    
+
     if (isDevelopment) {
       // Development mode: WASM is in dist directory
       wasmPath = "./dist/rendertree.wasm";
@@ -92,12 +104,13 @@ export async function initWasm(): Promise<WasmFunctions> {
     const result = await WebAssembly.instantiateStreaming(fetchResponse, go.importObject);
 
     logger.debug('WASM instantiated, starting Go runtime');
-    go.run(result.instance);
+    void go.run(result.instance);
 
     logger.info('WASM initialization completed successfully');
     wasmInitialized = true;
     return { renderASCII };
   } catch (e) {
+    initPromise = null;
     const { message, originalError } = extractErrorInfo(e);
     logger.error("Error initializing WebAssembly:", message);
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { useDebounce } from '../hooks/useDebounce';
+import type { FormatType, RenderMode } from '../types/wasm';
 
 interface InputPanelProps {
   disabled: boolean;
@@ -55,7 +56,7 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
       return () => clearTimeout(timeoutId);
     }
     return undefined;
-  }, [renderMode, format, hangingIndent, input, disabled, handleRender]);
+  }, [renderMode, format, wrapWidth, hangingIndent, input, disabled, handleRender]);
 
   // Handle wrap width input with debouncing and special keys
   const handleWrapWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +141,7 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             id="renderMode"
             aria-label="Render mode"
             value={renderMode}
-            onChange={(e) => setRenderMode(e.target.value)}
+            onChange={(e) => setRenderMode(e.target.value as RenderMode)}
             disabled={disabled}
           >
             <option value="AUTO">AUTO</option>
@@ -154,7 +155,7 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             id="format"
             aria-label="Format"
             value={format}
-            onChange={(e) => setFormat(e.target.value)}
+            onChange={(e) => setFormat(e.target.value as FormatType)}
             disabled={disabled}
           >
             <option value="CURRENT">CURRENT</option>

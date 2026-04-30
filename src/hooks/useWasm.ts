@@ -13,13 +13,18 @@ export function useWasm() {
 
   useEffect(() => {
     logger.info('Starting WASM initialization in useWasm hook');
+    let active = true;
 
     const initWasm = async () => {
       try {
         logger.debug('Calling initWasm from useWasm hook');
         const startTime = performance.now();
 
-        wasmInstance.current = await initWasmOriginal();
+        const wasm = await initWasmOriginal();
+        if (!active) {
+          return;
+        }
+        wasmInstance.current = wasm;
 
         const endTime = performance.now();
         logger.info(`WASM initialization completed in ${(endTime - startTime).toFixed(2)}ms`);
@@ -27,6 +32,9 @@ export function useWasm() {
         logger.debug('Setting isLoading to false');
         setIsLoading(false);
       } catch (err) {
+        if (!active) {
+          return;
+        }
         const { message, originalError } = extractErrorInfo(err);
         logger.error('Error in useWasm hook during initialization:', message);
 
@@ -40,6 +48,7 @@ export function useWasm() {
 
     // Cleanup function
     return () => {
+      active = false;
       logger.debug('useWasm hook cleanup');
     };
   }, []);

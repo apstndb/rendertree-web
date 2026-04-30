@@ -8,6 +8,7 @@ const execAsync = promisify(exec);
 
 export default function goWasm(): Plugin {
   let isBuilding = false; // Prevent duplicate builds
+  let command: 'build' | 'serve';
   
   /**
    * Builds Go WASM and sets up necessary files.
@@ -60,15 +61,18 @@ export default function goWasm(): Plugin {
 
   return {
     name: 'vite-plugin-go-wasm',
+    configResolved(config) {
+      command = config.command;
+    },
     async buildStart() {
-      // Only build in buildStart for development server
-      // Production builds will use closeBundle
-      await buildGoWasm('buildStart', false);
+      if (command === 'serve') {
+        await buildGoWasm('buildStart', false);
+      }
     },
     async closeBundle() {
-      // Build for production and copy to assets directory
-      // The buildStart flag prevents duplicate building during dev server
-      await buildGoWasm('closeBundle', true);
+      if (command === 'build') {
+        await buildGoWasm('closeBundle', true);
+      }
     }
   };
 }

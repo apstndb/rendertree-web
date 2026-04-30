@@ -34,7 +34,7 @@ This project consists of:
 
 ### Prerequisites
 
-- Node.js (v18 or later)
+- Node.js (v22 or later)
 - Go (v1.24 or later)
 
 ### Setup
