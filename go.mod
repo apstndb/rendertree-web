@@ -2,7 +2,7 @@ module github.com/apstndb/rendertree-web
 
 go 1.24
 
-require github.com/apstndb/spannerplan v0.1.6
+require github.com/apstndb/spannerplan v0.1.7
 
 require (
 	cloud.google.com/go/spanner v1.82.0 // indirect
