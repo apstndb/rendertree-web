@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useAppContext } from '../contexts/AppContext';
+import { useAppContext, type ScalarAliasResolution } from '../contexts/AppContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { useDebounce } from '../hooks/useDebounce';
-import type { FormatType, PrintSection, RenderMode } from '../types/wasm';
+import type { FormatType, PrintSection } from '../types/wasm';
 
 interface InputPanelProps {
   disabled: boolean;
@@ -27,6 +27,12 @@ const appendixPresetOptions: Array<{ value: AppendixPreset; label: string; secti
   { value: 'full', label: 'Full debug', sections: ['full'] },
 ];
 
+const scalarAliasResolutionOptions: Array<{ value: ScalarAliasResolution; label: string }> = [
+  { value: 'none', label: 'None' },
+  { value: 'direct', label: 'Resolve scalar aliases' },
+  { value: 'recursive', label: 'Resolve scalar aliases recursively' },
+];
+
 const sameSections = (a: PrintSection[] | undefined, b: PrintSection[] | undefined): boolean => {
   if (a === undefined || b === undefined) {
     return a === b;
@@ -47,10 +53,6 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   const {
     input,
     setInput,
-    renderType,
-    setRenderType,
-    renderMode,
-    setRenderMode,
     format,
     setFormat,
     wrapWidth,
@@ -61,10 +63,8 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     setPrintSections,
     showScalarVars,
     setShowScalarVars,
-    resolveScalarVars,
-    setResolveScalarVars,
-    resolveScalarVarsRecursive,
-    setResolveScalarVarsRecursive,
+    scalarAliasResolution,
+    setScalarAliasResolution,
     handleRender,
     handleFileUpload,
     loadSampleFile
@@ -102,14 +102,12 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     }
     return undefined;
   }, [
-    renderMode,
     format,
     wrapWidth,
     hangingIndent,
     printSections,
     showScalarVars,
-    resolveScalarVars,
-    resolveScalarVarsRecursive,
+    scalarAliasResolution,
     input,
     disabled,
     handleRender
@@ -181,32 +179,6 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
           <p className="auto-render-note">Changes are automatically applied</p>
         </div>
         <div className="select-container">
-          <label htmlFor="renderType" className="control-group-label">Type:</label>
-          <select
-            id="renderType"
-            aria-label="Render type"
-            value={renderType}
-            onChange={(e) => setRenderType(e.target.value)}
-            disabled={disabled}
-          >
-            <option value="ascii">ASCII</option>
-          </select>
-        </div>
-        <div className="select-container">
-          <label htmlFor="renderMode" className="control-group-label">Mode:</label>
-          <select
-            id="renderMode"
-            aria-label="Render mode"
-            value={renderMode}
-            onChange={(e) => setRenderMode(e.target.value as RenderMode)}
-            disabled={disabled}
-          >
-            <option value="AUTO">AUTO</option>
-            <option value="PLAN">PLAN</option>
-            <option value="PROFILE">PROFILE</option>
-          </select>
-        </div>
-        <div className="select-container">
           <label htmlFor="format" className="control-group-label">Format:</label>
           <select
             id="format"
@@ -273,28 +245,22 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
           />
           <span>Show scalar variable names</span>
         </label>
-        <label className="checkbox-container" htmlFor="resolveScalarVars">
-          <input
-            type="checkbox"
-            id="resolveScalarVars"
-            checked={resolveScalarVars}
-            onChange={(e) => setResolveScalarVars(e.target.checked)}
-            aria-label="Resolve scalar variable aliases"
+        <div className="select-container">
+          <label htmlFor="scalarAliasResolution" className="control-group-label">Scalar Alias Resolution:</label>
+          <select
+            id="scalarAliasResolution"
+            aria-label="Scalar alias resolution"
+            value={scalarAliasResolution}
+            onChange={(e) => setScalarAliasResolution(e.target.value as ScalarAliasResolution)}
             disabled={disabled}
-          />
-          <span>Resolve scalar aliases</span>
-        </label>
-        <label className="checkbox-container" htmlFor="resolveScalarVarsRecursive">
-          <input
-            type="checkbox"
-            id="resolveScalarVarsRecursive"
-            checked={resolveScalarVarsRecursive}
-            onChange={(e) => setResolveScalarVarsRecursive(e.target.checked)}
-            aria-label="Recursively resolve scalar variable aliases"
-            disabled={disabled}
-          />
-          <span>Resolve scalar aliases recursively</span>
-        </label>
+          >
+            {scalarAliasResolutionOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           className="primary-button"
           onClick={handleRender}

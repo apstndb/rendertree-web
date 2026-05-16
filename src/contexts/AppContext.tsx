@@ -4,21 +4,20 @@ import { createContextWithHook } from '../utils/createContextWithHook';
 import { useWasmContext } from './WasmContext';
 import { useFileContext } from './FileContext';
 import { renderASCIITree } from '../wasm';
-import type { FormatType, PrintSection, RenderAppendixOptions, RenderMode } from '../types/wasm';
+import type { FormatType, PrintSection, RenderAppendixOptions } from '../types/wasm';
 import { logger } from '../utils/logger';
+
+export type ScalarAliasResolution = 'none' | 'direct' | 'recursive';
 
 // Define types for the application state
 interface AppState {
   input: string;
-  renderType: string;
-  renderMode: RenderMode;
   format: FormatType;
   wrapWidth: number;
   hangingIndent: boolean;
   printSections: PrintSection[] | undefined;
   showScalarVars: boolean;
-  resolveScalarVars: boolean;
-  resolveScalarVarsRecursive: boolean;
+  scalarAliasResolution: ScalarAliasResolution;
   output: string;
   message: string;
   isRendering: boolean;
@@ -27,15 +26,12 @@ interface AppState {
 // Define types for the context value
 interface AppContextType extends AppState {
   setInput: (input: string) => void;
-  setRenderType: (renderType: string) => void;
-  setRenderMode: (renderMode: RenderMode) => void;
   setFormat: (format: FormatType) => void;
   setWrapWidth: (wrapWidth: number) => void;
   setHangingIndent: (hangingIndent: boolean) => void;
   setPrintSections: (printSections: PrintSection[] | undefined) => void;
   setShowScalarVars: (showScalarVars: boolean) => void;
-  setResolveScalarVars: (resolveScalarVars: boolean) => void;
-  setResolveScalarVarsRecursive: (resolveScalarVarsRecursive: boolean) => void;
+  setScalarAliasResolution: (scalarAliasResolution: ScalarAliasResolution) => void;
   handleRender: () => Promise<void>;
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   loadSampleFile: (filename: string) => Promise<void>;
@@ -54,15 +50,12 @@ interface AppProviderProps {
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   // Application state
   const [input, setInput] = useState<string>('');
-  const [renderType, setRenderType] = useState<string>('ascii');
-  const [renderMode, setRenderMode] = useState<RenderMode>('AUTO');
   const [format, setFormat] = useState<FormatType>('CURRENT');
   const [wrapWidth, setWrapWidth] = useState<number>(0);
   const [hangingIndent, setHangingIndent] = useState<boolean>(false);
   const [printSections, setPrintSections] = useState<PrintSection[] | undefined>(undefined);
   const [showScalarVars, setShowScalarVars] = useState<boolean>(false);
-  const [resolveScalarVars, setResolveScalarVars] = useState<boolean>(false);
-  const [resolveScalarVarsRecursive, setResolveScalarVarsRecursive] = useState<boolean>(false);
+  const [scalarAliasResolution, setScalarAliasResolution] = useState<ScalarAliasResolution>('none');
   const [output, setOutput] = useState<string>('');
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('Loading rendering engine... Please wait.');
@@ -115,13 +108,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     try {
       const appendixOptions: RenderAppendixOptions = {
         showScalarVars,
-        resolveScalarVars,
-        resolveScalarVarsRecursive,
+        resolveScalarVars: scalarAliasResolution === 'direct',
+        resolveScalarVarsRecursive: scalarAliasResolution === 'recursive',
         ...(printSections !== undefined ? { printSections } : {})
       };
 
       logger.debug('Rendering with params:', {
-        mode: renderMode,
+        mode: 'AUTO',
         format,
         wrapWidth,
         hangingIndent,
@@ -130,7 +123,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       });
 
       const startTime = performance.now();
-      const rendered = await renderASCIITree(input, renderMode, format, wrapWidth, hangingIndent, appendixOptions);
+      const rendered = await renderASCIITree(input, 'AUTO', format, wrapWidth, hangingIndent, appendixOptions);
       const endTime = performance.now();
 
       logger.info(`Rendering completed in ${(endTime - startTime).toFixed(2)}ms`);
@@ -147,14 +140,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [
     input,
-    renderMode,
     format,
     wrapWidth,
     hangingIndent,
     printSections,
     showScalarVars,
-    resolveScalarVars,
-    resolveScalarVarsRecursive,
+    scalarAliasResolution,
     renderASCII
   ]);
 
@@ -194,10 +185,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const contextValue: AppContextType = {
     input,
     setInput,
-    renderType,
-    setRenderType,
-    renderMode,
-    setRenderMode,
     format,
     setFormat,
     wrapWidth,
@@ -208,10 +195,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setPrintSections,
     showScalarVars,
     setShowScalarVars,
-    resolveScalarVars,
-    setResolveScalarVars,
-    resolveScalarVarsRecursive,
-    setResolveScalarVarsRecursive,
+    scalarAliasResolution,
+    setScalarAliasResolution,
     output,
     message,
     isRendering,
