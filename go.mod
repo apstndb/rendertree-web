@@ -2,12 +2,11 @@ module github.com/apstndb/rendertree-web
 
 go 1.24
 
-require github.com/apstndb/spannerplan v0.1.7
+require github.com/apstndb/spannerplan v0.1.10
 
 require (
 	cloud.google.com/go/spanner v1.82.0 // indirect
 	github.com/apstndb/go-tabwrap v0.1.3 // indirect
-	github.com/apstndb/lox v0.0.0-20230530141045-98c1efebcde8 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
@@ -19,8 +18,7 @@ require (
 	github.com/olekukonko/ll v0.0.9 // indirect
 	github.com/olekukonko/tablewriter v1.0.9 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/samber/lo v1.50.0 // indirect
-	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
+	github.com/samber/lo v1.53.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect

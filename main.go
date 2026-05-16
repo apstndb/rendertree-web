@@ -189,12 +189,11 @@ func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int, 
 		return "", InvalidSpannerFormatError{msg: "Plan nodes are missing from query plan"}
 	}
 
-	opts := []reference.Option{reference.WithWrapWidth(wrapWidth)}
-	if hangingIndent {
-		opts = append(opts, reference.WithHangingIndent())
+	config := reference.RenderConfig{
+		WrapWidth:     wrapWidth,
+		HangingIndent: hangingIndent,
 	}
-
-	s, err := reference.RenderTreeTableWithOptions(planNodes, mode, format, opts...)
+	s, err := reference.RenderTreeTableWithConfig(planNodes, mode, format, config)
 	if err != nil {
 		return "", RenderError{msg: fmt.Sprintf("Failed to render tree table: %v", err)}
 	}
