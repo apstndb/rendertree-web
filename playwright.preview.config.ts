@@ -9,7 +9,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : '50%',
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
-    baseURL: 'http://localhost:4173/rendertree-web',
+    baseURL: 'http://localhost:4173/rendertree-web/',
     trace: 'on-first-retry',
     headless: true,
   },

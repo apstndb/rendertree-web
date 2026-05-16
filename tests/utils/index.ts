@@ -58,7 +58,7 @@ export async function setupCompleteTest(
     url?: string;
   } = {}
 ) {
-  const { debug = false, url = '/' } = options;
+  const { debug = false, url = '.' } = options;
 
   // Navigate to the page
   await page.goto(url);

@@ -1,5 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const baseURL = process.env.BASE_URL ?? 'http://localhost:5173/';
+const webServer = process.env.BASE_URL
+  ? undefined
+  : {
+      command: 'npm run dev',
+      port: 5173,
+      reuseExistingServer: !process.env.CI,
+    };
+
 export default defineConfig({
   testDir: './tests',
   timeout: 30000,
@@ -9,7 +18,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : '50%',
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL,
     trace: 'on-first-retry',
     headless: true,
   },
@@ -39,9 +48,5 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    port: 5173,
-    reuseExistingServer: !process.env.CI,
-  },
+  ...(webServer ? { webServer } : {}),
 });
