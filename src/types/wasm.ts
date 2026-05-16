@@ -15,9 +15,33 @@ export type RenderMode = "AUTO" | "PLAN" | "PROFILE";
 export type FormatType = "CURRENT" | "TRADITIONAL" | "COMPACT";
 
 /**
+ * Appendix sections that can be printed after the rendered tree table
+ * - predicates: Predicate-like scalar links
+ * - ordering: Ordering scalar links for sort operators
+ * - aggregate: Grouping and aggregate scalar links for aggregate operators
+ * - typed: All typed scalar links as a raw debug dump
+ * - full: All scalar links, including unnamed links, as a raw debug dump
+ */
+export type PrintSection = "predicates" | "ordering" | "aggregate" | "typed" | "full";
+
+/**
+ * Optional appendix rendering settings.
+ */
+export interface RenderAppendixOptions {
+  /** Ordered appendix sections. Omit for default predicates; use [] for no appendices. */
+  printSections?: PrintSection[];
+  /** Whether semantic appendix sections should include scalar assignment variable names */
+  showScalarVars?: boolean;
+  /** Whether semantic appendix sections should resolve direct scalar variable aliases */
+  resolveScalarVars?: boolean;
+  /** Whether semantic appendix sections should recursively resolve scalar variable aliases */
+  resolveScalarVarsRecursive?: boolean;
+}
+
+/**
  * Parameters for WASM renderASCII function
  */
-export interface RenderParams { 
+export interface RenderParams extends RenderAppendixOptions {
   /** Query plan text in YAML or JSON format */
   input: string; 
   /** Rendering mode */

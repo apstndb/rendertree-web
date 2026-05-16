@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { WasmResponse, WasmError, RenderParams, WasmErrorType, RenderMode, FormatType } from '../wasm.js';
+import type { WasmResponse, WasmError, RenderParams, WasmErrorType, RenderMode, FormatType, PrintSection } from '../wasm.js';
 
 describe('WASM Integration Type Validation', () => {
   describe('Request Parameter Structure', () => {
@@ -18,7 +18,11 @@ describe('WASM Integration Type Validation', () => {
         mode: 'AUTO',
         format: 'CURRENT',
         wrapWidth: 80,
-        hangingIndent: true
+        hangingIndent: true,
+        printSections: ['predicates', 'ordering', 'aggregate'],
+        showScalarVars: true,
+        resolveScalarVars: true,
+        resolveScalarVarsRecursive: false
       };
 
       // Should serialize without data loss
@@ -30,6 +34,43 @@ describe('WASM Integration Type Validation', () => {
       expect(deserialized.format).toBe(params.format);
       expect(deserialized.wrapWidth).toBe(params.wrapWidth);
       expect(deserialized.hangingIndent).toBe(params.hangingIndent);
+      expect(deserialized.printSections).toEqual(params.printSections);
+      expect(deserialized.showScalarVars).toBe(params.showScalarVars);
+      expect(deserialized.resolveScalarVars).toBe(params.resolveScalarVars);
+      expect(deserialized.resolveScalarVarsRecursive).toBe(params.resolveScalarVarsRecursive);
+    });
+
+    it('should validate all print section values are properly typed', () => {
+      const validPrintSections: PrintSection[] = ['predicates', 'ordering', 'aggregate', 'typed', 'full'];
+
+      const params: RenderParams = {
+        input: 'test',
+        mode: 'AUTO',
+        format: 'CURRENT',
+        wrapWidth: 80,
+        printSections: validPrintSections
+      };
+
+      const serialized = JSON.stringify(params);
+      const deserialized: RenderParams = JSON.parse(serialized);
+
+      expect(deserialized.printSections).toEqual(validPrintSections);
+    });
+
+    it('should preserve explicit empty print sections', () => {
+      const params: RenderParams = {
+        input: 'test',
+        mode: 'AUTO',
+        format: 'CURRENT',
+        wrapWidth: 80,
+        printSections: []
+      };
+
+      const serialized = JSON.stringify(params);
+      const deserialized: RenderParams = JSON.parse(serialized);
+
+      expect(serialized).toContain('"printSections":[]');
+      expect(deserialized.printSections).toEqual([]);
     });
 
     it('should validate all render mode values are properly typed', () => {
@@ -195,7 +236,11 @@ describe('WASM Integration Type Validation', () => {
         mode: 'AUTO',
         format: 'CURRENT',
         wrapWidth: 80,
-        hangingIndent: false
+        hangingIndent: false,
+        printSections: ['predicates', 'ordering'],
+        showScalarVars: true,
+        resolveScalarVars: false,
+        resolveScalarVarsRecursive: true
       };
 
       // Serialize request (what would be sent to WASM)
@@ -208,6 +253,10 @@ describe('WASM Integration Type Validation', () => {
       expect(parsedRequest.format).toBe(request.format);
       expect(parsedRequest.wrapWidth).toBe(request.wrapWidth);
       expect(parsedRequest.hangingIndent).toBe(request.hangingIndent);
+      expect(parsedRequest.printSections).toEqual(request.printSections);
+      expect(parsedRequest.showScalarVars).toBe(request.showScalarVars);
+      expect(parsedRequest.resolveScalarVars).toBe(request.resolveScalarVars);
+      expect(parsedRequest.resolveScalarVarsRecursive).toBe(request.resolveScalarVarsRecursive);
 
       // Mock response (what would be returned from WASM)
       const response: WasmResponse = {
@@ -279,10 +328,18 @@ describe('WASM Integration Type Validation', () => {
         mode: 'AUTO',     // required
         format: 'CURRENT', // required  
         wrapWidth: 80,    // required
-        hangingIndent: true
+        hangingIndent: true,
+        printSections: ['predicates'],
+        showScalarVars: true,
+        resolveScalarVars: true,
+        resolveScalarVarsRecursive: false
       };
-      expect(Object.keys(params)).toHaveLength(5);
+      expect(Object.keys(params)).toHaveLength(9);
       expect(params.hangingIndent).toBe(true);
+      expect(params.printSections).toEqual(['predicates']);
+      expect(params.showScalarVars).toBe(true);
+      expect(params.resolveScalarVars).toBe(true);
+      expect(params.resolveScalarVarsRecursive).toBe(false);
 
       // WasmResponse requires success, optional result/error
       const response: WasmResponse = {

@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { WasmErrorType, RenderMode, FormatType } from '../wasm.js';
+import type { WasmErrorType, RenderMode, FormatType, PrintSection } from '../wasm.js';
 
 describe('Go-TypeScript Type Synchronization', () => {
   describe('Error Type Constants', () => {
@@ -133,6 +133,48 @@ describe('Go-TypeScript Type Synchronization', () => {
     });
   });
 
+  describe('Print Section Constants', () => {
+    it('should have TypeScript print sections that match Go constants', () => {
+      // These values must match Go constants in spannerplan/plantree/reference.
+      const expectedGoPrintSections = [
+        'predicates',
+        'ordering',
+        'aggregate',
+        'typed',
+        'full'
+      ];
+
+      const typeScriptPrintSections: PrintSection[] = [
+        'predicates',
+        'ordering',
+        'aggregate',
+        'typed',
+        'full'
+      ];
+
+      expect(typeScriptPrintSections).toHaveLength(expectedGoPrintSections.length);
+      expectedGoPrintSections.forEach(section => {
+        expect(typeScriptPrintSections).toContain(section as PrintSection);
+      });
+    });
+
+    it('should not have extra print sections not defined in Go', () => {
+      const validPrintSections = ['predicates', 'ordering', 'aggregate', 'typed', 'full'];
+
+      const testPrintSections: PrintSection[] = [
+        'predicates',
+        'ordering',
+        'aggregate',
+        'typed',
+        'full'
+      ];
+
+      testPrintSections.forEach(section => {
+        expect(validPrintSections).toContain(section);
+      });
+    });
+  });
+
   describe('WASM Response Structure Validation', () => {
     it('should validate successful response structure', () => {
       // Test structure that matches Go Response struct
@@ -192,7 +234,11 @@ describe('Go-TypeScript Type Synchronization', () => {
         mode: 'AUTO' as RenderMode,
         format: 'CURRENT' as FormatType,
         wrapWidth: 80,
-        hangingIndent: true
+        hangingIndent: true,
+        printSections: ['predicates', 'ordering'] as PrintSection[],
+        showScalarVars: true,
+        resolveScalarVars: true,
+        resolveScalarVarsRecursive: false
       };
 
       expect(typeof renderParams.input).toBe('string');
@@ -201,6 +247,10 @@ describe('Go-TypeScript Type Synchronization', () => {
       expect(typeof renderParams.wrapWidth).toBe('number');
       expect(Number.isInteger(renderParams.wrapWidth)).toBe(true);
       expect(typeof renderParams.hangingIndent).toBe('boolean');
+      expect(renderParams.printSections).toEqual(['predicates', 'ordering']);
+      expect(typeof renderParams.showScalarVars).toBe('boolean');
+      expect(typeof renderParams.resolveScalarVars).toBe('boolean');
+      expect(typeof renderParams.resolveScalarVarsRecursive).toBe('boolean');
     });
 
     it('should validate parameters with zero wrap width', () => {

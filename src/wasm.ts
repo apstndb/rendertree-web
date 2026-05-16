@@ -1,5 +1,5 @@
 // No need to import wasm_exec.js as it's loaded from GOROOT in index.html
-import type { WasmFunctions, RenderParams, RenderMode, FormatType, WasmResponse } from './types/wasm';
+import type { WasmFunctions, RenderParams, RenderMode, FormatType, RenderAppendixOptions, WasmResponse } from './types/wasm';
 import { logger } from './utils/logger';
 import { WasmInitializationError, WasmRenderingError } from './errors/WasmErrors';
 import { extractErrorInfo } from './utils/errorHandling';
@@ -126,6 +126,7 @@ async function initializeWasm(): Promise<WasmFunctions> {
  * @param format Format (CURRENT, TRADITIONAL, COMPACT)
  * @param wrapWidth Wrap width (0 for no wrap)
  * @param hangingIndent Whether wrapped lines should align after node-local prefixes
+ * @param appendixOptions Optional appendix rendering settings
  * @returns ASCII representation of query plan
  */
 export async function renderASCIITree(
@@ -133,9 +134,21 @@ export async function renderASCIITree(
   mode: RenderMode = 'AUTO', 
   format: FormatType = 'CURRENT', 
   wrapWidth: number = 0,
-  hangingIndent: boolean = false
+  hangingIndent: boolean = false,
+  appendixOptions: RenderAppendixOptions = {}
 ): Promise<string> {
-  logger.info('renderASCIITree called with mode:', mode, 'format:', format, 'wrapWidth:', wrapWidth, 'hangingIndent:', hangingIndent);
+  logger.info(
+    'renderASCIITree called with mode:',
+    mode,
+    'format:',
+    format,
+    'wrapWidth:',
+    wrapWidth,
+    'hangingIndent:',
+    hangingIndent,
+    'appendixOptions:',
+    appendixOptions
+  );
   logger.debug('Input length:', input.length, 'characters');
 
   try {
@@ -147,7 +160,8 @@ export async function renderASCIITree(
       mode,
       format,
       wrapWidth,
-      hangingIndent
+      hangingIndent,
+      ...appendixOptions
     };
 
     logger.debug('Calling WASM renderASCII function');

@@ -4,7 +4,7 @@ import { createContextWithHook } from '../utils/createContextWithHook';
 import { useWasmContext } from './WasmContext';
 import { useFileContext } from './FileContext';
 import { renderASCIITree } from '../wasm';
-import type { FormatType, RenderMode } from '../types/wasm';
+import type { FormatType, PrintSection, RenderAppendixOptions, RenderMode } from '../types/wasm';
 import { logger } from '../utils/logger';
 
 // Define types for the application state
@@ -15,6 +15,10 @@ interface AppState {
   format: FormatType;
   wrapWidth: number;
   hangingIndent: boolean;
+  printSections: PrintSection[] | undefined;
+  showScalarVars: boolean;
+  resolveScalarVars: boolean;
+  resolveScalarVarsRecursive: boolean;
   output: string;
   message: string;
   isRendering: boolean;
@@ -28,6 +32,10 @@ interface AppContextType extends AppState {
   setFormat: (format: FormatType) => void;
   setWrapWidth: (wrapWidth: number) => void;
   setHangingIndent: (hangingIndent: boolean) => void;
+  setPrintSections: (printSections: PrintSection[] | undefined) => void;
+  setShowScalarVars: (showScalarVars: boolean) => void;
+  setResolveScalarVars: (resolveScalarVars: boolean) => void;
+  setResolveScalarVarsRecursive: (resolveScalarVarsRecursive: boolean) => void;
   handleRender: () => Promise<void>;
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   loadSampleFile: (filename: string) => Promise<void>;
@@ -51,6 +59,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [format, setFormat] = useState<FormatType>('CURRENT');
   const [wrapWidth, setWrapWidth] = useState<number>(0);
   const [hangingIndent, setHangingIndent] = useState<boolean>(false);
+  const [printSections, setPrintSections] = useState<PrintSection[] | undefined>(undefined);
+  const [showScalarVars, setShowScalarVars] = useState<boolean>(false);
+  const [resolveScalarVars, setResolveScalarVars] = useState<boolean>(false);
+  const [resolveScalarVarsRecursive, setResolveScalarVarsRecursive] = useState<boolean>(false);
   const [output, setOutput] = useState<string>('');
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('Loading rendering engine... Please wait.');
@@ -101,10 +113,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setMessage('Rendering...');
 
     try {
-      logger.debug('Rendering with params:', { mode: renderMode, format, wrapWidth, hangingIndent, inputLength: input.length });
+      const appendixOptions: RenderAppendixOptions = {
+        showScalarVars,
+        resolveScalarVars,
+        resolveScalarVarsRecursive,
+        ...(printSections !== undefined ? { printSections } : {})
+      };
+
+      logger.debug('Rendering with params:', {
+        mode: renderMode,
+        format,
+        wrapWidth,
+        hangingIndent,
+        ...appendixOptions,
+        inputLength: input.length
+      });
 
       const startTime = performance.now();
-      const rendered = await renderASCIITree(input, renderMode, format, wrapWidth, hangingIndent);
+      const rendered = await renderASCIITree(input, renderMode, format, wrapWidth, hangingIndent, appendixOptions);
       const endTime = performance.now();
 
       logger.info(`Rendering completed in ${(endTime - startTime).toFixed(2)}ms`);
@@ -119,7 +145,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       logger.debug('Setting isRendering to false');
       setIsRendering(false);
     }
-  }, [input, renderMode, format, wrapWidth, hangingIndent, renderASCII]);
+  }, [
+    input,
+    renderMode,
+    format,
+    wrapWidth,
+    hangingIndent,
+    printSections,
+    showScalarVars,
+    resolveScalarVars,
+    resolveScalarVarsRecursive,
+    renderASCII
+  ]);
 
   // Handle file upload using FileContext
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,6 +204,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setWrapWidth,
     hangingIndent,
     setHangingIndent,
+    printSections,
+    setPrintSections,
+    showScalarVars,
+    setShowScalarVars,
+    resolveScalarVars,
+    setResolveScalarVars,
+    resolveScalarVarsRecursive,
+    setResolveScalarVarsRecursive,
     output,
     message,
     isRendering,

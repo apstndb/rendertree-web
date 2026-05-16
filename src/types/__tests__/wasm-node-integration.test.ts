@@ -21,6 +21,79 @@ declare global {
   var renderASCII: (paramsJson: string) => string;
 }
 
+const scalarAppendixInput = `
+stats:
+  queryPlan:
+    planNodes:
+      - displayName: "Sort"
+        kind: RELATIONAL
+        index: 0
+        childLinks:
+          - childIndex: 1
+            type: "Key"
+            variable: "sort_count"
+          - childIndex: 2
+            type: "Key"
+            variable: "sort_genre"
+          - childIndex: 3
+      - displayName: "Reference"
+        kind: SCALAR
+        index: 1
+        shortRepresentation:
+          description: "$SongCount (DESC)"
+      - displayName: "Reference"
+        kind: SCALAR
+        index: 2
+        shortRepresentation:
+          description: "$group_SongGenre'"
+      - displayName: "Aggregate"
+        kind: RELATIONAL
+        index: 3
+        childLinks:
+          - childIndex: 4
+            type: "Key"
+            variable: "group_SongGenre'"
+          - childIndex: 5
+            type: "Agg"
+            variable: "SongCount"
+          - childIndex: 6
+      - displayName: "Reference"
+        kind: SCALAR
+        index: 4
+        shortRepresentation:
+          description: "$group_SongGenre"
+      - displayName: "Reference"
+        kind: SCALAR
+        index: 5
+        shortRepresentation:
+          description: "COUNT_FINAL($v1)"
+      - displayName: "Scan"
+        kind: RELATIONAL
+        index: 6
+        childLinks:
+          - childIndex: 7
+            variable: "group_SongGenre"
+          - childIndex: 8
+            variable: "SongGenre"
+          - childIndex: 9
+            variable: "v1"
+      - displayName: "Reference"
+        kind: SCALAR
+        index: 7
+        shortRepresentation:
+          description: "$SongGenre"
+      - displayName: "Reference"
+        kind: SCALAR
+        index: 8
+        shortRepresentation:
+          description: "SongGenre"
+      - displayName: "Reference"
+        kind: SCALAR
+        index: 9
+        shortRepresentation:
+          description: "COUNT()"
+`;
+
 describe('WASM Node.js Integration Tests', () => {
   let renderASCII: (paramsJson: string) => string;
 
@@ -425,6 +498,59 @@ stats:
       expect(withHanging.success).toBe(true);
       expect(withHanging.result).not.toBe(withoutHanging.result);
       expect(withHanging.result).toContain('[Input] Batch Scan');
+    });
+
+    it('should render selected scalar appendix sections', () => {
+      const params: RenderParams = {
+        input: scalarAppendixInput,
+        mode: 'PLAN',
+        format: 'CURRENT',
+        wrapWidth: 0,
+        printSections: ['ordering', 'aggregate'],
+        resolveScalarVarsRecursive: true
+      };
+
+      const resultStr = renderASCII(JSON.stringify(params));
+      const response: WasmResponse = JSON.parse(resultStr);
+
+      expect(response.success).toBe(true);
+      expect(response.result).toContain('Ordering(identified by ID):');
+      expect(response.result).toContain('Aggregates(identified by ID):');
+      expect(response.result).toContain('COUNT_FINAL(COUNT()) DESC, SongGenre');
+      expect(response.result).not.toContain('Predicates(identified by ID):');
+    });
+
+    it('should suppress appendices with explicit empty print sections', () => {
+      const params: RenderParams = {
+        input: scalarAppendixInput,
+        mode: 'PLAN',
+        format: 'CURRENT',
+        wrapWidth: 0,
+        printSections: []
+      };
+
+      const resultStr = renderASCII(JSON.stringify(params));
+      const response: WasmResponse = JSON.parse(resultStr);
+
+      expect(response.success).toBe(true);
+      expect(response.result).not.toContain('identified by ID');
+    });
+
+    it('should return INVALID_PARAMETERS for invalid print section', () => {
+      const invalidParams = {
+        input: scalarAppendixInput,
+        mode: 'PLAN',
+        format: 'CURRENT',
+        wrapWidth: 0,
+        printSections: ['broken']
+      };
+
+      const resultStr = renderASCII(JSON.stringify(invalidParams));
+      const response: WasmResponse = JSON.parse(resultStr);
+
+      expect(response.success).toBe(false);
+      expect(response.error?.type).toBe('INVALID_PARAMETERS');
+      expect(response.error?.message).toMatch(/print section/i);
     });
   });
 

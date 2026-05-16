@@ -13,11 +13,15 @@ import (
 )
 
 type params struct {
-	Input         string `json:"input"`
-	Mode          string `json:"mode"`
-	Format        string `json:"format"`
-	WrapWidth     int    `json:"wrapWidth"`
-	HangingIndent bool   `json:"hangingIndent"`
+	Input                      string                   `json:"input"`
+	Mode                       string                   `json:"mode"`
+	Format                     string                   `json:"format"`
+	WrapWidth                  int                      `json:"wrapWidth"`
+	HangingIndent              bool                     `json:"hangingIndent"`
+	PrintSections              *reference.PrintSections `json:"printSections,omitempty"`
+	ShowScalarVars             bool                     `json:"showScalarVars,omitempty"`
+	ResolveScalarVars          bool                     `json:"resolveScalarVars,omitempty"`
+	ResolveScalarVarsRecursive bool                     `json:"resolveScalarVarsRecursive,omitempty"`
 }
 
 // Response represents the structured response from WASM
@@ -122,7 +126,7 @@ func renderASCII(_ js.Value, args []js.Value) any {
 			err.Error())
 	}
 
-	s, err := renderASCIIImpl(par.Input, par.Mode, par.Format, par.WrapWidth, par.HangingIndent)
+	s, err := renderASCIIImpl(par)
 	if err != nil {
 		// Classify error types using errors.As for type-safe error handling
 		errorType := classifyError(err)
@@ -161,21 +165,29 @@ func classifyError(err error) string {
 
 // renderASCIIImpl implements the core rendering logic
 // Validates parameters, extracts query plan, and renders ASCII output
-func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int, hangingIndent bool) (string, error) {
-	stats, _, err := queryplan.ExtractQueryPlan([]byte(j))
+func renderASCIIImpl(par params) (string, error) {
+	stats, _, err := queryplan.ExtractQueryPlan([]byte(par.Input))
 	if err != nil {
 		// Wrap external parsing errors in our custom type
 		return "", ParseError{msg: fmt.Sprintf("Failed to extract query plan: %v", err)}
 	}
 
-	mode, err := reference.ParseRenderMode(modeStr)
+	mode, err := reference.ParseRenderMode(par.Mode)
 	if err != nil {
 		return "", InvalidParametersError{msg: fmt.Sprintf("Invalid render mode: %v", err)}
 	}
 
-	format, err := reference.ParseFormat(formatStr)
+	format, err := reference.ParseFormat(par.Format)
 	if err != nil {
 		return "", InvalidParametersError{msg: fmt.Sprintf("Invalid format type: %v", err)}
+	}
+
+	if par.PrintSections != nil {
+		for _, section := range *par.PrintSections {
+			if _, err := reference.ParsePrintSection(string(section)); err != nil {
+				return "", InvalidParametersError{msg: fmt.Sprintf("Invalid print section: %v", err)}
+			}
+		}
 	}
 
 	// Validate Spanner query plan structure
@@ -190,8 +202,12 @@ func renderASCIIImpl(j string, modeStr string, formatStr string, wrapWidth int, 
 	}
 
 	config := reference.RenderConfig{
-		WrapWidth:     wrapWidth,
-		HangingIndent: hangingIndent,
+		WrapWidth:                  par.WrapWidth,
+		HangingIndent:              par.HangingIndent,
+		PrintSections:              par.PrintSections,
+		ShowScalarVars:             par.ShowScalarVars,
+		ResolveScalarVars:          par.ResolveScalarVars,
+		ResolveScalarVarsRecursive: par.ResolveScalarVarsRecursive,
 	}
 	s, err := reference.RenderTreeTableWithConfig(planNodes, mode, format, config)
 	if err != nil {

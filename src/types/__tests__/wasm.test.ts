@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { RenderMode, FormatType, RenderParams, WasmFunctions } from '../wasm';
+import type { RenderMode, FormatType, PrintSection, RenderParams, WasmFunctions } from '../wasm';
 
 describe('WASM types', () => {
   it('should have correct RenderMode values', () => {
@@ -20,6 +20,14 @@ describe('WASM types', () => {
     });
   });
 
+  it('should have correct PrintSection values', () => {
+    const sections: PrintSection[] = ['predicates', 'ordering', 'aggregate', 'typed', 'full'];
+
+    sections.forEach(section => {
+      expect(['predicates', 'ordering', 'aggregate', 'typed', 'full']).toContain(section);
+    });
+  });
+
   it('should create valid RenderParams object', () => {
     const params: RenderParams = {
       input: 'test input',
@@ -27,6 +35,10 @@ describe('WASM types', () => {
       format: 'CURRENT',
       wrapWidth: 80,
       hangingIndent: true,
+      printSections: ['predicates', 'ordering', 'aggregate'],
+      showScalarVars: true,
+      resolveScalarVars: true,
+      resolveScalarVarsRecursive: false,
     };
     
     expect(params.input).toBe('test input');
@@ -34,6 +46,10 @@ describe('WASM types', () => {
     expect(params.format).toBe('CURRENT');
     expect(params.wrapWidth).toBe(80);
     expect(params.hangingIndent).toBe(true);
+    expect(params.printSections).toEqual(['predicates', 'ordering', 'aggregate']);
+    expect(params.showScalarVars).toBe(true);
+    expect(params.resolveScalarVars).toBe(true);
+    expect(params.resolveScalarVarsRecursive).toBe(false);
   });
 
   it('should create valid WasmFunctions object', () => {
@@ -54,6 +70,10 @@ describe('WASM types', () => {
       format: 'CURRENT',
       wrapWidth: 0,
       hangingIndent: false,
+      printSections: [],
+      showScalarVars: false,
+      resolveScalarVars: false,
+      resolveScalarVarsRecursive: false,
     });
     
     const result = wasmFunctions.renderASCII(testParams);
@@ -82,6 +102,7 @@ describe('WASM types', () => {
         format: 'CURRENT',
         wrapWidth: 120,
         hangingIndent: false,
+        printSections: ['typed'],
       },
     ];
 
@@ -92,6 +113,11 @@ describe('WASM types', () => {
       expect(typeof params.wrapWidth).toBe('number');
       expect(params.wrapWidth).toBeGreaterThanOrEqual(0);
       expect(typeof params.hangingIndent).toBe('boolean');
+      if (params.printSections) {
+        params.printSections.forEach(section => {
+          expect(['predicates', 'ordering', 'aggregate', 'typed', 'full']).toContain(section);
+        });
+      }
     });
   });
 });

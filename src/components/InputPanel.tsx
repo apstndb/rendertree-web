@@ -2,11 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { useDebounce } from '../hooks/useDebounce';
-import type { FormatType, RenderMode } from '../types/wasm';
+import type { FormatType, PrintSection, RenderMode } from '../types/wasm';
 
 interface InputPanelProps {
   disabled: boolean;
 }
+
+type AppendixPreset =
+  | 'default'
+  | 'none'
+  | 'predicates'
+  | 'semantic'
+  | 'orderingAggregate'
+  | 'typed'
+  | 'full';
+
+const appendixPresetOptions: Array<{ value: AppendixPreset; label: string; sections: PrintSection[] | undefined }> = [
+  { value: 'default', label: 'Default predicates', sections: undefined },
+  { value: 'none', label: 'None', sections: [] },
+  { value: 'predicates', label: 'Predicates', sections: ['predicates'] },
+  { value: 'semantic', label: 'Predicates + ordering + aggregates', sections: ['predicates', 'ordering', 'aggregate'] },
+  { value: 'orderingAggregate', label: 'Ordering + aggregates', sections: ['ordering', 'aggregate'] },
+  { value: 'typed', label: 'Typed debug', sections: ['typed'] },
+  { value: 'full', label: 'Full debug', sections: ['full'] },
+];
+
+const sameSections = (a: PrintSection[] | undefined, b: PrintSection[] | undefined): boolean => {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return a.length === b.length && a.every((section, index) => section === b[index]);
+};
+
+const presetForSections = (sections: PrintSection[] | undefined): AppendixPreset => {
+  return appendixPresetOptions.find(option => sameSections(option.sections, sections))?.value ?? 'default';
+};
+
+const sectionsForPreset = (preset: AppendixPreset): PrintSection[] | undefined => {
+  const sections = appendixPresetOptions.find(option => option.value === preset)?.sections;
+  return sections === undefined ? undefined : [...sections];
+};
 
 const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   const {
@@ -22,6 +57,14 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     setWrapWidth,
     hangingIndent,
     setHangingIndent,
+    printSections,
+    setPrintSections,
+    showScalarVars,
+    setShowScalarVars,
+    resolveScalarVars,
+    setResolveScalarVars,
+    resolveScalarVarsRecursive,
+    setResolveScalarVarsRecursive,
     handleRender,
     handleFileUpload,
     loadSampleFile
@@ -46,6 +89,8 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     setLocalWrapWidth(wrapWidth.toString());
   }, [wrapWidth]);
 
+  const appendixPreset = presetForSections(printSections);
+
   // Auto-render when settings change (except wrapWidth which is handled separately)
   useEffect(() => {
     if (input.trim() && !disabled) {
@@ -56,7 +101,19 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
       return () => clearTimeout(timeoutId);
     }
     return undefined;
-  }, [renderMode, format, wrapWidth, hangingIndent, input, disabled, handleRender]);
+  }, [
+    renderMode,
+    format,
+    wrapWidth,
+    hangingIndent,
+    printSections,
+    showScalarVars,
+    resolveScalarVars,
+    resolveScalarVarsRecursive,
+    input,
+    disabled,
+    handleRender
+  ]);
 
   // Handle wrap width input with debouncing and special keys
   const handleWrapWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,6 +245,55 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             disabled={disabled}
           />
           <span>Hanging indent for wrapped lines</span>
+        </label>
+        <div className="select-container">
+          <label htmlFor="appendixPreset" className="control-group-label">Appendices:</label>
+          <select
+            id="appendixPreset"
+            aria-label="Appendices"
+            value={appendixPreset}
+            onChange={(e) => setPrintSections(sectionsForPreset(e.target.value as AppendixPreset))}
+            disabled={disabled}
+          >
+            {appendixPresetOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <label className="checkbox-container" htmlFor="showScalarVars">
+          <input
+            type="checkbox"
+            id="showScalarVars"
+            checked={showScalarVars}
+            onChange={(e) => setShowScalarVars(e.target.checked)}
+            aria-label="Show scalar variable names"
+            disabled={disabled}
+          />
+          <span>Show scalar variable names</span>
+        </label>
+        <label className="checkbox-container" htmlFor="resolveScalarVars">
+          <input
+            type="checkbox"
+            id="resolveScalarVars"
+            checked={resolveScalarVars}
+            onChange={(e) => setResolveScalarVars(e.target.checked)}
+            aria-label="Resolve scalar variable aliases"
+            disabled={disabled}
+          />
+          <span>Resolve scalar aliases</span>
+        </label>
+        <label className="checkbox-container" htmlFor="resolveScalarVarsRecursive">
+          <input
+            type="checkbox"
+            id="resolveScalarVarsRecursive"
+            checked={resolveScalarVarsRecursive}
+            onChange={(e) => setResolveScalarVarsRecursive(e.target.checked)}
+            aria-label="Recursively resolve scalar variable aliases"
+            disabled={disabled}
+          />
+          <span>Resolve scalar aliases recursively</span>
         </label>
         <button
           className="primary-button"
