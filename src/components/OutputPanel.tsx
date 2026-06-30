@@ -127,7 +127,7 @@ const OutputPanel: React.FC = () => {
         </div>
       )}
 
-      {!isDiagramView && asciiOutput && (
+      {outputView === 'ascii' && asciiOutput && (
         <div
           className="pre-container"
           data-testid="output-container"

@@ -21,6 +21,18 @@ test.describe('SVG Rendering', () => {
     await expect(diagram.locator('svg')).toContainText(/Distributed/i);
   });
 
+  test('should not show ASCII output when SVG view is selected', async ({ page }) => {
+    await setupCompleteTest(page, test);
+    await uploadTestFile(page, 'dca_profile.yaml');
+    await expect(page.getByTestId('output-code')).toContainText('Distributed Union', { timeout: 60000 });
+
+    await selectOutputView(page, 'svg');
+    await waitForDiagramComplete(page);
+
+    await expect(page.getByTestId('output-code')).toHaveCount(0);
+    await expect(page.getByTestId('diagram-output').locator('svg')).toBeVisible();
+  });
+
   test('should keep SVG output copyable', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'Clipboard permissions are configured for Chromium only');
 
