@@ -31,6 +31,8 @@ export {
   uploadTestFile,
   clickRenderButton,
   waitForRenderingComplete,
+  waitForDiagramComplete,
+  selectOutputView,
   uploadAndRender
 } from './fileHelpers';
 

@@ -1,35 +1,31 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { initWasm as initWasmOriginal } from '../wasm';
+import type { WasmFunctions } from '../types/wasm';
 import { logger } from '../utils/logger';
 import { extractErrorInfo } from '../utils/errorHandling';
 
 export function useWasm() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const wasmInstance = useRef<Awaited<ReturnType<typeof initWasmOriginal>> | null>(null);
+  const [wasmFunctions, setWasmFunctions] = useState<WasmFunctions | null>(null);
 
-  // Log initial state
   logger.debug('useWasm hook initialized, isLoading:', isLoading);
 
   useEffect(() => {
     logger.info('Starting WASM initialization in useWasm hook');
     let active = true;
 
-    const initWasm = async () => {
+    const initialize = async () => {
       try {
         logger.debug('Calling initWasm from useWasm hook');
         const startTime = performance.now();
-
         const wasm = await initWasmOriginal();
         if (!active) {
           return;
         }
-        wasmInstance.current = wasm;
 
-        const endTime = performance.now();
-        logger.info(`WASM initialization completed in ${(endTime - startTime).toFixed(2)}ms`);
-
-        logger.debug('Setting isLoading to false');
+        setWasmFunctions(wasm);
+        logger.info(`WASM initialization completed in ${(performance.now() - startTime).toFixed(2)}ms`);
         setIsLoading(false);
       } catch (err) {
         if (!active) {
@@ -37,37 +33,36 @@ export function useWasm() {
         }
         const { message, originalError } = extractErrorInfo(err);
         logger.error('Error in useWasm hook during initialization:', message);
-
         setError(originalError || new Error(message));
-        logger.debug('Setting isLoading to false after error');
         setIsLoading(false);
       }
     };
 
-    initWasm();
+    void initialize();
 
-    // Cleanup function
     return () => {
       active = false;
       logger.debug('useWasm hook cleanup');
     };
   }, []);
 
-  // Log when renderASCII becomes available
   useEffect(() => {
-    if (wasmInstance.current?.renderASCII) {
+    if (wasmFunctions?.renderASCII) {
       logger.info('renderASCII function is now available');
     }
-  }, [wasmInstance.current?.renderASCII]);
+    if (wasmFunctions?.renderMermaid) {
+      logger.info('renderMermaid function is now available');
+    }
+  }, [wasmFunctions]);
 
-  // Log state changes
   useEffect(() => {
     logger.debug('useWasm state updated - isLoading:', isLoading, 'hasError:', !!error);
   }, [isLoading, error]);
 
-  return { 
-    isLoading, 
-    error, 
-    renderASCII: wasmInstance.current?.renderASCII 
+  return {
+    isLoading,
+    error,
+    renderASCII: wasmFunctions?.renderASCII ?? null,
+    renderMermaid: wasmFunctions?.renderMermaid ?? null,
   };
 }

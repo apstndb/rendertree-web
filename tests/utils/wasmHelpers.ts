@@ -78,8 +78,8 @@ export async function waitForWasmInitialization(
 
   // Wait for input to be enabled
   await page.waitForFunction(() => {
-    const textarea = document.querySelector('.input-area');
-    return textarea && !(textarea as HTMLTextAreaElement).disabled;
+    const filePicker = document.querySelector('[data-testid="file-picker"]');
+    return filePicker instanceof HTMLInputElement && !filePicker.disabled;
   }, { timeout: inputTimeout });
 }
 

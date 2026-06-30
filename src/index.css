@@ -15,31 +15,68 @@ body {
 #root {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   width: 100%;
 }
 
 /* File picker container styles */
 .file-picker-container {
-  margin-bottom: 15px;
-  padding: 15px;
+  margin-bottom: 8px;
+  padding: 10px;
   background-color: #f8f9fa;
-  border: 2px dashed #007bff;
+  border: 1px solid #dee2e6;
   border-radius: 8px;
-  text-align: center;
 }
 
 .file-picker-container h3 {
   margin-top: 0;
-  margin-bottom: 10px;
-  color: #007bff;
-  font-size: 16px;
+  margin-bottom: 8px;
+  color: #495057;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .file-input-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.file-source-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.secondary-button {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #495057;
+  border: 1px solid #ced4da;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .file-input-wrapper input[type="file"] {
@@ -52,38 +89,34 @@ body {
 }
 
 .file-hint {
-  margin: 5px 0 0;
-  font-size: 12px;
-  color: #6c757d;
-  font-style: italic;
+  display: none;
 }
 
-/* Sample files section */
 .sample-files {
-  margin-top: 10px;
-  padding: 10px;
+  margin-top: 0;
+  padding: 8px;
   background-color: #f0f8ff;
   border-radius: 4px;
   border: 1px solid #b8daff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .sample-files p {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  color: #0056b3;
-  font-weight: bold;
+  display: none;
 }
 
 .sample-file-button {
   display: block;
   width: 100%;
-  padding: 6px 10px;
-  margin-bottom: 5px;
+  padding: 5px 8px;
+  margin-bottom: 0;
   background-color: #e6f3ff;
   border: 1px solid #b8daff;
   border-radius: 4px;
   color: #0056b3;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease;
@@ -99,24 +132,33 @@ body {
   transform: translateY(1px);
 }
 
-/* Make textarea less prominent */
+/* Plan input */
+.plan-input-section {
+  flex: 0 0 auto;
+  padding: 0 10px;
+  margin-bottom: 8px;
+}
+
 textarea.input-area {
-  width: calc(100% - 20px); /* Adjust width for padding */
-  margin-bottom: 10px;
-  flex: 0.5; /* Reduce the flex value to make it less prominent */
-  min-height: 100px; /* Reduce minimum height */
-  max-height: 150px; /* Add maximum height */
-  resize: vertical; /* Allow resize only in vertical direction */
-  box-sizing: border-box; /* Include padding and border in width and height */
-  font-size: 12px; /* Smaller font size */
-  opacity: 0.8; /* Slightly transparent */
+  width: 100%;
+  margin-bottom: 0;
+  min-height: 120px;
+  max-height: 220px;
+  resize: vertical;
+  box-sizing: border-box;
+  font-size: 12px;
+  opacity: 1;
 }
 
 .main-container {
   display: flex;
-  flex-grow: 1; /* Allow it to take up available vertical space */
+  flex: 1 1 auto;
   gap: 10px; /* Space between panes */
   position: relative; /* For absolute positioning of toggle button */
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 /* Left pane toggle button */
@@ -158,12 +200,16 @@ textarea.input-area {
 .left-pane {
   transition: width 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
   width: 250px;
+  max-width: 250px;
   flex-shrink: 0;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   visibility: visible;
   display: flex;
   flex-direction: column;
   height: 100%; /* Fill the entire height of parent container */
+  box-sizing: border-box;
 }
 
 .left-pane.hidden {
@@ -188,12 +234,14 @@ textarea.input-area {
 
 .render-controls {
   display: flex;
-  flex-direction: column; /* Stack controls vertically */
+  flex-direction: column;
   padding: 10px;
   margin-bottom: 0;
   margin-top: 0;
-  gap: 10px; /* Space between control groups */
-  flex-shrink: 0; /* Control area does not shrink */
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .placeholder {
@@ -205,8 +253,9 @@ textarea.input-area {
 }
 
 .app-footer {
-  position: relative; /* Change to relative as body is flex column */
+  position: relative;
   width: 100%;
+  flex-shrink: 0;
   background-color: #fff;
   padding: 10px 0;
   text-align: center;
@@ -243,38 +292,21 @@ textarea.input-area {
 .pre-container {
   position: relative;
   width: 100%;
-  overflow: hidden; /* Ensures the container doesn't overflow */
-  resize: vertical; /* Allow vertical resizing */
-  min-height: 100px; /* Minimum height */
-  flex: 1 1 auto; /* Fill available space */
+  overflow: hidden;
+  min-height: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: #fff;
+  box-sizing: border-box;
 }
 
-/* Resize handle styles */
-.resize-handle {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 10px;
-  background-color: #f5f5f5;
-  border-top: 1px solid #ddd;
-  cursor: ns-resize;
-  text-align: center;
-  font-size: 10px;
-  color: #888;
-  line-height: 10px;
-  user-select: none;
+.pre-container pre {
+  min-height: 0;
 }
 
-.resize-handle:hover {
-  background-color: #e0e0e0;
-}
-
-.resize-handle::before {
-  content: "≡";
-  font-size: 12px;
-}
 /* Rendering control styles */
 .render-controls {
   /* display: flex; Removed as it's now a column flex container */
@@ -346,10 +378,12 @@ textarea.input-area {
 /* Font size controls */
 .font-size-controls {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   margin-left: 0; /* Remove margin-left */
   margin-bottom: 10px; /* Add margin-bottom for spacing */
   width: 100%; /* Make full width */
-  justify-content: space-between; /* Distribute items */
+  gap: 4px;
 }
 
 .font-size-controls button, .height-controls button {
@@ -380,6 +414,89 @@ textarea.input-area {
   background-color: #e9ecef;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
   transform: translateY(1px);
+}
+
+.diagram-zoom-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.diagram-zoom-controls__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.diagram-zoom-controls__header .control-group-label {
+  margin-right: 0;
+}
+
+.diagram-zoom-controls__fit {
+  flex: 1 1 auto;
+  padding: 5px 10px;
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  color: #495057;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  height: 32px;
+}
+
+.diagram-zoom-controls__fit:hover:not(:disabled) {
+  background-color: #f0f0f0;
+  border-color: #adb5bd;
+}
+
+.diagram-zoom-controls__fit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.diagram-zoom-controls__stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.diagram-zoom-controls__stepper button {
+  flex: 0 0 36px;
+  padding: 5px 0;
+  margin: 0;
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #495057;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diagram-zoom-controls__stepper button:hover:not(:disabled) {
+  background-color: #f0f0f0;
+  border-color: #adb5bd;
+}
+
+.diagram-zoom-controls__stepper button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.diagram-zoom-controls__stepper .font-size-value {
+  flex: 1 1 auto;
+  margin: 0;
+  min-width: 0;
 }
 
 /* Height controls */
@@ -479,6 +596,9 @@ pre::-webkit-scrollbar-corner {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Disabled state for UI elements */
@@ -576,4 +696,60 @@ pre::-webkit-scrollbar-corner {
   color: #6c757d;
   transform: translateX(-50%);
   white-space: nowrap;
+}
+
+/* Diagram output */
+.output-panel-shell {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+.diagram-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-x pan-y;
+}
+
+.diagram-panel {
+  display: block;
+  width: max-content;
+  max-width: none;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.mermaid-zoom-stage {
+  position: relative;
+}
+
+.mermaid-diagram {
+  display: block;
+}
+
+.mermaid-diagram svg {
+  display: block;
+  max-width: none !important;
+  width: auto;
+  height: auto;
+}
+
+.diagram-error {
+  margin: 12px 16px 0;
+  padding: 10px 12px;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  background-color: #f8d7da;
+  color: #842029;
 }

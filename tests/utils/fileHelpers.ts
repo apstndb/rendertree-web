@@ -81,6 +81,26 @@ export async function clickRenderButton(
 }
 
 /**
+ * Waits for diagram rendering to complete and SVG to be available
+ */
+export async function waitForDiagramComplete(
+  page: Page,
+  timeout: number = 60000,
+): Promise<void> {
+  await page.waitForSelector('[data-testid="diagram-output"] svg', { timeout });
+}
+
+/**
+ * Selects the output view mode
+ */
+export async function selectOutputView(
+  page: Page,
+  view: 'ascii' | 'diagram',
+): Promise<void> {
+  await page.getByTestId('output-view-select').selectOption(view);
+}
+
+/**
  * Waits for rendering to complete and output to be available
  * @param page - Playwright page object
  * @param timeout - Timeout in milliseconds (default: 30000)

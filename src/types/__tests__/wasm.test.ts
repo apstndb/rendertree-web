@@ -58,11 +58,18 @@ describe('WASM types', () => {
       return `Rendered: ${params.input}`;
     };
 
+    const mockRenderMermaid = (paramsJson: string): string => {
+      const params = JSON.parse(paramsJson);
+      return `graph TD\n  node0["${params.input}"]`;
+    };
+
     const wasmFunctions: WasmFunctions = {
       renderASCII: mockRenderASCII,
+      renderMermaid: mockRenderMermaid,
     };
     
     expect(typeof wasmFunctions.renderASCII).toBe('function');
+    expect(typeof wasmFunctions.renderMermaid).toBe('function');
     
     const testParams = JSON.stringify({
       input: 'test',

@@ -10,6 +10,8 @@ import (
 
 	queryplan "github.com/apstndb/spannerplan"
 	"github.com/apstndb/spannerplan/plantree/reference"
+	"github.com/apstndb/spannerplanviz/mermaid"
+	"github.com/apstndb/spannerplanviz/visualize"
 )
 
 type params struct {
@@ -22,6 +24,18 @@ type params struct {
 	ShowScalarVars             bool                     `json:"showScalarVars,omitempty"`
 	ResolveScalarVars          bool                     `json:"resolveScalarVars,omitempty"`
 	ResolveScalarVarsRecursive bool                     `json:"resolveScalarVarsRecursive,omitempty"`
+}
+
+type mermaidParams struct {
+	Input             string `json:"input"`
+	Full              bool   `json:"full"`
+	Metadata          bool   `json:"metadata,omitempty"`
+	ExecutionStats    bool   `json:"executionStats,omitempty"`
+	ExecutionSummary  bool   `json:"executionSummary,omitempty"`
+	SerializeResult   bool   `json:"serializeResult,omitempty"`
+	HideScanTarget    bool   `json:"hideScanTarget,omitempty"`
+	NonVariableScalar bool   `json:"nonVariableScalar,omitempty"`
+	VariableScalar    bool   `json:"variableScalar,omitempty"`
 }
 
 // Response represents the structured response from WASM
@@ -85,55 +99,63 @@ func (e InvalidParametersError) Error() string {
 	return e.msg
 }
 
-// renderASCII is the main WASM function exposed to JavaScript
-// It takes JSON string parameters and returns structured JSON responses
-// instead of throwing JavaScript errors directly
-func renderASCII(_ js.Value, args []js.Value) any {
-	// Helper function to return structured error response
-	errorResponse := func(errorType, message, details string) string {
-		resp := Response{
-			Success: false,
-			Error: &Error{
-				Type:    errorType,
-				Message: message,
-				Details: details,
-			},
-		}
-		jsonBytes, _ := json.Marshal(resp)
-		return string(jsonBytes)
+func errorResponse(errorType, message, details string) string {
+	resp := Response{
+		Success: false,
+		Error: &Error{
+			Type:    errorType,
+			Message: message,
+			Details: details,
+		},
 	}
+	jsonBytes, _ := json.Marshal(resp)
+	return string(jsonBytes)
+}
 
-	// Helper function to return structured success response
-	successResponse := func(result string) string {
-		resp := Response{
-			Success: true,
-			Result:  result,
-		}
-		jsonBytes, _ := json.Marshal(resp)
-		return string(jsonBytes)
+func successResponse(result string) string {
+	resp := Response{
+		Success: true,
+		Result:  result,
 	}
+	jsonBytes, _ := json.Marshal(resp)
+	return string(jsonBytes)
+}
 
+func invokeWasm(args []js.Value, run func(string) (string, error)) any {
 	if len(args) != 1 {
 		return errorResponse(ErrorTypeInvalidParameters,
 			"Invalid number of arguments",
 			fmt.Sprintf("Expected 1 argument, got %d", len(args)))
 	}
 
-	par := params{}
-	if err := json.Unmarshal([]byte(args[0].String()), &par); err != nil {
-		return errorResponse(ErrorTypeParseError,
-			"Failed to parse parameters",
-			err.Error())
-	}
-
-	s, err := renderASCIIImpl(par)
+	result, err := run(args[0].String())
 	if err != nil {
-		// Classify error types using errors.As for type-safe error handling
-		errorType := classifyError(err)
-		return errorResponse(errorType, err.Error(), "")
+		return errorResponse(classifyError(err), err.Error(), "")
 	}
+	return successResponse(result)
+}
 
-	return successResponse(s)
+// renderASCII is the main WASM function exposed to JavaScript
+// It takes JSON string parameters and returns structured JSON responses
+// instead of throwing JavaScript errors directly
+func renderASCII(_ js.Value, args []js.Value) any {
+	return invokeWasm(args, func(paramsJSON string) (string, error) {
+		par := params{}
+		if err := json.Unmarshal([]byte(paramsJSON), &par); err != nil {
+			return "", ParseError{msg: fmt.Sprintf("Failed to parse parameters: %v", err)}
+		}
+		return renderASCIIImpl(par)
+	})
+}
+
+func renderMermaid(_ js.Value, args []js.Value) any {
+	return invokeWasm(args, func(paramsJSON string) (string, error) {
+		par := mermaidParams{}
+		if err := json.Unmarshal([]byte(paramsJSON), &par); err != nil {
+			return "", ParseError{msg: fmt.Sprintf("Failed to parse parameters: %v", err)}
+		}
+		return renderMermaidImpl(par)
+	})
 }
 
 // classifyError determines the error type using errors.As for type-safe classification
@@ -216,8 +238,47 @@ func renderASCIIImpl(par params) (string, error) {
 	return s, nil
 }
 
+func renderMermaidImpl(par mermaidParams) (string, error) {
+	stats, rowType, err := queryplan.ExtractQueryPlan([]byte(par.Input))
+	if err != nil {
+		return "", ParseError{msg: fmt.Sprintf("Failed to extract query plan: %v", err)}
+	}
+
+	queryPlan := stats.GetQueryPlan()
+	if queryPlan == nil {
+		return "", InvalidSpannerFormatError{msg: "Query plan is missing from input"}
+	}
+	if len(queryPlan.GetPlanNodes()) == 0 {
+		return "", InvalidSpannerFormatError{msg: "Plan nodes are missing from query plan"}
+	}
+
+	buildOpts := visualize.BuildOptions{
+		Full:              par.Full,
+		Metadata:          par.Metadata,
+		ExecutionStats:    par.ExecutionStats,
+		ExecutionSummary:  par.ExecutionSummary,
+		SerializeResult:   par.SerializeResult,
+		HideScanTarget:    par.HideScanTarget,
+		NonVariableScalar: par.NonVariableScalar,
+		VariableScalar:    par.VariableScalar,
+	}
+	buildOpts.ApplyFull()
+
+	plan, err := visualize.BuildPlan(rowType, stats, buildOpts)
+	if err != nil {
+		return "", RenderError{msg: fmt.Sprintf("Failed to build plan: %v", err)}
+	}
+
+	src, err := mermaid.Source(plan)
+	if err != nil {
+		return "", RenderError{msg: fmt.Sprintf("Failed to render mermaid diagram: %v", err)}
+	}
+	return src, nil
+}
+
 func main() {
 	js.Global().Set("renderASCII", js.FuncOf(renderASCII))
+	js.Global().Set("renderMermaid", js.FuncOf(renderMermaid))
 	c := make(<-chan struct{})
 	<-c
 }

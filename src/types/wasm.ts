@@ -39,6 +39,30 @@ export interface RenderAppendixOptions {
 }
 
 /**
+ * Output view mode for the visualization panel
+ * - ascii: Text tree rendered by spannerplan/plantree
+ * - diagram: Mermaid.js diagram rendered in the browser
+ */
+export type OutputView = "ascii" | "diagram";
+
+/**
+ * Parameters for WASM renderMermaid function
+ */
+export interface RenderMermaidParams {
+  /** Query plan text in YAML or JSON format */
+  input: string;
+  /** Enable all diagram detail flags (spannerplanviz --full) */
+  full?: boolean;
+  metadata?: boolean;
+  executionStats?: boolean;
+  executionSummary?: boolean;
+  serializeResult?: boolean;
+  hideScanTarget?: boolean;
+  nonVariableScalar?: boolean;
+  variableScalar?: boolean;
+}
+
+/**
  * Parameters for WASM renderASCII function
  */
 export interface RenderParams extends RenderAppendixOptions {
@@ -104,5 +128,11 @@ export interface WasmFunctions {
    * @param paramsJson - JSON string containing RenderParams
    * @returns JSON string containing WasmResponse
    */
-  renderASCII: (paramsJson: string) => string; 
+  renderASCII: (paramsJson: string) => string;
+  /**
+   * Renders Spanner query plan as Mermaid.js source
+   * @param paramsJson - JSON string containing RenderMermaidParams
+   * @returns JSON string containing WasmResponse
+   */
+  renderMermaid: (paramsJson: string) => string;
 }

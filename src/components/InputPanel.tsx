@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAppContext, type ScalarAliasResolution } from '../contexts/AppContext';
-import { useSettingsContext } from '../contexts/SettingsContext';
+import {
+  DIAGRAM_ZOOM_STEP,
+  MAX_DIAGRAM_ZOOM,
+  MIN_DIAGRAM_ZOOM,
+  useSettingsContext,
+} from '../contexts/SettingsContext';
 import { useDebounce } from '../hooks/useDebounce';
-import type { FormatType, PrintSection } from '../types/wasm';
+import type { FormatType, OutputView, PrintSection } from '../types/wasm';
 
 interface InputPanelProps {
   disabled: boolean;
@@ -65,12 +70,14 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     setShowScalarVars,
     scalarAliasResolution,
     setScalarAliasResolution,
+    diagramFull,
+    setDiagramFull,
     handleRender,
     handleFileUpload,
     loadSampleFile
   } = useAppContext();
 
-  const { fontSize, setFontSize } = useSettingsContext();
+  const { fontSize, setFontSize, diagramZoom, setDiagramZoom, fitDiagramToView, outputView, setOutputView } = useSettingsContext();
   
   // Local state for wrap width input
   const [localWrapWidth, setLocalWrapWidth] = useState(wrapWidth.toString());
@@ -90,14 +97,26 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   }, [wrapWidth]);
 
   const appendixPreset = presetForSections(printSections);
+  const isDiagramView = outputView === 'diagram';
+  const [showPlanInput, setShowPlanInput] = useState(false);
+
+  const onFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileUpload(event);
+    setShowPlanInput(true);
+  };
+
+  const onLoadSampleFile = async (path: string) => {
+    await loadSampleFile(path);
+    setShowPlanInput(true);
+  };
 
   // Auto-render when settings change (except wrapWidth which is handled separately)
   useEffect(() => {
     if (input.trim() && !disabled) {
       const timeoutId = setTimeout(() => {
         handleRender();
-      }, 200); // Faster response for dropdown changes
-      
+      }, 200);
+
       return () => clearTimeout(timeoutId);
     }
     return undefined;
@@ -108,9 +127,10 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     printSections,
     showScalarVars,
     scalarAliasResolution,
+    diagramFull,
     input,
     disabled,
-    handleRender
+    handleRender,
   ]);
 
   // Handle wrap width input with debouncing and special keys
@@ -134,50 +154,91 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   return (
     <div className={`left-pane ${disabled ? 'disabled' : ''}`}>
       <div className="file-picker-container">
-        <h3>Select a file to visualize:</h3>
         <div className="file-input-wrapper">
+          <label htmlFor="fileInput" className="control-group-label">Plan source</label>
           <input
             type="file"
             id="fileInput"
             accept=".yaml,.yml,.json"
             aria-label="Upload plan file"
-            onChange={handleFileUpload}
+            onChange={onFileUpload}
             disabled={disabled}
             data-testid="file-picker"
           />
-          <p className="file-hint">Files are automatically rendered when selected</p>
-          <div className="sample-files">
-            <p>Sample files:</p>
-            <button 
-              className="sample-file-button" 
-              onClick={() => loadSampleFile('testdata/dca_profile.yaml')}
+          <div className="file-source-actions">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setShowPlanInput((visible) => !visible)}
               disabled={disabled}
+              aria-expanded={showPlanInput}
+              data-testid="plan-input-toggle"
             >
-              Load dca_profile.yaml
+              {showPlanInput ? 'Hide input' : 'Paste / Preview'}
             </button>
-            <button 
-              className="sample-file-button" 
-              onClick={() => loadSampleFile('testdata/dca_plan.yaml')}
+          </div>
+          <div className="sample-files">
+            <span className="control-group-label">Samples</span>
+            <button
+              className="sample-file-button"
+              onClick={() => void onLoadSampleFile('testdata/dca_profile.yaml')}
               disabled={disabled}
             >
-              Load dca_plan.yaml
+              dca_profile.yaml
+            </button>
+            <button
+              className="sample-file-button"
+              onClick={() => void onLoadSampleFile('testdata/dca_plan.yaml')}
+              disabled={disabled}
+            >
+              dca_plan.yaml
             </button>
           </div>
         </div>
       </div>
-      <textarea
-        className="input-area"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Enter Spanner QueryPlan in JSON or YAML format..."
-        aria-label="QueryPlan input"
-        disabled={disabled}
-      />
-      <div className="render-controls">
-        <div className="settings-header">
-          <h4>Rendering Settings</h4>
-          <p className="auto-render-note">Changes are automatically applied</p>
+      {showPlanInput && (
+        <div className="plan-input-section" data-testid="plan-input-section">
+          <textarea
+            className="input-area"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Paste or preview QueryPlan YAML/JSON..."
+            aria-label="QueryPlan input"
+            disabled={disabled}
+            data-testid="plan-input"
+          />
         </div>
+      )}
+      <div className="render-controls">
+        <div className="select-container">
+          <label htmlFor="outputView" className="control-group-label">Output view:</label>
+          <select
+            id="outputView"
+            aria-label="Output view"
+            value={outputView}
+            onChange={(e) => setOutputView(e.target.value as OutputView)}
+            disabled={disabled}
+            data-testid="output-view-select"
+          >
+            <option value="ascii">ASCII tree</option>
+            <option value="diagram">Diagram (Mermaid)</option>
+          </select>
+        </div>
+        {isDiagramView ? (
+          <label className="checkbox-container" htmlFor="diagramFull">
+            <input
+              type="checkbox"
+              id="diagramFull"
+              checked={diagramFull}
+              onChange={(e) => setDiagramFull(e.target.checked)}
+              aria-label="Include full diagram details"
+              disabled={disabled}
+              data-testid="diagram-full-checkbox"
+            />
+            <span>Full diagram details</span>
+          </label>
+        ) : (
+          <>
         <div className="select-container">
           <label htmlFor="format" className="control-group-label">Format:</label>
           <select
@@ -261,6 +322,8 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             ))}
           </select>
         </div>
+          </>
+        )}
         <button
           className="primary-button"
           onClick={handleRender}
@@ -269,11 +332,20 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
         >
           🔄 Refresh
         </button>
-        <FontSizeControls 
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-          disabled={disabled} 
-        />
+        {isDiagramView ? (
+          <DiagramZoomControls
+            diagramZoom={diagramZoom}
+            setDiagramZoom={setDiagramZoom}
+            onFit={fitDiagramToView}
+            disabled={disabled}
+          />
+        ) : (
+          <FontSizeControls
+            fontSize={fontSize}
+            setFontSize={setFontSize}
+            disabled={disabled}
+          />
+        )}
       </div>
     </div>
   );
@@ -323,6 +395,72 @@ const FontSizeControls: React.FC<FontSizeControlsProps> = ({
       >
         A+
       </button>
+    </div>
+  );
+};
+
+interface DiagramZoomControlsProps {
+  diagramZoom: number;
+  setDiagramZoom: (diagramZoom: number) => void;
+  onFit: () => void;
+  disabled: boolean;
+}
+
+const DiagramZoomControls: React.FC<DiagramZoomControlsProps> = ({
+  diagramZoom,
+  setDiagramZoom,
+  onFit,
+  disabled,
+}) => {
+  const decreaseZoom = () => {
+    setDiagramZoom(diagramZoom - DIAGRAM_ZOOM_STEP);
+  };
+
+  const increaseZoom = () => {
+    setDiagramZoom(diagramZoom + DIAGRAM_ZOOM_STEP);
+  };
+
+  return (
+    <div className="diagram-zoom-controls" data-testid="diagram-zoom-controls">
+      <div className="diagram-zoom-controls__header">
+        <span className="control-group-label">Zoom</span>
+        <button
+          id="fit-diagram-zoom"
+          className="diagram-zoom-controls__fit"
+          title="Fit diagram to view"
+          aria-label="Fit diagram to view"
+          onClick={onFit}
+          disabled={disabled}
+          data-testid="diagram-zoom-fit"
+        >
+          Fit
+        </button>
+      </div>
+      <div className="diagram-zoom-controls__stepper">
+        <button
+          id="decrease-diagram-zoom"
+          title="Zoom out diagram"
+          aria-label="Zoom out diagram"
+          onClick={decreaseZoom}
+          disabled={disabled || diagramZoom <= MIN_DIAGRAM_ZOOM}
+          data-testid="diagram-zoom-out"
+        >
+          −
+        </button>
+        <span id="diagram-zoom-display" className="font-size-value" data-testid="diagram-zoom-display">
+          {diagramZoom}%
+        </span>
+        <button
+          id="increase-diagram-zoom"
+          title="Zoom in diagram"
+          aria-label="Zoom in diagram"
+          onClick={increaseZoom}
+          disabled={disabled || diagramZoom >= MAX_DIAGRAM_ZOOM}
+          data-testid="diagram-zoom-in"
+        >
+          +
+        </button>
+      </div>
     </div>
   );
 };

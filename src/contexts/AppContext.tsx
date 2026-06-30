@@ -3,13 +3,13 @@ import type { ReactNode } from 'react';
 import { createContextWithHook } from '../utils/createContextWithHook';
 import { useWasmContext } from './WasmContext';
 import { useFileContext } from './FileContext';
-import { renderASCIITree } from '../wasm';
+import { useSettingsContext } from './SettingsContext';
+import { renderASCIITree, renderMermaidDiagram } from '../wasm';
 import type { FormatType, PrintSection, RenderAppendixOptions } from '../types/wasm';
 import { logger } from '../utils/logger';
 
 export type ScalarAliasResolution = 'none' | 'direct' | 'recursive';
 
-// Define types for the application state
 interface AppState {
   input: string;
   format: FormatType;
@@ -18,12 +18,13 @@ interface AppState {
   printSections: PrintSection[] | undefined;
   showScalarVars: boolean;
   scalarAliasResolution: ScalarAliasResolution;
-  output: string;
+  diagramFull: boolean;
+  asciiOutput: string;
+  diagramOutput: string;
   message: string;
   isRendering: boolean;
 }
 
-// Define types for the context value
 interface AppContextType extends AppState {
   setInput: (input: string) => void;
   setFormat: (format: FormatType) => void;
@@ -32,23 +33,20 @@ interface AppContextType extends AppState {
   setPrintSections: (printSections: PrintSection[] | undefined) => void;
   setShowScalarVars: (showScalarVars: boolean) => void;
   setScalarAliasResolution: (scalarAliasResolution: ScalarAliasResolution) => void;
+  setDiagramFull: (diagramFull: boolean) => void;
   handleRender: () => Promise<void>;
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   loadSampleFile: (filename: string) => Promise<void>;
 }
 
-// Create context with generic utility
-const { Provider: AppContextProvider, useContext: useAppContext } = 
+const { Provider: AppContextProvider, useContext: useAppContext } =
   createContextWithHook<AppContextType>('AppContext');
 
-// Props for the AppProvider component
 interface AppProviderProps {
   children: ReactNode;
 }
 
-// Provider component that wraps the application
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-  // Application state
   const [input, setInput] = useState<string>('');
   const [format, setFormat] = useState<FormatType>('CURRENT');
   const [wrapWidth, setWrapWidth] = useState<number>(0);
@@ -56,17 +54,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [printSections, setPrintSections] = useState<PrintSection[] | undefined>(undefined);
   const [showScalarVars, setShowScalarVars] = useState<boolean>(false);
   const [scalarAliasResolution, setScalarAliasResolution] = useState<ScalarAliasResolution>('none');
-  const [output, setOutput] = useState<string>('');
+  const [diagramFull, setDiagramFull] = useState<boolean>(true);
+  const [asciiOutput, setAsciiOutput] = useState<string>('');
+  const [diagramOutput, setDiagramOutput] = useState<string>('');
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('Loading rendering engine... Please wait.');
 
-  // Get WASM functionality from context
-  const { isLoading, error, renderASCII } = useWasmContext();
-  
-  // Get file functionality from context
+  const { isLoading, error, renderASCII, renderMermaid } = useWasmContext();
+  const { outputView } = useSettingsContext();
   const { handleFileUpload: fileUpload, loadSampleFile: sampleFileLoader } = useFileContext();
 
-  // Update message based on WASM loading state
   useEffect(() => {
     logger.debug('AppContext useEffect triggered - isLoading:', isLoading, 'hasError:', !!error);
 
@@ -82,9 +79,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [isLoading, error]);
 
-  // Handle rendering
   const handleRender = useCallback(async () => {
-    logger.debug('handleRender called');
+    logger.debug('handleRender called, outputView:', outputView);
 
     if (!input.trim()) {
       logger.warn('Render attempted with empty input');
@@ -92,64 +88,72 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return;
     }
 
-    if (!renderASCII) {
+    if (outputView === 'ascii' && !renderASCII) {
       logger.error('Render attempted but renderASCII function is not available');
       setMessage('Rendering engine not initialized.');
       return;
     }
 
-    logger.info('Starting rendering process');
-    logger.debug('Setting isRendering to true');
-    setIsRendering(true);
+    if (outputView === 'diagram' && !renderMermaid) {
+      logger.error('Render attempted but renderMermaid function is not available');
+      setMessage('Rendering engine not initialized.');
+      return;
+    }
 
-    logger.debug('Setting message to "Rendering..."');
+    logger.info('Starting rendering process');
+    setIsRendering(true);
     setMessage('Rendering...');
 
     try {
-      const appendixOptions: RenderAppendixOptions = {
-        showScalarVars,
-        resolveScalarVars: scalarAliasResolution === 'direct',
-        resolveScalarVarsRecursive: scalarAliasResolution === 'recursive',
-        ...(printSections !== undefined ? { printSections } : {})
-      };
+      let rendered: string;
+      if (outputView === 'diagram') {
+        rendered = await renderMermaidDiagram(input, { full: diagramFull });
+      } else {
+        const appendixOptions: RenderAppendixOptions = {
+          showScalarVars,
+          resolveScalarVars: scalarAliasResolution === 'direct',
+          resolveScalarVarsRecursive: scalarAliasResolution === 'recursive',
+          ...(printSections !== undefined ? { printSections } : {}),
+        };
+        rendered = await renderASCIITree(input, 'AUTO', format, wrapWidth, hangingIndent, appendixOptions);
+      }
 
-      logger.debug('Rendering with params:', {
-        mode: 'AUTO',
-        format,
-        wrapWidth,
-        hangingIndent,
-        ...appendixOptions,
-        inputLength: input.length
-      });
-
-      const startTime = performance.now();
-      const rendered = await renderASCIITree(input, 'AUTO', format, wrapWidth, hangingIndent, appendixOptions);
-      const endTime = performance.now();
-
-      logger.info(`Rendering completed in ${(endTime - startTime).toFixed(2)}ms`);
-      logger.debug('Result string length:', rendered.length, 'characters');
-      setOutput(rendered);
+      if (outputView === 'diagram') {
+        setDiagramOutput(rendered);
+      } else {
+        setAsciiOutput(rendered);
+      }
       setMessage('');
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
+    } catch (renderError) {
+      const errorMsg = renderError instanceof Error ? renderError.message : String(renderError);
       logger.error('Error during rendering:', errorMsg);
       setMessage(`Error during rendering: ${errorMsg}`);
     } finally {
-      logger.debug('Setting isRendering to false');
       setIsRendering(false);
     }
   }, [
     input,
+    outputView,
     format,
     wrapWidth,
     hangingIndent,
     printSections,
     showScalarVars,
     scalarAliasResolution,
-    renderASCII
+    diagramFull,
+    renderASCII,
+    renderMermaid,
   ]);
 
-  // Handle file upload using FileContext
+  useEffect(() => {
+    if (isLoading || !input.trim()) {
+      return;
+    }
+    void handleRender();
+    // Re-render immediately when switching views; input/settings changes use InputPanel debounce.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outputView]);
+
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     fileUpload(
       event,
@@ -163,7 +167,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     );
   }, [fileUpload]);
 
-  // Load sample file using FileContext
   const loadSampleFile = useCallback(async (filename: string) => {
     await sampleFileLoader(
       filename,
@@ -181,7 +184,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     );
   }, [sampleFileLoader]);
 
-  // Context value
   const contextValue: AppContextType = {
     input,
     setInput,
@@ -197,12 +199,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setShowScalarVars,
     scalarAliasResolution,
     setScalarAliasResolution,
-    output,
+    diagramFull,
+    setDiagramFull,
+    asciiOutput,
+    diagramOutput,
     message,
     isRendering,
     handleRender,
     handleFileUpload,
-    loadSampleFile
+    loadSampleFile,
   };
 
   return (

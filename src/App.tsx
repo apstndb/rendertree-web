@@ -24,7 +24,7 @@ const AppContent: React.FC = () => {
   const { isLoading } = useWasmContext();
 
   return (
-    <>
+    <div className="app-shell">
       <div className="main-container">
         <InputPanel disabled={isLoading} />
         <OutputPanel />
@@ -34,7 +34,7 @@ const AppContent: React.FC = () => {
           GitHub Repository
         </a>
       </footer>
-    </>
+    </div>
   );
 };
 

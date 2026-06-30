@@ -11,7 +11,7 @@ test.describe('Sample File Loading', () => {
     await setupCompleteTest(page, test, { debug: DEBUG });
 
     // Click the "Load dca_profile.yaml" button
-    const profileButton = page.locator('button:has-text("Load dca_profile.yaml")');
+    const profileButton = page.locator('button:has-text("dca_profile.yaml")');
     await expect(profileButton).toBeVisible();
     await expect(profileButton).toBeEnabled();
     
@@ -22,7 +22,7 @@ test.describe('Sample File Loading', () => {
     await page.waitForTimeout(500); // Allow time for file to load
     
     // Verify the content was loaded
-    const textareaContent = await page.locator('textarea.input-area').inputValue();
+    const textareaContent = await page.getByTestId('plan-input').inputValue();
     expect(textareaContent).toBeTruthy();
     expect(textareaContent).toContain('metadata');
     expect(textareaContent).toContain('rowType');
@@ -62,7 +62,7 @@ test.describe('Sample File Loading', () => {
     await setupCompleteTest(page, test, { debug: DEBUG });
 
     // Click the "Load dca_plan.yaml" button
-    const planButton = page.locator('button:has-text("Load dca_plan.yaml")');
+    const planButton = page.locator('button:has-text("dca_plan.yaml")');
     await expect(planButton).toBeVisible();
     await expect(planButton).toBeEnabled();
     
@@ -73,7 +73,7 @@ test.describe('Sample File Loading', () => {
     await page.waitForTimeout(500); // Allow time for file to load
     
     // Verify the content was loaded
-    const textareaContent = await page.locator('textarea.input-area').inputValue();
+    const textareaContent = await page.getByTestId('plan-input').inputValue();
     expect(textareaContent).toBeTruthy();
     expect(textareaContent).toContain('metadata');
     expect(textareaContent).toContain('planNodes');
@@ -121,7 +121,7 @@ test.describe('Sample File Loading', () => {
     });
 
     // Click the "Load dca_profile.yaml" button
-    const profileButton = page.locator('button:has-text("Load dca_profile.yaml")');
+    const profileButton = page.locator('button:has-text("dca_profile.yaml")');
     await expect(profileButton).toBeVisible();
     await expect(profileButton).toBeEnabled();
     
@@ -145,7 +145,7 @@ test.describe('Sample File Loading', () => {
     await setupCompleteTest(page, test, { debug: DEBUG });
 
     // First load a sample file
-    const profileButton = page.locator('button:has-text("Load dca_profile.yaml")');
+    const profileButton = page.locator('button:has-text("dca_profile.yaml")');
     await profileButton.click();
     
     // Wait for content to load and start rendering
@@ -161,7 +161,7 @@ test.describe('Sample File Loading', () => {
     if (isRendering) {
       // Sample file buttons should be disabled during rendering
       await expect(profileButton).toBeDisabled();
-      const planButton = page.locator('button:has-text("Load dca_plan.yaml")');
+      const planButton = page.locator('button:has-text("dca_plan.yaml")');
       await expect(planButton).toBeDisabled();
     }
 
@@ -170,7 +170,7 @@ test.describe('Sample File Loading', () => {
     
     // After rendering, buttons should be enabled again
     await expect(profileButton).toBeEnabled();
-    const planButton = page.locator('button:has-text("Load dca_plan.yaml")');
+    const planButton = page.locator('button:has-text("dca_plan.yaml")');
     await expect(planButton).toBeEnabled();
   });
 });

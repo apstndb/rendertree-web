@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import type { WasmResponse, RenderParams } from '../wasm.js';
+import type { WasmResponse, RenderParams, RenderMermaidParams } from '../wasm.js';
 
 // Global declarations for WASM environment
 declare global {
@@ -19,6 +19,7 @@ declare global {
     exited: boolean;
   };
   var renderASCII: (paramsJson: string) => string;
+  var renderMermaid: (paramsJson: string) => string;
 }
 
 const scalarAppendixInput = `
@@ -96,6 +97,7 @@ stats:
 
 describe('WASM Node.js Integration Tests', () => {
   let renderASCII: (paramsJson: string) => string;
+  let renderMermaid: (paramsJson: string) => string;
 
   beforeAll(async () => {
     // Load and execute wasm_exec.js in Node.js environment
@@ -163,9 +165,13 @@ describe('WASM Node.js Integration Tests', () => {
     
     // Get renderASCII function from global scope
     renderASCII = (globalThis as Record<string, unknown>).renderASCII as (paramsJson: string) => string;
+    renderMermaid = (globalThis as Record<string, unknown>).renderMermaid as (paramsJson: string) => string;
     
     if (typeof renderASCII !== 'function') {
       throw new Error('renderASCII function not available after WASM initialization');
+    }
+    if (typeof renderMermaid !== 'function') {
+      throw new Error('renderMermaid function not available after WASM initialization');
     }
     
     // WASM module initialized successfully in Node.js
@@ -268,6 +274,51 @@ stats:
         // Should contain execution statistics
         expect(response.result).toMatch(/msecs|cpu_time|latency/);
       }
+    });
+  });
+
+  describe('renderMermaid', () => {
+    it('should return Mermaid source for a valid query plan', () => {
+      const params: RenderMermaidParams = {
+        input: `
+stats:
+  queryPlan:
+    planNodes:
+      - displayName: "Distributed Union"
+        kind: RELATIONAL
+        index: 0
+        childLinks:
+          - childIndex: 1
+      - displayName: "Scan"
+        kind: RELATIONAL
+        index: 1
+`,
+        full: true
+      };
+
+      const resultStr = renderMermaid(JSON.stringify(params));
+      const response: WasmResponse = JSON.parse(resultStr);
+
+      expect(response.success).toBe(true);
+      expect(response.result).toContain('graph TD');
+      expect(response.result).toContain('Distributed&nbsp;Union');
+      expect(response.result).toContain('Scan');
+    });
+
+    it('should return INVALID_SPANNER_FORMAT for missing plan nodes', () => {
+      const params: RenderMermaidParams = {
+        input: `
+stats:
+  queryPlan: {}
+`,
+        full: true
+      };
+
+      const resultStr = renderMermaid(JSON.stringify(params));
+      const response: WasmResponse = JSON.parse(resultStr);
+
+      expect(response.success).toBe(false);
+      expect(response.error?.type).toBe('INVALID_SPANNER_FORMAT');
     });
   });
 
