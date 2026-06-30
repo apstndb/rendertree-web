@@ -14,7 +14,7 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/fatih/color v1.15.0 // indirect
-	github.com/flopp/go-findfont v0.1.1-0.20250313113053-2aa41f534f91 // indirect
+	github.com/flopp/go-findfont v0.1.0 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/goccy/go-graphviz v0.2.10 // indirect
 	github.com/goccy/go-yaml v1.17.1 // indirect
@@ -42,3 +42,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
+
+replace github.com/flopp/go-findfont => github.com/goccy/go-findfont v0.0.0-20250109093214-c2e12b298c75

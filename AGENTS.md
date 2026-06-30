@@ -15,7 +15,7 @@ Client-side Spanner query plan viewer: React + Vite UI, Go WASM (`main.go`) for 
 
 GitHub Pages base path: `/rendertree-web/`.
 
-Graphviz in WASM pulls in `go-findfont` via `goccy/go-graphviz` (which replaces it with `github.com/goccy/go-findfont` including `js` build tags). No local stub is required.
+Graphviz in WASM pulls in `go-findfont` via `goccy/go-graphviz`. This repo mirrors go-graphviz’s `replace` to `github.com/goccy/go-findfont` (includes `js` build tags). No local stub is required.
 
 ## Before push
 
