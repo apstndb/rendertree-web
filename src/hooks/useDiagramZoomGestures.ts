@@ -5,8 +5,13 @@ import {
 } from '../utils/diagramZoom';
 
 function touchDistance(touches: TouchList): number {
-  const dx = touches[0].clientX - touches[1].clientX;
-  const dy = touches[0].clientY - touches[1].clientY;
+  const first = touches.item(0);
+  const second = touches.item(1);
+  if (!first || !second) {
+    return 0;
+  }
+  const dx = first.clientX - second.clientX;
+  const dy = first.clientY - second.clientY;
   return Math.hypot(dx, dy);
 }
 

@@ -25,8 +25,10 @@ This is a **client-side visualization tool** designed for users who need to anal
 
 ### Development
 ```bash
-npm run dev          # Start development server
+npm run dev          # Start development server (does NOT run typecheck)
 ```
+
+**Before pushing**, run `npm run typecheck` or `npm run test:ci`. Dev server and `npm run test:unit` alone can miss TypeScript errors that fail CI.
 
 ### Building & Testing
 ```bash
@@ -120,10 +122,11 @@ When implementing changes or fixes, follow this workflow:
 ### Pre-Push Validation
 **IMPORTANT**: Before pushing changes, run one of these to prevent CI failures:
 ```bash
-npm run test:ci      # Full CI validation (recommended)
-npm run test:all     # All tests including development mode
+npm run typecheck   # Minimum: matches CI Tests + Deploy tsc step
+npm run test:ci     # Full CI validation (recommended)
+npm run test:all    # All tests including development mode
 ```
-These commands include TypeScript compilation checks that will catch the type errors that cause CI build failures.
+`npm run dev`, `npm run build:wasm`, and `npm run test:unit` do **not** substitute for `npm run typecheck`. CI fails on `tsc` before unit or Playwright tests run.
 
 ### Issue Tracking
 - **Create issues for ALL problems**: Even known/existing issues should be documented in GitHub Issues
@@ -146,7 +149,17 @@ These commands include TypeScript compilation checks that will catch the type er
 - Use GitHub's project management features for milestone tracking
 
 ### TypeScript and CI Compatibility
-- **Ensure TypeScript compilation**: All code must compile without errors for CI to pass
+- **Ensure TypeScript compilation**: All code must compile without errors for CI to pass. Both the **Tests** workflow (`npm run typecheck`) and **Deploy** workflow (`npm run build` → `tsc`) run `tsc --noEmit` before Playwright or Vite production build.
+- **`noUncheckedIndexedAccess` is enabled**: Do not index arrays, tuples, or `TouchList`/`NodeList` with `[0]` without narrowing. Prefer `.item(n)` plus null checks, or validate length first.
+  ```typescript
+  // Bad (TS2532 in CI)
+  const dx = touches[0].clientX - touches[1].clientX;
+
+  // Good
+  const first = touches.item(0);
+  const second = touches.item(1);
+  if (!first || !second) return 0;
+  ```
 - **Use proper types**: 
   - Use `window.setTimeout()` instead of `setTimeout()` for timeout operations to get correct return type
   - Include `"types": ["vite/client"]` in `tsconfig.json` for Vite environment variables support
