@@ -33,6 +33,19 @@ test.describe('SVG Rendering', () => {
     await expect(page.getByTestId('diagram-output').locator('svg')).toBeVisible();
   });
 
+  test('should download Graphviz SVG with svg extension', async ({ page }) => {
+    await setupCompleteTest(page, test);
+    await selectOutputView(page, 'svg');
+    await uploadTestFile(page, 'dca_profile.yaml');
+    await waitForDiagramComplete(page);
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByTestId('download-button').click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toBe('query-plan.svg');
+  });
+
   test('should keep SVG output copyable', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'Clipboard permissions are configured for Chromium only');
 

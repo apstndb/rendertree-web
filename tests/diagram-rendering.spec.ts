@@ -82,6 +82,19 @@ test.describe('Diagram Rendering', () => {
     await expect.poll(async () => container.evaluate((el) => el.scrollWidth)).toBeGreaterThan(initialScrollWidth);
   });
 
+  test('should download Mermaid source with mermaid extension', async ({ page }) => {
+    await setupCompleteTest(page, test, { debug: DEBUG });
+    await selectOutputView(page, 'diagram');
+    await uploadTestFile(page, 'dca_profile.yaml');
+    await waitForDiagramComplete(page);
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByTestId('download-button').click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toBe('query-plan.mermaid');
+  });
+
   test('should fit the diagram to the visible container', async ({ page }) => {
     await setupCompleteTest(page, test, { debug: DEBUG });
     await selectOutputView(page, 'diagram');

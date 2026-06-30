@@ -5,9 +5,10 @@ import { useSettingsContext } from '../contexts/SettingsContext';
 import { computeFitDiagramZoom, measureSvgSize } from '../utils/diagramZoom';
 import { logger } from '../utils/logger';
 import { CharacterRuler } from './CharacterRuler';
-import { CopyButton } from './CopyButton';
+import { OutputActionButtons } from './OutputActionButtons';
 import MermaidPanel from './MermaidPanel';
 import SvgPanel from './SvgPanel';
+import { OUTPUT_DOWNLOAD } from '../utils/downloadFile';
 import { useDiagramZoomGestures } from '../hooks/useDiagramZoomGestures';
 import { useScrollTracking } from '../hooks/useScrollTracking';
 
@@ -100,9 +101,9 @@ const OutputPanel: React.FC = () => {
           >
             <MermaidPanel source={diagramOutput} isRendering={isRendering} zoom={diagramZoom} />
           </div>
-          <CopyButton
+          <OutputActionButtons
             content={diagramOutput}
-            data-testid="copy-button"
+            download={OUTPUT_DOWNLOAD.diagram}
           />
         </div>
       )}
@@ -120,9 +121,9 @@ const OutputPanel: React.FC = () => {
           >
             <SvgPanel svg={svgOutput} zoom={diagramZoom} />
           </div>
-          <CopyButton
+          <OutputActionButtons
             content={svgOutput}
-            data-testid="copy-button"
+            download={OUTPUT_DOWNLOAD.svg}
           />
         </div>
       )}
@@ -168,9 +169,9 @@ const OutputPanel: React.FC = () => {
             </code>
           </pre>
 
-          <CopyButton
+          <OutputActionButtons
             content={asciiOutput}
-            data-testid="copy-button"
+            download={OUTPUT_DOWNLOAD.ascii}
           />
         </div>
       )}

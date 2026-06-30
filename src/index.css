@@ -264,25 +264,34 @@ textarea.input-area {
   margin-top: 20px;
 }
 
-/* Copy button styles */
-.copy-button {
+/* Copy / download action buttons */
+.output-actions {
   position: absolute;
-  top: 5px;
-  right: 5px; /* Changed from left to right */
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  display: flex;
+  gap: 6px;
+}
+
+.copy-button,
+.download-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
   border-radius: 4px;
   padding: 5px 10px;
-  font-size: 12px;
   cursor: pointer;
+  font-size: 12px;
   opacity: 0.8;
-  transition: opacity 0.2s;
+  transition: opacity 0.3s;
 }
-.copy-button:hover {
+
+.copy-button:hover,
+.download-button:hover {
   opacity: 1;
-  background-color: #e9ecef;
 }
-/* Styles for when copy is completed */
+
 .copy-button.copied {
   background-color: #28a745;
   color: white;
@@ -324,26 +333,6 @@ textarea.input-area {
   width: 100%; /* Make select full width */
 }
 
-/* Copy button positioning */
-.copy-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 100;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 12px;
-  opacity: 0.8;
-  transition: opacity 0.3s;
-}
-
-.copy-button:hover {
-  opacity: 1;
-}
 .render-controls button {
   padding: 5px 15px;
   border-radius: 4px;
