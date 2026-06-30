@@ -95,7 +95,7 @@ export async function waitForDiagramComplete(
  */
 export async function selectOutputView(
   page: Page,
-  view: 'ascii' | 'diagram',
+  view: 'ascii' | 'diagram' | 'svg',
 ): Promise<void> {
   await page.getByTestId('output-view-select').selectOption(view);
 }

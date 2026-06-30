@@ -1,5 +1,5 @@
 // No need to import wasm_exec.js as it's loaded from GOROOT in index.html
-import type { WasmFunctions, RenderParams, RenderMermaidParams, RenderMode, FormatType, RenderAppendixOptions, WasmResponse } from './types/wasm';
+import type { WasmFunctions, RenderParams, RenderPlanVizParams, RenderMode, FormatType, RenderAppendixOptions, WasmResponse } from './types/wasm';
 import { logger } from './utils/logger';
 import { WasmInitializationError, WasmRenderingError } from './errors/WasmErrors';
 import { extractErrorInfo } from './utils/errorHandling';
@@ -10,6 +10,7 @@ import { extractErrorInfo } from './utils/errorHandling';
 // These functions will be globally available after WASM initialization
 declare function renderASCII(paramsJson: string): string;
 declare function renderMermaid(paramsJson: string): string;
+declare function renderSVG(paramsJson: string): string;
 
 let cachedWasmFunctions: WasmFunctions | null = null;
 let initPromise: Promise<WasmFunctions> | null = null;
@@ -106,7 +107,7 @@ async function initializeWasm(): Promise<WasmFunctions> {
     const result = await WebAssembly.instantiateStreaming(fetchResponse, go.importObject);
     void go.run(result.instance);
 
-    cachedWasmFunctions = { renderASCII, renderMermaid };
+    cachedWasmFunctions = { renderASCII, renderMermaid, renderSVG };
     logger.info('WASM initialization completed successfully');
     return cachedWasmFunctions;
   } catch (e) {
@@ -154,14 +155,14 @@ export async function renderASCIITree(
  */
 export async function renderMermaidDiagram(
   input: string,
-  options: Omit<RenderMermaidParams, 'input'> = { full: true }
+  options: Omit<RenderPlanVizParams, 'input'> = { full: true }
 ): Promise<string> {
   logger.info('renderMermaidDiagram called');
   logger.debug('Input length:', input.length, 'characters');
 
   try {
     const wasmFunctions = await initWasm();
-    const params: RenderMermaidParams = {
+    const params: RenderPlanVizParams = {
       input,
       ...options,
     };
@@ -169,6 +170,30 @@ export async function renderMermaidDiagram(
   } catch (e) {
     const { message, originalError } = extractErrorInfo(e);
     logger.error('Error during mermaid rendering:', message);
+    throw new WasmRenderingError(message, originalError);
+  }
+}
+
+/**
+ * Render Graphviz SVG for a query plan via WASM.
+ */
+export async function renderSVGDiagram(
+  input: string,
+  options: Omit<RenderPlanVizParams, 'input'> = { full: true }
+): Promise<string> {
+  logger.info('renderSVGDiagram called');
+  logger.debug('Input length:', input.length, 'characters');
+
+  try {
+    const wasmFunctions = await initWasm();
+    const params: RenderPlanVizParams = {
+      input,
+      ...options,
+    };
+    return invokeWasm(wasmFunctions.renderSVG, JSON.stringify(params));
+  } catch (e) {
+    const { message, originalError } = extractErrorInfo(e);
+    logger.error('Error during SVG rendering:', message);
     throw new WasmRenderingError(message, originalError);
   }
 }

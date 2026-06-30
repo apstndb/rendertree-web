@@ -97,7 +97,7 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   }, [wrapWidth]);
 
   const appendixPreset = presetForSections(printSections);
-  const isDiagramView = outputView === 'diagram';
+  const isPlanVizView = outputView === 'diagram' || outputView === 'svg';
   const [showPlanInput, setShowPlanInput] = useState(false);
 
   const onFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -222,9 +222,10 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
           >
             <option value="ascii">ASCII tree</option>
             <option value="diagram">Diagram (Mermaid)</option>
+            <option value="svg">Diagram (Graphviz SVG)</option>
           </select>
         </div>
-        {isDiagramView ? (
+        {isPlanVizView ? (
           <label className="checkbox-container" htmlFor="diagramFull">
             <input
               type="checkbox"
@@ -332,7 +333,7 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
         >
           🔄 Refresh
         </button>
-        {isDiagramView ? (
+        {isPlanVizView ? (
           <DiagramZoomControls
             diagramZoom={diagramZoom}
             setDiagramZoom={setDiagramZoom}

@@ -7,16 +7,19 @@ import { logger } from '../utils/logger';
 import { CharacterRuler } from './CharacterRuler';
 import { CopyButton } from './CopyButton';
 import MermaidPanel from './MermaidPanel';
+import SvgPanel from './SvgPanel';
 import { useDiagramZoomGestures } from '../hooks/useDiagramZoomGestures';
 import { useScrollTracking } from '../hooks/useScrollTracking';
 
 const OutputPanel: React.FC = () => {
-  const { asciiOutput, diagramOutput, message, isRendering } = useAppContext();
+  const { asciiOutput, diagramOutput, svgOutput, message, isRendering } = useAppContext();
   const { isLoading: isWasmLoading } = useWasmContext();
   const { fontSize, diagramZoom, setDiagramZoom, outputView, registerDiagramFitHandler } = useSettingsContext();
   const isLoading = isWasmLoading || isRendering;
   const isDiagramView = outputView === 'diagram';
-  const activeOutput = isDiagramView ? diagramOutput : asciiOutput;
+  const isSvgView = outputView === 'svg';
+  const isZoomableView = isDiagramView || isSvgView;
+  const activeOutput = isDiagramView ? diagramOutput : isSvgView ? svgOutput : asciiOutput;
 
   const preRef = useRef<HTMLPreElement>(null);
   const codeRef = useRef<HTMLElement>(null);
@@ -24,7 +27,7 @@ const OutputPanel: React.FC = () => {
 
   useDiagramZoomGestures({
     containerRef: diagramScrollRef,
-    enabled: isDiagramView && Boolean(diagramOutput),
+    enabled: isZoomableView && Boolean(activeOutput),
     diagramZoom,
     setDiagramZoom,
   });
@@ -32,7 +35,7 @@ const OutputPanel: React.FC = () => {
   const { scrollLeft, rulerWidth } = useScrollTracking(
     preRef,
     codeRef,
-    isDiagramView ? '' : asciiOutput,
+    isZoomableView ? '' : asciiOutput,
     fontSize,
     "Consolas, 'Courier New', Courier, monospace"
   );
@@ -72,7 +75,7 @@ const OutputPanel: React.FC = () => {
     });
 
     return () => registerDiagramFitHandler(null);
-  }, [diagramOutput, registerDiagramFitHandler, setDiagramZoom]);
+  }, [diagramOutput, svgOutput, registerDiagramFitHandler, setDiagramZoom]);
 
   return (
     <div className="content-container">
@@ -99,6 +102,26 @@ const OutputPanel: React.FC = () => {
           </div>
           <CopyButton
             content={diagramOutput}
+            data-testid="copy-button"
+          />
+        </div>
+      )}
+
+      {isSvgView && svgOutput && (
+        <div
+          className="output-panel-shell diagram-shell"
+          data-testid="output-container"
+        >
+          <div
+            className="diagram-scroll"
+            ref={diagramScrollRef}
+            data-testid="diagram-scroll"
+            title="Pinch or Ctrl+scroll (Cmd+scroll on Mac) to zoom the diagram"
+          >
+            <SvgPanel svg={svgOutput} zoom={diagramZoom} />
+          </div>
+          <CopyButton
+            content={svgOutput}
             data-testid="copy-button"
           />
         </div>

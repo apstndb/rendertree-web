@@ -4,7 +4,7 @@ import { createContextWithHook } from '../utils/createContextWithHook';
 import { useWasmContext } from './WasmContext';
 import { useFileContext } from './FileContext';
 import { useSettingsContext } from './SettingsContext';
-import { renderASCIITree, renderMermaidDiagram } from '../wasm';
+import { renderASCIITree, renderMermaidDiagram, renderSVGDiagram } from '../wasm';
 import type { FormatType, PrintSection, RenderAppendixOptions } from '../types/wasm';
 import { logger } from '../utils/logger';
 
@@ -21,6 +21,7 @@ interface AppState {
   diagramFull: boolean;
   asciiOutput: string;
   diagramOutput: string;
+  svgOutput: string;
   message: string;
   isRendering: boolean;
 }
@@ -57,10 +58,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [diagramFull, setDiagramFull] = useState<boolean>(true);
   const [asciiOutput, setAsciiOutput] = useState<string>('');
   const [diagramOutput, setDiagramOutput] = useState<string>('');
+  const [svgOutput, setSvgOutput] = useState<string>('');
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('Loading rendering engine... Please wait.');
 
-  const { isLoading, error, renderASCII, renderMermaid } = useWasmContext();
+  const { isLoading, error, renderASCII, renderMermaid, renderSVG } = useWasmContext();
   const { outputView } = useSettingsContext();
   const { handleFileUpload: fileUpload, loadSampleFile: sampleFileLoader } = useFileContext();
 
@@ -100,6 +102,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return;
     }
 
+    if (outputView === 'svg' && !renderSVG) {
+      logger.error('Render attempted but renderSVG function is not available');
+      setMessage('Rendering engine not initialized.');
+      return;
+    }
+
     logger.info('Starting rendering process');
     setIsRendering(true);
     setMessage('Rendering...');
@@ -108,6 +116,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       let rendered: string;
       if (outputView === 'diagram') {
         rendered = await renderMermaidDiagram(input, { full: diagramFull });
+      } else if (outputView === 'svg') {
+        rendered = await renderSVGDiagram(input, { full: diagramFull });
       } else {
         const appendixOptions: RenderAppendixOptions = {
           showScalarVars,
@@ -120,6 +130,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       if (outputView === 'diagram') {
         setDiagramOutput(rendered);
+      } else if (outputView === 'svg') {
+        setSvgOutput(rendered);
       } else {
         setAsciiOutput(rendered);
       }
@@ -143,6 +155,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     diagramFull,
     renderASCII,
     renderMermaid,
+    renderSVG,
   ]);
 
   useEffect(() => {
@@ -203,6 +216,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setDiagramFull,
     asciiOutput,
     diagramOutput,
+    svgOutput,
     message,
     isRendering,
     handleRender,

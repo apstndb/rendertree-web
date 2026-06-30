@@ -3,6 +3,8 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +12,7 @@ import (
 
 	queryplan "github.com/apstndb/spannerplan"
 	"github.com/apstndb/spannerplan/plantree/reference"
+	"github.com/apstndb/spannerplanviz/graphviz"
 	"github.com/apstndb/spannerplanviz/mermaid"
 	"github.com/apstndb/spannerplanviz/visualize"
 )
@@ -26,7 +29,7 @@ type params struct {
 	ResolveScalarVarsRecursive bool                     `json:"resolveScalarVarsRecursive,omitempty"`
 }
 
-type mermaidParams struct {
+type planVizParams struct {
 	Input             string `json:"input"`
 	Full              bool   `json:"full"`
 	Metadata          bool   `json:"metadata,omitempty"`
@@ -150,11 +153,21 @@ func renderASCII(_ js.Value, args []js.Value) any {
 
 func renderMermaid(_ js.Value, args []js.Value) any {
 	return invokeWasm(args, func(paramsJSON string) (string, error) {
-		par := mermaidParams{}
+		par := planVizParams{}
 		if err := json.Unmarshal([]byte(paramsJSON), &par); err != nil {
 			return "", ParseError{msg: fmt.Sprintf("Failed to parse parameters: %v", err)}
 		}
 		return renderMermaidImpl(par)
+	})
+}
+
+func renderSVG(_ js.Value, args []js.Value) any {
+	return invokeWasm(args, func(paramsJSON string) (string, error) {
+		par := planVizParams{}
+		if err := json.Unmarshal([]byte(paramsJSON), &par); err != nil {
+			return "", ParseError{msg: fmt.Sprintf("Failed to parse parameters: %v", err)}
+		}
+		return renderSVGImpl(par)
 	})
 }
 
@@ -238,18 +251,18 @@ func renderASCIIImpl(par params) (string, error) {
 	return s, nil
 }
 
-func renderMermaidImpl(par mermaidParams) (string, error) {
+func buildPlanFromParams(par planVizParams) (*visualize.Plan, error) {
 	stats, rowType, err := queryplan.ExtractQueryPlan([]byte(par.Input))
 	if err != nil {
-		return "", ParseError{msg: fmt.Sprintf("Failed to extract query plan: %v", err)}
+		return nil, ParseError{msg: fmt.Sprintf("Failed to extract query plan: %v", err)}
 	}
 
 	queryPlan := stats.GetQueryPlan()
 	if queryPlan == nil {
-		return "", InvalidSpannerFormatError{msg: "Query plan is missing from input"}
+		return nil, InvalidSpannerFormatError{msg: "Query plan is missing from input"}
 	}
 	if len(queryPlan.GetPlanNodes()) == 0 {
-		return "", InvalidSpannerFormatError{msg: "Plan nodes are missing from query plan"}
+		return nil, InvalidSpannerFormatError{msg: "Plan nodes are missing from query plan"}
 	}
 
 	buildOpts := visualize.BuildOptions{
@@ -266,7 +279,15 @@ func renderMermaidImpl(par mermaidParams) (string, error) {
 
 	plan, err := visualize.BuildPlan(rowType, stats, buildOpts)
 	if err != nil {
-		return "", RenderError{msg: fmt.Sprintf("Failed to build plan: %v", err)}
+		return nil, RenderError{msg: fmt.Sprintf("Failed to build plan: %v", err)}
+	}
+	return plan, nil
+}
+
+func renderMermaidImpl(par planVizParams) (string, error) {
+	plan, err := buildPlanFromParams(par)
+	if err != nil {
+		return "", err
 	}
 
 	src, err := mermaid.Source(plan)
@@ -276,9 +297,24 @@ func renderMermaidImpl(par mermaidParams) (string, error) {
 	return src, nil
 }
 
+func renderSVGImpl(par planVizParams) (string, error) {
+	plan, err := buildPlanFromParams(par)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	renderer := graphviz.NewRenderer(graphviz.Options{Format: graphviz.SVG})
+	if err := renderer.Render(context.Background(), &buf, plan); err != nil {
+		return "", RenderError{msg: fmt.Sprintf("Failed to render SVG diagram: %v", err)}
+	}
+	return buf.String(), nil
+}
+
 func main() {
 	js.Global().Set("renderASCII", js.FuncOf(renderASCII))
 	js.Global().Set("renderMermaid", js.FuncOf(renderMermaid))
+	js.Global().Set("renderSVG", js.FuncOf(renderSVG))
 	c := make(<-chan struct{})
 	<-c
 }

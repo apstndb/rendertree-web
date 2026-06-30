@@ -6,7 +6,7 @@ Client-side Spanner query plan viewer: React + Vite UI, Go WASM (`main.go`) for 
 
 | Area | Role |
 |------|------|
-| `main.go` | WASM entry: `renderASCII`, `renderMermaid` (via `spannerplanviz`) |
+| `main.go` | WASM entry: `renderASCII`, `renderMermaid`, `renderSVG` (spannerplanviz) |
 | `src/wasm.ts`, `src/types/wasm.ts` | JS ↔ WASM bridge and types |
 | `WasmContext` / `AppContext` | Module load vs UI state |
 | `InputPanel` / `OutputPanel` | Input, ASCII or Diagram output |
@@ -14,6 +14,8 @@ Client-side Spanner query plan viewer: React + Vite UI, Go WASM (`main.go`) for 
 | `testdata/` | Sample plans (copied to dist) |
 
 GitHub Pages base path: `/rendertree-web/`.
+
+Graphviz in WASM uses `internal/stubs/go-findfont` (`replace` in `go.mod`) because host font scanning does not compile for `js/wasm`.
 
 ## Before push
 

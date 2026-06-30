@@ -63,13 +63,17 @@ describe('WASM types', () => {
       return `graph TD\n  node0["${params.input}"]`;
     };
 
+    const mockRenderSVG = (): string => '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
+
     const wasmFunctions: WasmFunctions = {
       renderASCII: mockRenderASCII,
       renderMermaid: mockRenderMermaid,
+      renderSVG: mockRenderSVG,
     };
     
     expect(typeof wasmFunctions.renderASCII).toBe('function');
     expect(typeof wasmFunctions.renderMermaid).toBe('function');
+    expect(typeof wasmFunctions.renderSVG).toBe('function');
     
     const testParams = JSON.stringify({
       input: 'test',
