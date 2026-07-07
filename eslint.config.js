@@ -103,6 +103,20 @@ export default [
       '@typescript-eslint/no-unused-expressions': 'off' // Allow expect statements in tests
     },
   },
+  // Node.js scripts
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
   // Node.js TypeScript files
   {
     files: ['*.config.ts', 'src/vite-plugin-go-wasm.ts'],

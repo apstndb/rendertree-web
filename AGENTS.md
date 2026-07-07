@@ -6,7 +6,7 @@ Client-side Spanner query plan viewer: React + Vite UI, Go WASM (`main.go`) for 
 
 | Area | Role |
 |------|------|
-| `main.go` | WASM entry: `renderASCII`, `renderMermaid`, `renderSVG` (spannerplanviz) |
+| `main.go` | WASM entry: `renderASCII`, `renderMermaid`, `renderDOT` (spannerplanviz) |
 | `src/wasm.ts`, `src/types/wasm.ts` | JS ↔ WASM bridge and types |
 | `WasmContext` / `AppContext` | Module load vs UI state |
 | `InputPanel` / `OutputPanel` | Input, ASCII or Diagram output |
@@ -15,7 +15,7 @@ Client-side Spanner query plan viewer: React + Vite UI, Go WASM (`main.go`) for 
 
 GitHub Pages base path: `/rendertree-web/`.
 
-Graphviz in WASM pulls in `go-findfont` via `goccy/go-graphviz`. This repo mirrors go-graphviz’s `replace` to `github.com/goccy/go-findfont` (includes `js` build tags). No local stub is required.
+Graphviz layout runs in the browser: Go WASM emits DOT source (`spannerplanviz/dot`), and `src/wasm.ts` lazily loads `@hpcc-js/wasm-graphviz` to produce SVG. Do not reintroduce `goccy/go-graphviz` into the Go module — it embeds a Graphviz WASM runtime plus a font stack and roughly doubles the binary (CI enforces budgets via `npm run check:wasm-size`).
 
 ## Before push
 

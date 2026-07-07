@@ -28,6 +28,7 @@
     "test:all": "npm run lint && npm run typecheck && npm run test:unit && npm run test",
     "test:ci": "npm run lint && npm run typecheck && npm run test:unit && npm run test:preview",
     "typecheck": "tsc --noEmit",
+    "check:wasm-size": "node scripts/check-wasm-size.mjs",
     "clean": "rm -rf dist/*"
   },
   "repository": {
@@ -63,6 +64,7 @@
     "vitest": "^3.2.3"
   },
   "dependencies": {
+    "@hpcc-js/wasm-graphviz": "^1.24.1",
     "loglevel": "^1.9.2",
     "mermaid": "^11.16.0",
     "react": "^18.2.0",

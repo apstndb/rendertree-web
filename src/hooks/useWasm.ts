@@ -53,8 +53,8 @@ export function useWasm() {
     if (wasmFunctions?.renderMermaid) {
       logger.info('renderMermaid function is now available');
     }
-    if (wasmFunctions?.renderSVG) {
-      logger.info('renderSVG function is now available');
+    if (wasmFunctions?.renderDOT) {
+      logger.info('renderDOT function is now available');
     }
   }, [wasmFunctions]);
 
@@ -67,6 +67,6 @@ export function useWasm() {
     error,
     renderASCII: wasmFunctions?.renderASCII ?? null,
     renderMermaid: wasmFunctions?.renderMermaid ?? null,
-    renderSVG: wasmFunctions?.renderSVG ?? null,
+    renderDOT: wasmFunctions?.renderDOT ?? null,
   };
 }

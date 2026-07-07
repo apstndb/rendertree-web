@@ -3,8 +3,6 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,7 +10,7 @@ import (
 
 	queryplan "github.com/apstndb/spannerplan"
 	"github.com/apstndb/spannerplan/plantree/reference"
-	"github.com/apstndb/spannerplanviz/graphviz"
+	"github.com/apstndb/spannerplanviz/dot"
 	"github.com/apstndb/spannerplanviz/mermaid"
 	"github.com/apstndb/spannerplanviz/visualize"
 )
@@ -161,13 +159,13 @@ func renderMermaid(_ js.Value, args []js.Value) any {
 	})
 }
 
-func renderSVG(_ js.Value, args []js.Value) any {
+func renderDOT(_ js.Value, args []js.Value) any {
 	return invokeWasm(args, func(paramsJSON string) (string, error) {
 		par := planVizParams{}
 		if err := json.Unmarshal([]byte(paramsJSON), &par); err != nil {
 			return "", ParseError{msg: fmt.Sprintf("Failed to parse parameters: %v", err)}
 		}
-		return renderSVGImpl(par)
+		return renderDOTImpl(par)
 	})
 }
 
@@ -297,24 +295,26 @@ func renderMermaidImpl(par planVizParams) (string, error) {
 	return src, nil
 }
 
-func renderSVGImpl(par planVizParams) (string, error) {
+// renderDOTImpl returns Graphviz DOT source text. Layout and SVG generation
+// happen in the browser (see renderSVGDiagram in src/wasm.ts), so the WASM
+// binary does not need to embed a Graphviz runtime.
+func renderDOTImpl(par planVizParams) (string, error) {
 	plan, err := buildPlanFromParams(par)
 	if err != nil {
 		return "", err
 	}
 
-	var buf bytes.Buffer
-	renderer := graphviz.NewRenderer(graphviz.Options{Format: graphviz.SVG})
-	if err := renderer.Render(context.Background(), &buf, plan); err != nil {
-		return "", RenderError{msg: fmt.Sprintf("Failed to render SVG diagram: %v", err)}
+	src, err := dot.Source(plan)
+	if err != nil {
+		return "", RenderError{msg: fmt.Sprintf("Failed to render DOT source: %v", err)}
 	}
-	return buf.String(), nil
+	return src, nil
 }
 
 func main() {
 	js.Global().Set("renderASCII", js.FuncOf(renderASCII))
 	js.Global().Set("renderMermaid", js.FuncOf(renderMermaid))
-	js.Global().Set("renderSVG", js.FuncOf(renderSVG))
+	js.Global().Set("renderDOT", js.FuncOf(renderDOT))
 	c := make(<-chan struct{})
 	<-c
 }

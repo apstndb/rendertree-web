@@ -62,7 +62,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('Loading rendering engine... Please wait.');
 
-  const { isLoading, error, renderASCII, renderMermaid, renderSVG } = useWasmContext();
+  const { isLoading, error, renderASCII, renderMermaid, renderDOT } = useWasmContext();
   const { outputView } = useSettingsContext();
   const { handleFileUpload: fileUpload, loadSampleFile: sampleFileLoader } = useFileContext();
 
@@ -102,8 +102,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return;
     }
 
-    if (outputView === 'svg' && !renderSVG) {
-      logger.error('Render attempted but renderSVG function is not available');
+    if (outputView === 'svg' && !renderDOT) {
+      logger.error('Render attempted but renderDOT function is not available');
       setMessage('Rendering engine not initialized.');
       return;
     }
@@ -155,7 +155,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     diagramFull,
     renderASCII,
     renderMermaid,
-    renderSVG,
+    renderDOT,
   ]);
 
   useEffect(() => {
