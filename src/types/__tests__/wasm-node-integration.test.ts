@@ -98,7 +98,7 @@ stats:
 describe('WASM Node.js Integration Tests', () => {
   let renderASCII: (paramsJson: string) => string;
   let renderMermaid: (paramsJson: string) => string;
-  let renderSVG: (paramsJson: string) => string;
+  let renderDOT: (paramsJson: string) => string;
 
   beforeAll(async () => {
     // Load and execute wasm_exec.js in Node.js environment
@@ -167,7 +167,7 @@ describe('WASM Node.js Integration Tests', () => {
     // Get renderASCII function from global scope
     renderASCII = (globalThis as Record<string, unknown>).renderASCII as (paramsJson: string) => string;
     renderMermaid = (globalThis as Record<string, unknown>).renderMermaid as (paramsJson: string) => string;
-    renderSVG = (globalThis as Record<string, unknown>).renderSVG as (paramsJson: string) => string;
+    renderDOT = (globalThis as Record<string, unknown>).renderDOT as (paramsJson: string) => string;
     
     if (typeof renderASCII !== 'function') {
       throw new Error('renderASCII function not available after WASM initialization');
@@ -175,8 +175,8 @@ describe('WASM Node.js Integration Tests', () => {
     if (typeof renderMermaid !== 'function') {
       throw new Error('renderMermaid function not available after WASM initialization');
     }
-    if (typeof renderSVG !== 'function') {
-      throw new Error('renderSVG function not available after WASM initialization');
+    if (typeof renderDOT !== 'function') {
+      throw new Error('renderDOT function not available after WASM initialization');
     }
     
     // WASM module initialized successfully in Node.js
@@ -327,8 +327,8 @@ stats:
     });
   });
 
-  describe('renderSVG', () => {
-    it('should return Graphviz SVG for a valid query plan', () => {
+  describe('renderDOT', () => {
+    it('should return Graphviz DOT source for a valid query plan', () => {
       const params: RenderMermaidParams = {
         input: `
 stats:
@@ -346,11 +346,11 @@ stats:
         full: true,
       };
 
-      const resultStr = renderSVG(JSON.stringify(params));
+      const resultStr = renderDOT(JSON.stringify(params));
       const response: WasmResponse = JSON.parse(resultStr);
 
       expect(response.success).toBe(true);
-      expect(response.result).toContain('<svg');
+      expect(response.result).toContain('digraph {');
       expect(response.result).toContain('Distributed Union');
       expect(response.result).toContain('Scan');
     });

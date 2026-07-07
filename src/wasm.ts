@@ -10,7 +10,7 @@ import { extractErrorInfo } from './utils/errorHandling';
 // These functions will be globally available after WASM initialization
 declare function renderASCII(paramsJson: string): string;
 declare function renderMermaid(paramsJson: string): string;
-declare function renderSVG(paramsJson: string): string;
+declare function renderDOT(paramsJson: string): string;
 
 let cachedWasmFunctions: WasmFunctions | null = null;
 let initPromise: Promise<WasmFunctions> | null = null;
@@ -107,7 +107,7 @@ async function initializeWasm(): Promise<WasmFunctions> {
     const result = await WebAssembly.instantiateStreaming(fetchResponse, go.importObject);
     void go.run(result.instance);
 
-    cachedWasmFunctions = { renderASCII, renderMermaid, renderSVG };
+    cachedWasmFunctions = { renderASCII, renderMermaid, renderDOT };
     logger.info('WASM initialization completed successfully');
     return cachedWasmFunctions;
   } catch (e) {
@@ -174,8 +174,27 @@ export async function renderMermaidDiagram(
   }
 }
 
+// The Graphviz layout engine (@hpcc-js/wasm-graphviz) is imported dynamically
+// so its WASM chunk is only downloaded when the SVG view is actually used.
+let graphvizPromise: Promise<import('@hpcc-js/wasm-graphviz').Graphviz> | null = null;
+
+async function loadGraphviz(): Promise<import('@hpcc-js/wasm-graphviz').Graphviz> {
+  if (!graphvizPromise) {
+    graphvizPromise = import('@hpcc-js/wasm-graphviz').then(({ Graphviz }) => Graphviz.load());
+    graphvizPromise.catch(() => {
+      // Allow a retry on the next call instead of caching the failure.
+      graphvizPromise = null;
+    });
+  }
+  return graphvizPromise;
+}
+
 /**
- * Render Graphviz SVG for a query plan via WASM.
+ * Render Graphviz SVG for a query plan.
+ *
+ * The Go WASM module generates DOT source; layout and SVG generation happen
+ * in the browser via @hpcc-js/wasm-graphviz, so the Go binary does not embed
+ * a Graphviz runtime.
  */
 export async function renderSVGDiagram(
   input: string,
@@ -190,7 +209,13 @@ export async function renderSVGDiagram(
       input,
       ...options,
     };
-    return invokeWasm(wasmFunctions.renderSVG, JSON.stringify(params));
+    const dotSource = invokeWasm(wasmFunctions.renderDOT, JSON.stringify(params));
+
+    const graphviz = await loadGraphviz();
+    const layoutStart = performance.now();
+    const svg = graphviz.dot(dotSource);
+    logger.info(`Graphviz layout completed in ${(performance.now() - layoutStart).toFixed(2)}ms`);
+    return svg;
   } catch (e) {
     const { message, originalError } = extractErrorInfo(e);
     logger.error('Error during SVG rendering:', message);

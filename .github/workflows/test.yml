@@ -41,6 +41,9 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
+      - name: Check WASM size budget
+        run: npm run check:wasm-size
+
       - name: Run tests (development mode)
         run: npm test
 
