@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/apstndb/spannerplan v0.2.0
-	github.com/apstndb/spannerplanviz v0.9.1
+	github.com/apstndb/spannerplanviz v0.9.2
 )
 
 require (
