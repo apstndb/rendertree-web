@@ -180,11 +180,13 @@ let graphvizPromise: Promise<import('@hpcc-js/wasm-graphviz').Graphviz> | null =
 
 async function loadGraphviz(): Promise<import('@hpcc-js/wasm-graphviz').Graphviz> {
   if (!graphvizPromise) {
-    graphvizPromise = import('@hpcc-js/wasm-graphviz').then(({ Graphviz }) => Graphviz.load());
-    graphvizPromise.catch(() => {
-      // Allow a retry on the next call instead of caching the failure.
-      graphvizPromise = null;
-    });
+    graphvizPromise = import('@hpcc-js/wasm-graphviz')
+      .then(({ Graphviz }) => Graphviz.load())
+      .catch((err: unknown) => {
+        // Allow a retry on the next call instead of caching the failure.
+        graphvizPromise = null;
+        throw err;
+      });
   }
   return graphvizPromise;
 }
