@@ -9,6 +9,7 @@ vi.mock('loglevel', () => ({
     warn: vi.fn(),
     error: vi.fn(),
     setLevel: vi.fn(),
+    setDefaultLevel: vi.fn(),
     levels: {
       WARN: 3,
       DEBUG: 1,
@@ -39,7 +40,7 @@ describe('logger utility', () => {
     // Re-import to trigger initialization with mocked environment
     await import('../logger');
     
-    expect(log.setLevel).toHaveBeenCalledWith(log.levels.DEBUG);
+    expect(log.setDefaultLevel).toHaveBeenCalledWith(log.levels.DEBUG);
   });
 
   it('should log debug messages in development environment', async () => {
