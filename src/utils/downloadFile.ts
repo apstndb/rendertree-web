@@ -3,7 +3,7 @@ export interface DownloadDescriptor {
   mimeType: string;
 }
 
-export const OUTPUT_DOWNLOAD: Record<'ascii' | 'diagram' | 'svg', DownloadDescriptor> = {
+export const OUTPUT_DOWNLOAD: Record<'ascii' | 'diagram' | 'svg' | 'd2', DownloadDescriptor> = {
   ascii: {
     filename: 'query-plan.txt',
     mimeType: 'text/plain;charset=utf-8',
@@ -15,6 +15,10 @@ export const OUTPUT_DOWNLOAD: Record<'ascii' | 'diagram' | 'svg', DownloadDescri
   svg: {
     filename: 'query-plan.svg',
     mimeType: 'image/svg+xml;charset=utf-8',
+  },
+  d2: {
+    filename: 'query-plan.d2',
+    mimeType: 'text/plain;charset=utf-8',
   },
 };
 

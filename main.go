@@ -10,6 +10,7 @@ import (
 
 	queryplan "github.com/apstndb/spannerplan"
 	"github.com/apstndb/spannerplan/plantree/reference"
+	"github.com/apstndb/spannerplanviz/d2"
 	"github.com/apstndb/spannerplanviz/dot"
 	"github.com/apstndb/spannerplanviz/mermaid"
 	"github.com/apstndb/spannerplanviz/visualize"
@@ -169,6 +170,16 @@ func renderDOT(_ js.Value, args []js.Value) any {
 	})
 }
 
+func renderD2(_ js.Value, args []js.Value) any {
+	return invokeWasm(args, func(paramsJSON string) (string, error) {
+		par := planVizParams{}
+		if err := json.Unmarshal([]byte(paramsJSON), &par); err != nil {
+			return "", ParseError{msg: fmt.Sprintf("Failed to parse parameters: %v", err)}
+		}
+		return renderD2Impl(par)
+	})
+}
+
 // classifyError determines the error type using errors.As for type-safe classification
 func classifyError(err error) string {
 	// Check for custom error types first
@@ -311,10 +322,27 @@ func renderDOTImpl(par planVizParams) (string, error) {
 	return src, nil
 }
 
+// renderD2Impl returns D2 (https://d2lang.com) diagram source text. Layout and
+// image generation happen externally via the d2 CLI, so the WASM binary does
+// not embed a D2 runtime (the official D2 browser bundle is far too large).
+func renderD2Impl(par planVizParams) (string, error) {
+	plan, err := buildPlanFromParams(par)
+	if err != nil {
+		return "", err
+	}
+
+	src, err := d2.Source(plan)
+	if err != nil {
+		return "", RenderError{msg: fmt.Sprintf("Failed to render D2 source: %v", err)}
+	}
+	return src, nil
+}
+
 func main() {
 	js.Global().Set("renderASCII", js.FuncOf(renderASCII))
 	js.Global().Set("renderMermaid", js.FuncOf(renderMermaid))
 	js.Global().Set("renderDOT", js.FuncOf(renderDOT))
+	js.Global().Set("renderD2", js.FuncOf(renderD2))
 	c := make(<-chan struct{})
 	<-c
 }

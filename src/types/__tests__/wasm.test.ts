@@ -65,15 +65,23 @@ describe('WASM types', () => {
 
     const mockRenderDOT = (): string => 'digraph { "node0" [shape="box"]; }';
 
+    const mockRenderD2 = (paramsJson: string): string => {
+      const params = JSON.parse(paramsJson);
+      return `direction: down\nnode0.label: |md **${params.input}** |`;
+    };
+
     const wasmFunctions: WasmFunctions = {
       renderASCII: mockRenderASCII,
       renderMermaid: mockRenderMermaid,
       renderDOT: mockRenderDOT,
+      renderD2: mockRenderD2,
     };
 
     expect(typeof wasmFunctions.renderASCII).toBe('function');
     expect(typeof wasmFunctions.renderMermaid).toBe('function');
     expect(typeof wasmFunctions.renderDOT).toBe('function');
+    expect(typeof wasmFunctions.renderD2).toBe('function');
+    expect(wasmFunctions.renderD2(JSON.stringify({ input: 'plan' }))).toContain('direction: down');
     
     const testParams = JSON.stringify({
       input: 'test',

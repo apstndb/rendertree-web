@@ -20,6 +20,7 @@ declare global {
   };
   var renderASCII: (paramsJson: string) => string;
   var renderMermaid: (paramsJson: string) => string;
+  var renderD2: (paramsJson: string) => string;
 }
 
 const scalarAppendixInput = `
@@ -99,6 +100,7 @@ describe('WASM Node.js Integration Tests', () => {
   let renderASCII: (paramsJson: string) => string;
   let renderMermaid: (paramsJson: string) => string;
   let renderDOT: (paramsJson: string) => string;
+  let renderD2: (paramsJson: string) => string;
 
   beforeAll(async () => {
     // Load and execute wasm_exec.js in Node.js environment
@@ -168,7 +170,8 @@ describe('WASM Node.js Integration Tests', () => {
     renderASCII = (globalThis as Record<string, unknown>).renderASCII as (paramsJson: string) => string;
     renderMermaid = (globalThis as Record<string, unknown>).renderMermaid as (paramsJson: string) => string;
     renderDOT = (globalThis as Record<string, unknown>).renderDOT as (paramsJson: string) => string;
-    
+    renderD2 = (globalThis as Record<string, unknown>).renderD2 as (paramsJson: string) => string;
+
     if (typeof renderASCII !== 'function') {
       throw new Error('renderASCII function not available after WASM initialization');
     }
@@ -177,6 +180,9 @@ describe('WASM Node.js Integration Tests', () => {
     }
     if (typeof renderDOT !== 'function') {
       throw new Error('renderDOT function not available after WASM initialization');
+    }
+    if (typeof renderD2 !== 'function') {
+      throw new Error('renderD2 function not available after WASM initialization');
     }
     
     // WASM module initialized successfully in Node.js
@@ -353,6 +359,51 @@ stats:
       expect(response.result).toContain('digraph {');
       expect(response.result).toContain('Distributed Union');
       expect(response.result).toContain('Scan');
+    });
+  });
+
+  describe('renderD2', () => {
+    it('should return D2 source for a valid query plan', () => {
+      const params: RenderMermaidParams = {
+        input: `
+stats:
+  queryPlan:
+    planNodes:
+      - displayName: "Distributed Union"
+        kind: RELATIONAL
+        index: 0
+        childLinks:
+          - childIndex: 1
+      - displayName: "Scan"
+        kind: RELATIONAL
+        index: 1
+`,
+        full: true,
+      };
+
+      const resultStr = renderD2(JSON.stringify(params));
+      const response: WasmResponse = JSON.parse(resultStr);
+
+      expect(response.success).toBe(true);
+      expect(response.result).toContain('direction: down');
+      expect(response.result).toContain('Distributed Union');
+      expect(response.result).toContain('Scan');
+    });
+
+    it('should return INVALID_SPANNER_FORMAT for missing plan nodes', () => {
+      const params: RenderMermaidParams = {
+        input: `
+stats:
+  queryPlan: {}
+`,
+        full: true,
+      };
+
+      const resultStr = renderD2(JSON.stringify(params));
+      const response: WasmResponse = JSON.parse(resultStr);
+
+      expect(response.success).toBe(false);
+      expect(response.error?.type).toBe('INVALID_SPANNER_FORMAT');
     });
   });
 
