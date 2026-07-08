@@ -1,36 +1,76 @@
 import { test, expect } from '@playwright/test';
 import {
-  setupCompleteTest,
-  takeScreenshot
+  setupConsoleLogging,
+  waitForPageLoad,
+  waitForMessageState,
+  uploadTestFile,
+  takeScreenshot,
 } from './utils';
 
-// This test requires the WASM file to be built
-// Run with npm run test:with-build to ensure the WASM file is available
-test.describe('WebAssembly Initialization', () => {
-  // Increase timeout for the entire test
+// The Go WASM module now initializes lazily on the first render rather than at
+// page load. These tests pin that contract: the page reaches a ready state
+// without fetching the (large) Go WASM binary, and the binary is fetched and
+// initialized successfully as part of the first render.
+//
+// Requires the WASM file to be built (served by the dev/preview server).
+test.describe('WebAssembly Lazy Initialization', () => {
   test.setTimeout(60000);
 
-  test('should load WASM module successfully', async ({ page }) => {
-    // Complete test setup with WASM initialization and console logging
-    const { consoleMessages } = await setupCompleteTest(page, test, { 
-      debug: true // Enable console logging for debugging
+  test('is ready without fetching the WASM binary at page load', async ({ page }) => {
+    const consoleMessages = setupConsoleLogging(page);
+
+    const wasmRequests: string[] = [];
+    page.on('request', (req) => {
+      if (req.url().includes('rendertree.wasm')) {
+        wasmRequests.push(req.url());
+      }
     });
 
-    // Take a screenshot for debugging
-    await takeScreenshot(page, 'wasm-init');
+    await page.goto('.');
+    await waitForPageLoad(page);
+    // App is immediately ready; nothing is loading in the background.
+    await waitForMessageState(page, 'Ready');
 
-    // Verify no WASM initialization errors occurred
+    // The Go WASM binary must not be requested until the user renders.
+    expect(wasmRequests).toEqual([]);
+
+    // And no WASM errors should have been logged at load.
     const wasmErrors = consoleMessages
-      .filter(msg => msg.type === 'error')
-      .filter(msg => msg.text.includes('WebAssembly') || msg.text.includes('WASM'));
-
+      .filter((msg) => msg.type === 'error')
+      .filter((msg) => msg.text.includes('WebAssembly') || msg.text.includes('WASM'));
     expect(wasmErrors).toEqual([]);
+  });
 
-    // Check if there's an error message in the UI
-    const errorMessage = await page.textContent('.placeholder');
-    if (errorMessage && errorMessage.includes('Error')) {
-      console.error('Error message found in UI:', errorMessage);
-      throw new Error(`WASM initialization failed with error: ${errorMessage}`);
-    }
+  test('fetches and initializes the WASM binary on first render', async ({ page }) => {
+    const consoleMessages = setupConsoleLogging(page);
+
+    const wasmRequests: string[] = [];
+    page.on('request', (req) => {
+      if (req.url().includes('rendertree.wasm')) {
+        wasmRequests.push(req.url());
+      }
+    });
+
+    await page.goto('.');
+    await waitForPageLoad(page);
+    await waitForMessageState(page, 'Ready');
+    expect(wasmRequests).toEqual([]);
+
+    // Loading a sample auto-renders, which triggers the lazy initialization.
+    await uploadTestFile(page, 'dca_profile.yaml');
+    await expect(page.getByTestId('output-code')).toContainText('Distributed Union', {
+      timeout: 60000,
+    });
+
+    await takeScreenshot(page, 'wasm-lazy-init');
+
+    // The binary was fetched only as part of that first render.
+    expect(wasmRequests.length).toBeGreaterThan(0);
+
+    // A successful render implies initialization succeeded without WASM errors.
+    const wasmErrors = consoleMessages
+      .filter((msg) => msg.type === 'error')
+      .filter((msg) => msg.text.includes('WebAssembly') || msg.text.includes('WASM'));
+    expect(wasmErrors).toEqual([]);
   });
 });

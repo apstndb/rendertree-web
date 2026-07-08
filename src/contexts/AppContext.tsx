@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { createContextWithHook } from '../utils/createContextWithHook';
-import { useWasmContext } from './WasmContext';
 import { useFileContext } from './FileContext';
 import { useSettingsContext } from './SettingsContext';
-import { renderASCIITree, renderMermaidDiagram, renderSVGDiagram } from '../wasm';
+import { renderASCIITree, renderMermaidDiagram, renderSVGDiagram, isWasmInitialized } from '../wasm';
 import type { FormatType, PrintSection, RenderAppendixOptions } from '../types/wasm';
 import { logger } from '../utils/logger';
 
@@ -60,26 +59,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [diagramOutput, setDiagramOutput] = useState<string>('');
   const [svgOutput, setSvgOutput] = useState<string>('');
   const [isRendering, setIsRendering] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>('Loading rendering engine... Please wait.');
+  // The WASM module is initialized lazily on the first render (see wasm.ts),
+  // so the app is immediately usable and starts in a ready state.
+  const [message, setMessage] = useState<string>('Ready. Please enter a query plan and click Render.');
 
-  const { isLoading, error, renderASCII, renderMermaid, renderDOT } = useWasmContext();
   const { outputView } = useSettingsContext();
   const { handleFileUpload: fileUpload, loadSampleFile: sampleFileLoader } = useFileContext();
-
-  useEffect(() => {
-    logger.debug('AppContext useEffect triggered - isLoading:', isLoading, 'hasError:', !!error);
-
-    if (error) {
-      const errorMsg = `Error: ${error.message}`;
-      logger.error('Setting error message in UI:', errorMsg);
-      setMessage(errorMsg);
-    } else if (!isLoading) {
-      logger.info('WASM loading completed, setting ready message in UI');
-      setMessage('Ready. Please enter a query plan and click Render.');
-    } else {
-      logger.debug('Still loading, message remains unchanged');
-    }
-  }, [isLoading, error]);
 
   const handleRender = useCallback(async () => {
     logger.debug('handleRender called, outputView:', outputView);
@@ -90,27 +75,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return;
     }
 
-    if (outputView === 'ascii' && !renderASCII) {
-      logger.error('Render attempted but renderASCII function is not available');
-      setMessage('Rendering engine not initialized.');
-      return;
-    }
-
-    if (outputView === 'diagram' && !renderMermaid) {
-      logger.error('Render attempted but renderMermaid function is not available');
-      setMessage('Rendering engine not initialized.');
-      return;
-    }
-
-    if (outputView === 'svg' && !renderDOT) {
-      logger.error('Render attempted but renderDOT function is not available');
-      setMessage('Rendering engine not initialized.');
-      return;
-    }
-
     logger.info('Starting rendering process');
     setIsRendering(true);
-    setMessage('Rendering...');
+    // The exported render functions initialize the WASM module on demand. The
+    // first render therefore also pays the one-time load cost; surface that to
+    // the user instead of a bare "Rendering..." message.
+    setMessage(isWasmInitialized() ? 'Rendering...' : 'Loading rendering engine...');
 
     try {
       let rendered: string;
@@ -153,13 +123,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     showScalarVars,
     scalarAliasResolution,
     diagramFull,
-    renderASCII,
-    renderMermaid,
-    renderDOT,
   ]);
 
   useEffect(() => {
-    if (isLoading || !input.trim()) {
+    if (!input.trim()) {
       return;
     }
     void handleRender();

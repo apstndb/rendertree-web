@@ -83,6 +83,17 @@ export async function initWasm(): Promise<WasmFunctions> {
   return initPromise;
 }
 
+/**
+ * Whether the WASM module has already been initialized.
+ *
+ * Used by the UI to decide, on a render request, whether the first (slow)
+ * initialization still has to happen ("Loading rendering engine...") or the
+ * module is already resident ("Rendering...").
+ */
+export function isWasmInitialized(): boolean {
+  return cachedWasmFunctions !== null;
+}
+
 async function initializeWasm(): Promise<WasmFunctions> {
   logger.info('Starting WASM initialization');
 

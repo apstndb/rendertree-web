@@ -8,11 +8,17 @@
 // in the same PR.
 import { readFileSync } from 'node:fs';
 import { gzipSync, brotliCompressSync } from 'node:zlib';
+import { execSync } from 'node:child_process';
 
 const WASM_PATH = 'dist/rendertree.wasm';
 
-// Current measurements (2026-07-08, Go 1.24, after moving Graphviz layout to
-// the browser): raw ~25.4 MB, gzip ~5.5 MB, brotli ~4.6 MB.
+// Current measurements (2026-07-08, go1.25/1.26 builds after the grpc/x-net
+// security bump): raw ~24.29 MiB, gzip ~5.26 MiB, brotli ~3.70 MiB. CI is the
+// enforcement point and builds deterministically with the go.mod go directive
+// (setup-go go-version-file + GOTOOLCHAIN=local); the go.mod toolchain line
+// is only a lower bound locally, so a newer local Go may measure slightly
+// differently. The informational `go version` line below records which
+// toolchain produced these bytes.
 const BUDGETS = {
   raw: 28 * 1024 * 1024,
   gzip: 6.5 * 1024 * 1024,
@@ -27,6 +33,15 @@ try {
 } catch {
   console.error(`${WASM_PATH} not found; run \`npm run build:wasm\` first.`);
   process.exit(1);
+}
+
+// Record the Go toolchain for context: WASM size varies with the compiler
+// version, so the measurements above are only meaningful alongside it.
+try {
+  const goVersion = execSync('go version', { encoding: 'utf8' }).trim();
+  console.log(`info Built with: ${goVersion}`);
+} catch {
+  console.log('info Built with: unknown (go not found on PATH)');
 }
 
 const sizes = {

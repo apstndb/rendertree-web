@@ -60,8 +60,12 @@ export async function waitForPageLoad(page: Page, timeout: number = 10000): Prom
 }
 
 /**
- * Waits for WASM module to initialize completely
- * This includes waiting for loading indicators to disappear and input to be enabled
+ * Waits for the app to be ready to accept input.
+ *
+ * The Go WASM module now initializes lazily on the first render, so this no
+ * longer implies WASM is loaded -- it only confirms the page has mounted, any
+ * (unused) loading indicator is gone, and the controls are enabled. WASM is
+ * fetched later, on the first render triggered by the test.
  * @param page - Playwright page object
  * @param loadingTimeout - Timeout for loading indicator (default: 30000)
  * @param inputTimeout - Timeout for input enablement (default: 5000)

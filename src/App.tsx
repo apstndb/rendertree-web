@@ -1,11 +1,9 @@
 import React, { Suspense } from 'react';
 import InputPanel from './components/InputPanel';
 import OutputPanel from './components/OutputPanel';
-import { WasmProvider } from './contexts/WasmContext';
 import { AppProvider } from './contexts/AppContext';
 import { FileProvider } from './contexts/FileContext';
 import { SettingsProvider } from './contexts/SettingsContext';
-import { useWasmContext } from './contexts/WasmContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { WasmErrorBoundary } from './components/WasmErrorBoundary';
 import { AppErrorFallback } from './components/AppErrorFallback';
@@ -20,13 +18,12 @@ const LoadingFallback = () => (
 
 // Main content component that uses the contexts
 const AppContent: React.FC = () => {
-  // Get WASM loading state from context
-  const { isLoading } = useWasmContext();
-
+  // WASM initializes lazily on the first render, so the controls are usable
+  // immediately -- there is no load-time gate to disable them behind.
   return (
     <div className="app-shell">
       <div className="main-container">
-        <InputPanel disabled={isLoading} />
+        <InputPanel disabled={false} />
         <OutputPanel />
       </div>
       <footer className="app-footer">
@@ -46,22 +43,20 @@ function App() {
       description="The Rendertree Web application encountered an unexpected error"
     >
       <WasmErrorBoundary>
-        <WasmProvider>
-          <ErrorBoundary
-            title="Context Error"
-            description="An error occurred in the application context"
-          >
-            <FileProvider>
-              <SettingsProvider>
-                <AppProvider>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <AppContent />
-                  </Suspense>
-                </AppProvider>
-              </SettingsProvider>
-            </FileProvider>
-          </ErrorBoundary>
-        </WasmProvider>
+        <ErrorBoundary
+          title="Context Error"
+          description="An error occurred in the application context"
+        >
+          <FileProvider>
+            <SettingsProvider>
+              <AppProvider>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AppContent />
+                </Suspense>
+              </AppProvider>
+            </SettingsProvider>
+          </FileProvider>
+        </ErrorBoundary>
       </WasmErrorBoundary>
     </ErrorBoundary>
   );
