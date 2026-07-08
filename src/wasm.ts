@@ -189,9 +189,9 @@ export async function renderMermaidDiagram(
 /**
  * Render D2 (https://d2lang.com) diagram source text for a query plan via WASM.
  *
- * Unlike the SVG view, no in-browser layout happens: the official D2 browser
- * bundle is far too large to ship, so this returns the raw D2 source for the
- * user to render externally with the d2 CLI (for example `d2 plan.d2 plan.svg`).
+ * Returns the raw D2 source only (no layout). This backs the copy/download
+ * actions and is the input to {@link renderD2Diagram}, which additionally lays
+ * it out to SVG in the browser.
  */
 export async function renderD2Source(
   input: string,
@@ -261,6 +261,72 @@ export async function renderSVGDiagram(
   } catch (e) {
     const { message, originalError } = extractErrorInfo(e);
     logger.error('Error during SVG rendering:', message);
+    throw new WasmRenderingError(message, originalError);
+  }
+}
+
+// The D2 renderer (@terrastruct/d2) is imported dynamically so its large
+// (~8 MB) wasm-bearing browser bundle is only downloaded when the D2 view is
+// actually used. The browser build is fully self-contained: it spawns its own
+// web worker from an inlined Blob URL and embeds both the D2 wasm and its
+// wasm_exec.js, so no extra asset files or network fetches are involved. The
+// D2 instance is cached and reused across renders.
+let d2Promise: Promise<import('@terrastruct/d2').D2> | null = null;
+
+async function loadD2(): Promise<import('@terrastruct/d2').D2> {
+  if (!d2Promise) {
+    d2Promise = import('@terrastruct/d2')
+      .then(({ D2 }) => new D2())
+      .catch((err: unknown) => {
+        // Allow a retry on the next call instead of caching the failure.
+        d2Promise = null;
+        throw err;
+      });
+  }
+  return d2Promise;
+}
+
+/**
+ * Result of rendering a query plan as a D2 diagram.
+ */
+export interface D2RenderResult {
+  /** Raw D2 source text; backs the copy/download (.d2) actions. */
+  source: string;
+  /** The diagram laid out to SVG in the browser via @terrastruct/d2. */
+  svg: string;
+}
+
+/**
+ * Render a query plan as a D2 (https://d2lang.com) diagram.
+ *
+ * The Go WASM module emits D2 source (see {@link renderD2Source}); layout and
+ * SVG generation happen in the browser via the lazily-loaded @terrastruct/d2
+ * package, so the Go binary does not embed a D2 runtime. The raw source is
+ * returned alongside the SVG so the copy/download actions keep operating on the
+ * D2 source.
+ */
+export async function renderD2Diagram(
+  input: string,
+  options: Omit<RenderPlanVizParams, 'input'> = { full: true }
+): Promise<D2RenderResult> {
+  logger.info('renderD2Diagram called');
+
+  // Reuse the source path (it initializes WASM and returns D2 source), then
+  // lay it out to SVG in the browser.
+  const source = await renderD2Source(input, options);
+
+  try {
+    const d2 = await loadD2();
+    const layoutStart = performance.now();
+    const { diagram, renderOptions } = await d2.compile(source);
+    // noXMLTag omits the leading <?xml ...?> so the SVG embeds cleanly via
+    // innerHTML in SvgPanel (per the @terrastruct/d2 README recommendation).
+    const svg = await d2.render(diagram, { ...renderOptions, noXMLTag: true });
+    logger.info(`D2 layout completed in ${(performance.now() - layoutStart).toFixed(2)}ms`);
+    return { source, svg };
+  } catch (e) {
+    const { message, originalError } = extractErrorInfo(e);
+    logger.error('Error during D2 layout:', message);
     throw new WasmRenderingError(message, originalError);
   }
 }

@@ -3,25 +3,29 @@ import {
   setupCompleteTest,
   uploadTestFile,
   selectOutputView,
+  waitForDiagramComplete,
 } from './utils';
 
 const DEBUG = process.env.DEBUG === 'true';
 
-test.describe('D2 Source Rendering', () => {
+test.describe('D2 Diagram Rendering', () => {
   test.setTimeout(120000);
 
-  test('should render a query plan as D2 source text', async ({ page }) => {
+  test('should render a query plan as a D2 diagram', async ({ page }) => {
     await setupCompleteTest(page, test, { debug: DEBUG });
     await selectOutputView(page, 'd2');
     await uploadTestFile(page, 'dca_profile.yaml');
 
-    const output = page.getByTestId('d2-output-code');
-    await expect(output).toContainText('direction: down', { timeout: 60000 });
-    await expect(output).toContainText('node0');
-    await expect(output).toContainText(/Distributed/i);
-
-    // The hint tells users how to render the source externally with the d2 CLI.
-    await expect(page.getByTestId('d2-hint')).toContainText('d2 plan.d2 plan.svg');
+    // The D2 view now lays the diagram out in-browser via @terrastruct/d2 and
+    // shows the resulting SVG (the first render also downloads the large lazy
+    // D2 chunk, hence the generous timeout).
+    await waitForDiagramComplete(page);
+    const diagram = page.getByTestId('diagram-output');
+    await expect(diagram).toBeVisible();
+    // D2 embeds per-shape icon <svg> elements, so scope to the outer diagram SVG.
+    const outerSvg = diagram.locator('svg').first();
+    await expect(outerSvg).toBeVisible();
+    await expect(outerSvg).toContainText(/Distributed/i);
   });
 
   test('should switch between ASCII and D2 views', async ({ page }) => {
@@ -31,20 +35,22 @@ test.describe('D2 Source Rendering', () => {
     await expect(page.getByTestId('output-code')).toContainText('Distributed Union', { timeout: 60000 });
 
     await selectOutputView(page, 'd2');
-    await expect(page.getByTestId('d2-output-code')).toContainText('direction: down', { timeout: 60000 });
+    await waitForDiagramComplete(page);
+    await expect(page.getByTestId('diagram-output').locator('svg').first()).toBeVisible();
     await expect(page.getByTestId('output-code')).toHaveCount(0);
 
     await selectOutputView(page, 'ascii');
     await expect(page.getByTestId('output-code')).toContainText('Distributed Union', { timeout: 60000 });
-    await expect(page.getByTestId('d2-output-code')).toHaveCount(0);
+    await expect(page.getByTestId('diagram-output')).toHaveCount(0);
   });
 
-  test('should download D2 source with d2 extension', async ({ page }) => {
+  test('should download the D2 source with a d2 extension', async ({ page }) => {
     await setupCompleteTest(page, test, { debug: DEBUG });
     await selectOutputView(page, 'd2');
     await uploadTestFile(page, 'dca_profile.yaml');
-    await expect(page.getByTestId('d2-output-code')).toContainText('direction: down', { timeout: 60000 });
+    await waitForDiagramComplete(page);
 
+    // Copy/Download keep operating on the raw D2 source, not the rendered SVG.
     const downloadPromise = page.waitForEvent('download');
     await page.getByTestId('download-button').click();
     const download = await downloadPromise;
@@ -52,17 +58,18 @@ test.describe('D2 Source Rendering', () => {
     expect(download.suggestedFilename()).toBe('query-plan.d2');
   });
 
-  test('should keep D2 source copyable', async ({ page, browserName }) => {
+  test('should keep the D2 source copyable', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'Clipboard permissions are configured for Chromium only');
 
     await setupCompleteTest(page, test, { debug: DEBUG });
     await selectOutputView(page, 'd2');
     await uploadTestFile(page, 'dca_profile.yaml');
-    await expect(page.getByTestId('d2-output-code')).toContainText('direction: down', { timeout: 60000 });
+    await waitForDiagramComplete(page);
 
     await page.getByTestId('copy-button').click();
     await expect(page.getByTestId('copy-button')).toHaveText(/copied/i, { timeout: 5000 });
 
+    // The clipboard carries the D2 source (not the SVG markup).
     const clipboardText = await page.evaluate(async () => navigator.clipboard.readText());
     expect(clipboardText).toContain('direction: down');
     expect(clipboardText).toContain('node0');
