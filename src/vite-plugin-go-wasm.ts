@@ -46,14 +46,14 @@ export default function goWasm(): Plugin {
       
       // Provide helpful error information
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-        throw new Error('Go WASM build failed: Go compiler not found. Please ensure Go is installed and in PATH.');
+        throw new Error('Go WASM build failed: Go compiler not found. Please ensure Go is installed and in PATH.', { cause: error });
       }
       
       const errorMessage = error instanceof Error ? error.message : String(error);
       const stderr = error instanceof Error && 'stderr' in error ? ` STDERR: ${error.stderr}` : '';
       
       // Throw error to stop the build process completely
-      throw new Error(`Go WASM build failed in ${hookName}: ${errorMessage}${stderr}`);
+      throw new Error(`Go WASM build failed in ${hookName}: ${errorMessage}${stderr}`, { cause: error });
     } finally {
       isBuilding = false;
     }
