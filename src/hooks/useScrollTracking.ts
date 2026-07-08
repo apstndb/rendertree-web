@@ -14,8 +14,8 @@ import { measureCharacterWidth } from '../utils/characterMeasurement';
  * @returns Object containing scroll position and ruler width
  */
 export const useScrollTracking = (
-  preRef: React.RefObject<HTMLPreElement>,
-  codeRef: React.RefObject<HTMLElement>,
+  preRef: React.RefObject<HTMLPreElement | null>,
+  codeRef: React.RefObject<HTMLElement | null>,
   output: string,
   fontSize: number,
   fontFamily: string = "Consolas, 'Courier New', Courier, monospace"
