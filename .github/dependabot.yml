@@ -1,0 +1,40 @@
+version: 2
+# cooldown is a Dependabot version-update option. It does not delay security updates.
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 3
+    groups:
+      google-go:
+        patterns:
+          - "cloud.google.com/*"
+          - "google.golang.org/*"
+          - "github.com/googleapis/*"
+      golang-x:
+        patterns:
+          - "golang.org/x/*"
+      apstndb:
+        patterns:
+          - "github.com/apstndb/*"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 3
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"
