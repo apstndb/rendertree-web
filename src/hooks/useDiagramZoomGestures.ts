@@ -98,8 +98,8 @@ export function useDiagramZoomGestures({
     container.addEventListener('touchmove', onTouchMove, { passive: false, capture: true });
     container.addEventListener('touchend', onTouchEnd, { capture: true });
     container.addEventListener('touchcancel', onTouchEnd, { capture: true });
-    container.addEventListener('gesturestart', onGestureStart as EventListener, gestureOptions);
-    container.addEventListener('gesturechange', onGestureChange as EventListener, gestureOptions);
+    container.addEventListener('gesturestart', onGestureStart, gestureOptions);
+    container.addEventListener('gesturechange', onGestureChange, gestureOptions);
 
     return () => {
       container.removeEventListener('wheel', onWheel, wheelOptions);
@@ -107,8 +107,8 @@ export function useDiagramZoomGestures({
       container.removeEventListener('touchmove', onTouchMove, { capture: true });
       container.removeEventListener('touchend', onTouchEnd, { capture: true });
       container.removeEventListener('touchcancel', onTouchEnd, { capture: true });
-      container.removeEventListener('gesturestart', onGestureStart as EventListener, gestureOptions);
-      container.removeEventListener('gesturechange', onGestureChange as EventListener, gestureOptions);
+      container.removeEventListener('gesturestart', onGestureStart, gestureOptions);
+      container.removeEventListener('gesturechange', onGestureChange, gestureOptions);
     };
   }, [containerRef, enabled]);
 }
