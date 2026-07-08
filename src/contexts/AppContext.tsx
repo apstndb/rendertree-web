@@ -115,6 +115,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     } catch (renderError) {
       const errorMsg = renderError instanceof Error ? renderError.message : String(renderError);
       logger.error('Error during rendering:', errorMsg);
+      // Clear the current view's stale output so the error becomes visible.
+      // OutputPanel only renders `message` when the active view has no output
+      // (`{message && !activeOutput && ...}`), and `message` is shown nowhere
+      // else. Without clearing, a failing render after a successful one would
+      // leave the previous output on screen and hide the error entirely. Only
+      // the active view is cleared so switching back to another view still
+      // shows its last good output.
+      if (outputView === 'diagram') {
+        setDiagramOutput('');
+      } else if (outputView === 'svg') {
+        setSvgOutput('');
+      } else if (outputView === 'd2') {
+        setD2Output('');
+      } else {
+        setAsciiOutput('');
+      }
       setMessage(`Error during rendering: ${errorMsg}`);
     } finally {
       setIsRendering(false);

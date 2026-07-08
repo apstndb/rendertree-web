@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAppContext, type ScalarAliasResolution } from '../contexts/AppContext';
 import {
   DIAGRAM_ZOOM_STEP,
@@ -115,11 +115,21 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     setShowPlanInput(true);
   };
 
+  // Keep the latest render callback in a ref so the debounced auto-render effect
+  // below does not depend on its identity. handleRender's identity changes when
+  // outputView changes (outputView is one of its useCallback deps). If this
+  // effect depended on handleRender, switching the output view would re-fire it
+  // in addition to AppContext's dedicated view-switch effect, rendering twice.
+  // Using a ref lets the effect run only on actual input/settings changes while
+  // still invoking the current callback.
+  const handleRenderRef = useRef(handleRender);
+  handleRenderRef.current = handleRender;
+
   // Auto-render when settings change (except wrapWidth which is handled separately)
   useEffect(() => {
     if (input.trim() && !disabled) {
       const timeoutId = setTimeout(() => {
-        handleRender();
+        handleRenderRef.current();
       }, 200);
 
       return () => clearTimeout(timeoutId);
@@ -135,7 +145,6 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
     diagramFull,
     input,
     disabled,
-    handleRender,
   ]);
 
   // Handle wrap width input with debouncing and special keys
