@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { useAppContext } from '../contexts/AppContext';
-import { useWasmContext } from '../contexts/WasmContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { computeFitDiagramZoom, measureSvgSize } from '../utils/diagramZoom';
 import { logger } from '../utils/logger';
@@ -14,9 +13,11 @@ import { useScrollTracking } from '../hooks/useScrollTracking';
 
 const OutputPanel: React.FC = () => {
   const { asciiOutput, diagramOutput, svgOutput, message, isRendering } = useAppContext();
-  const { isLoading: isWasmLoading } = useWasmContext();
   const { fontSize, diagramZoom, setDiagramZoom, outputView, registerDiagramFitHandler } = useSettingsContext();
-  const isLoading = isWasmLoading || isRendering;
+  // WASM initializes lazily inside the render call, so the render lifecycle
+  // (isRendering) is the single source of the loading indicator -- it covers
+  // both the one-time module load and each subsequent render.
+  const isLoading = isRendering;
   const isDiagramView = outputView === 'diagram';
   const isSvgView = outputView === 'svg';
   const isZoomableView = isDiagramView || isSvgView;
@@ -41,8 +42,8 @@ const OutputPanel: React.FC = () => {
     "Consolas, 'Courier New', Courier, monospace"
   );
 
-  if (isWasmLoading || isRendering) {
-    logger.debug('OutputPanel loading state:', { isWasmLoading, isRendering });
+  if (isRendering) {
+    logger.debug('OutputPanel loading state:', { isRendering });
   }
 
   useEffect(() => {
