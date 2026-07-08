@@ -15,9 +15,6 @@ export default defineConfig(({ command }) => {
     build: {
       outDir: 'dist',
       emptyOutDir: true, // Empty the dist directory as WASM files are now built by the plugin
-      rollupOptions: {
-        // No need to externalize files that are properly imported
-      },
     },
     resolve: {
       alias: {
