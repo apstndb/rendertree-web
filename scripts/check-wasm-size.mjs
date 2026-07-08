@@ -12,12 +12,13 @@ import { execSync } from 'node:child_process';
 
 const WASM_PATH = 'dist/rendertree.wasm';
 
-// Current measurements (2026-07-08): raw ~23.66 MiB, gzip ~5.16 MiB,
-// brotli ~3.64 MiB. The Go toolchain pinned in go.mod (toolchain go1.24.0)
-// is the source of truth for CI; a newer local toolchain measures slightly
-// lower (go1.24.0 CI build is ~23.43 MiB raw). WASM size is dominated by the
-// Go toolchain version, so the informational `go version` line below records
-// which toolchain produced these bytes.
+// Current measurements (2026-07-08, go1.25/1.26 builds after the grpc/x-net
+// security bump): raw ~24.29 MiB, gzip ~5.26 MiB, brotli ~3.70 MiB. CI is the
+// enforcement point and builds deterministically with the go.mod go directive
+// (setup-go go-version-file + GOTOOLCHAIN=local); the go.mod toolchain line
+// is only a lower bound locally, so a newer local Go may measure slightly
+// differently. The informational `go version` line below records which
+// toolchain produced these bytes.
 const BUDGETS = {
   raw: 28 * 1024 * 1024,
   gzip: 6.5 * 1024 * 1024,
