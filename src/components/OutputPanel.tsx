@@ -12,7 +12,7 @@ import { useDiagramZoomGestures } from '../hooks/useDiagramZoomGestures';
 import { useScrollTracking } from '../hooks/useScrollTracking';
 
 const OutputPanel: React.FC = () => {
-  const { asciiOutput, diagramOutput, svgOutput, d2Output, message, isRendering } = useAppContext();
+  const { asciiOutput, diagramOutput, svgOutput, d2Output, d2SvgOutput, message, isRendering } = useAppContext();
   const { fontSize, diagramZoom, setDiagramZoom, outputView, registerDiagramFitHandler } = useSettingsContext();
   // WASM initializes lazily inside the render call, so the render lifecycle
   // (isRendering) is the single source of the loading indicator -- it covers
@@ -21,7 +21,7 @@ const OutputPanel: React.FC = () => {
   const isDiagramView = outputView === 'diagram';
   const isSvgView = outputView === 'svg';
   const isD2View = outputView === 'd2';
-  const isZoomableView = isDiagramView || isSvgView;
+  const isZoomableView = isDiagramView || isSvgView || isD2View;
   const activeOutput = isDiagramView
     ? diagramOutput
     : isSvgView
@@ -84,7 +84,7 @@ const OutputPanel: React.FC = () => {
     });
 
     return () => registerDiagramFitHandler(null);
-  }, [diagramOutput, svgOutput, registerDiagramFitHandler, setDiagramZoom]);
+  }, [diagramOutput, svgOutput, d2SvgOutput, registerDiagramFitHandler, setDiagramZoom]);
 
   return (
     <div className="content-container">
@@ -186,38 +186,19 @@ const OutputPanel: React.FC = () => {
 
       {isD2View && d2Output && (
         <div
-          className="pre-container"
+          className="output-panel-shell diagram-shell"
           data-testid="output-container"
         >
-          <div className="d2-hint" data-testid="d2-hint">
-            Render with the D2 CLI: <code>d2 plan.d2 plan.svg</code>
-          </div>
-          <pre
-            style={{
-              fontFamily: 'monospace',
-              whiteSpace: 'pre',
-              border: 'solid',
-              padding: '10px',
-              marginTop: '0',
-              position: 'relative',
-              overflow: 'auto',
-              maxWidth: '100%',
-              flex: '1 1 auto',
-              boxSizing: 'border-box',
-              margin: '0',
-            }}
+          <div
+            className="diagram-scroll"
+            ref={diagramScrollRef}
+            data-testid="diagram-scroll"
+            title="Pinch or Ctrl+scroll (Cmd+scroll on Mac) to zoom the diagram"
           >
-            <code
-              style={{
-                fontFamily: "Consolas, 'Courier New', Courier, monospace",
-                fontSize: `${fontSize}px`,
-              }}
-              data-testid="d2-output-code"
-            >
-              {d2Output}
-            </code>
-          </pre>
-
+            {/* The D2 view renders the diagram in-browser via @terrastruct/d2;
+                Copy/Download still operate on the raw D2 source (d2Output). */}
+            <SvgPanel svg={d2SvgOutput} zoom={diagramZoom} />
+          </div>
           <OutputActionButtons
             content={d2Output}
             download={OUTPUT_DOWNLOAD.d2}

@@ -17,6 +17,8 @@ GitHub Pages base path: `/rendertree-web/`.
 
 Graphviz layout runs in the browser: Go WASM emits DOT source (`spannerplanviz/dot`), and `src/wasm.ts` lazily loads `@hpcc-js/wasm-graphviz` to produce SVG. Do not reintroduce `goccy/go-graphviz` into the Go module — it embeds a Graphviz WASM runtime plus a font stack and roughly doubles the binary (CI enforces budgets via `npm run check:wasm-size`).
 
+D2 diagrams are also rendered in the browser: Go WASM emits D2 source (`renderD2`), and `src/wasm.ts` lazily loads `@terrastruct/d2` (`renderD2Diagram`) to compile+lay-out the source to SVG. That browser bundle is large (~8 MB raw, wasm embedded, self-hosted web worker), so it is dynamically imported as its own lazy chunk; `npm run check:chunk-size` tracks both the Graphviz and D2 chunks as regression detectors (not hard limits — the D2 chunk size is accepted). Copy/Download on the D2 view still operate on the raw D2 source (`.d2`), so users can render it externally with the d2 CLI.
+
 ## Before push
 
 CI runs **`tsc`** in both Tests (`npm run typecheck`) and Deploy (`npm run build`). These do **not** run typecheck:

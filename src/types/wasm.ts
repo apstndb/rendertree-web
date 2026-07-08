@@ -43,7 +43,7 @@ export interface RenderAppendixOptions {
  * - ascii: Text tree rendered by spannerplan/plantree
  * - diagram: Mermaid.js diagram rendered in the browser
  * - svg: Graphviz SVG laid out in the browser from spannerplanviz DOT source
- * - d2: D2 (https://d2lang.com) diagram source text; render externally with the d2 CLI
+ * - d2: D2 (https://d2lang.com) diagram laid out in the browser via @terrastruct/d2; the raw D2 source stays copy/downloadable
  */
 export type OutputView = "ascii" | "diagram" | "svg" | "d2";
 
@@ -149,8 +149,9 @@ export interface WasmFunctions {
   renderDOT: (paramsJson: string) => string;
   /**
    * Renders Spanner query plan as D2 (https://d2lang.com) diagram source text.
-   * The result is unlaid-out D2 source; render it externally with the d2 CLI
-   * (for example `d2 plan.d2 plan.svg`). No in-browser rendering is performed.
+   * The result is unlaid-out D2 source. Layout to SVG is done by the JS layer
+   * (`renderD2Diagram` in src/wasm.ts, via @terrastruct/d2); the same source is
+   * also copy/downloadable for external use with the d2 CLI.
    * @param paramsJson - JSON string containing RenderPlanVizParams
    * @returns JSON string containing WasmResponse
    */

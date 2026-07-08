@@ -58,9 +58,12 @@ test.describe('Render error visibility and single render on view switch', () => 
     await settle(page);
     const baselineRenderCount = countRenders(consoleMessages);
 
-    // Switch to the D2 source view.
+    // Switch to the D2 diagram view. The render counter is incremented
+    // synchronously at handleRender start (before any await), so it is already
+    // accurate regardless of how long the D2 layout / lazy-chunk load takes;
+    // still, wait for the diagram so the switch's render has actually run.
     await page.getByTestId('output-view-select').selectOption('d2');
-    await expect(page.getByTestId('d2-output-code')).toBeVisible({ timeout: 60000 });
+    await expect(page.getByTestId('diagram-output').locator('svg').first()).toBeVisible({ timeout: 60000 });
 
     // Wait past the auto-render debounce window (200ms) for any second render to
     // appear, then assert exactly one render happened for the view switch.

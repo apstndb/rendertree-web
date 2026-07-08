@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { createContextWithHook } from '../utils/createContextWithHook';
 import { useFileContext } from './FileContext';
 import { useSettingsContext } from './SettingsContext';
-import { renderASCIITree, renderMermaidDiagram, renderSVGDiagram, renderD2Source, isWasmInitialized } from '../wasm';
+import { renderASCIITree, renderMermaidDiagram, renderSVGDiagram, renderD2Diagram, isWasmInitialized } from '../wasm';
 import type { FormatType, PrintSection, RenderAppendixOptions } from '../types/wasm';
 import { logger } from '../utils/logger';
 
@@ -21,7 +21,10 @@ interface AppState {
   asciiOutput: string;
   diagramOutput: string;
   svgOutput: string;
+  /** Raw D2 source (backs copy/download of the D2 view). */
   d2Output: string;
+  /** D2 diagram laid out to SVG in the browser (the D2 view's display). */
+  d2SvgOutput: string;
   message: string;
   isRendering: boolean;
 }
@@ -60,6 +63,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [diagramOutput, setDiagramOutput] = useState<string>('');
   const [svgOutput, setSvgOutput] = useState<string>('');
   const [d2Output, setD2Output] = useState<string>('');
+  const [d2SvgOutput, setD2SvgOutput] = useState<string>('');
   const [isRendering, setIsRendering] = useState<boolean>(false);
   // The WASM module is initialized lazily on the first render (see wasm.ts),
   // so the app is immediately usable and starts in a ready state.
@@ -86,12 +90,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       let rendered: string;
+      // The D2 view renders an in-browser SVG (d2Svg) while keeping the raw
+      // source (rendered) for copy/download.
+      let d2Svg = '';
       if (outputView === 'diagram') {
         rendered = await renderMermaidDiagram(input, { full: diagramFull });
       } else if (outputView === 'svg') {
         rendered = await renderSVGDiagram(input, { full: diagramFull });
       } else if (outputView === 'd2') {
-        rendered = await renderD2Source(input, { full: diagramFull });
+        const d2Result = await renderD2Diagram(input, { full: diagramFull });
+        rendered = d2Result.source;
+        d2Svg = d2Result.svg;
       } else {
         const appendixOptions: RenderAppendixOptions = {
           showScalarVars,
@@ -108,6 +117,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setSvgOutput(rendered);
       } else if (outputView === 'd2') {
         setD2Output(rendered);
+        setD2SvgOutput(d2Svg);
       } else {
         setAsciiOutput(rendered);
       }
@@ -128,6 +138,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setSvgOutput('');
       } else if (outputView === 'd2') {
         setD2Output('');
+        setD2SvgOutput('');
       } else {
         setAsciiOutput('');
       }
@@ -207,6 +218,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     diagramOutput,
     svgOutput,
     d2Output,
+    d2SvgOutput,
     message,
     isRendering,
     handleRender,
