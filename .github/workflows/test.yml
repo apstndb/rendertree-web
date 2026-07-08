@@ -15,7 +15,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.24'
+          go-version-file: go.mod
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -43,6 +43,12 @@ jobs:
 
       - name: Check WASM size budget
         run: npm run check:wasm-size
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Check lazy chunk size budget
+        run: npm run check:chunk-size
 
       - name: Run tests (development mode)
         run: npm test

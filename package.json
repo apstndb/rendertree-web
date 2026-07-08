@@ -29,6 +29,7 @@
     "test:ci": "npm run lint && npm run typecheck && npm run test:unit && npm run test:preview",
     "typecheck": "tsc --noEmit",
     "check:wasm-size": "node scripts/check-wasm-size.mjs",
+    "check:chunk-size": "node scripts/check-chunk-size.mjs",
     "clean": "rm -rf dist/*"
   },
   "repository": {

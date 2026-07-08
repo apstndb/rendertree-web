@@ -2,6 +2,8 @@ module github.com/apstndb/rendertree-web
 
 go 1.24
 
+toolchain go1.24.0
+
 require (
 	github.com/apstndb/spannerplan v0.2.1
 	github.com/apstndb/spannerplanviz v0.9.3
