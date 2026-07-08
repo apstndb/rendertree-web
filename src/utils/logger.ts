@@ -5,7 +5,10 @@ import log from 'loglevel';
 const isProduction = import.meta.env.PROD;
 const isDevelopment = import.meta.env.DEV;
 
-log.setLevel(isProduction ? log.levels.WARN : log.levels.DEBUG);
+// setDefaultLevel (not setLevel) so a level persisted in localStorage (the
+// "loglevel" key) can override it — tests and debugging sessions can enable
+// info logging in production builds without a code change.
+log.setDefaultLevel(isProduction ? log.levels.WARN : log.levels.DEBUG);
 
 // Type for logger arguments - allows primitives, objects, and arrays
 // This is more specific than 'unknown[]' and provides better type safety

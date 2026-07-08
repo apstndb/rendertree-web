@@ -38,6 +38,11 @@ test.describe('Render error visibility and single render on view switch', () => 
   });
 
   test('switching the output view renders exactly once', async ({ page }) => {
+    // The render counter reads logger.info output, which production builds
+    // suppress by default. loglevel honors a level persisted under the
+    // "loglevel" localStorage key (see src/utils/logger.ts), so raise it
+    // before any app script runs -- this keeps the test valid in preview mode.
+    await page.addInitScript(() => localStorage.setItem('loglevel', 'INFO'));
     const { consoleMessages } = await setupCompleteTest(page, test, { debug: DEBUG });
 
     // Render a valid plan in the default ASCII view.
