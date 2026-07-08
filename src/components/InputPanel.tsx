@@ -97,7 +97,12 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
   }, [wrapWidth]);
 
   const appendixPreset = presetForSections(printSections);
-  const isPlanVizView = outputView === 'diagram' || outputView === 'svg';
+  // The diagram/svg/d2 views all build the plan via the spannerplanviz pipeline
+  // and share the "full details" toggle instead of the ASCII text controls.
+  const isPlanVizView = outputView === 'diagram' || outputView === 'svg' || outputView === 'd2';
+  // Only the rendered graphical views (diagram/svg) are zoomable; the D2 view is
+  // monospace source text, so it keeps the font-size controls like ASCII.
+  const isZoomableView = outputView === 'diagram' || outputView === 'svg';
   const [showPlanInput, setShowPlanInput] = useState(false);
 
   const onFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -223,6 +228,7 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
             <option value="ascii">ASCII tree</option>
             <option value="diagram">Diagram (Mermaid)</option>
             <option value="svg">Diagram (Graphviz SVG)</option>
+            <option value="d2">D2 source</option>
           </select>
         </div>
         {isPlanVizView ? (
@@ -333,7 +339,7 @@ const InputPanel: React.FC<InputPanelProps> = ({ disabled }) => {
         >
           🔄 Refresh
         </button>
-        {isPlanVizView ? (
+        {isZoomableView ? (
           <DiagramZoomControls
             diagramZoom={diagramZoom}
             setDiagramZoom={setDiagramZoom}

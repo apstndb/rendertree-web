@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { createContextWithHook } from '../utils/createContextWithHook';
 import { useFileContext } from './FileContext';
 import { useSettingsContext } from './SettingsContext';
-import { renderASCIITree, renderMermaidDiagram, renderSVGDiagram, isWasmInitialized } from '../wasm';
+import { renderASCIITree, renderMermaidDiagram, renderSVGDiagram, renderD2Source, isWasmInitialized } from '../wasm';
 import type { FormatType, PrintSection, RenderAppendixOptions } from '../types/wasm';
 import { logger } from '../utils/logger';
 
@@ -21,6 +21,7 @@ interface AppState {
   asciiOutput: string;
   diagramOutput: string;
   svgOutput: string;
+  d2Output: string;
   message: string;
   isRendering: boolean;
 }
@@ -58,6 +59,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [asciiOutput, setAsciiOutput] = useState<string>('');
   const [diagramOutput, setDiagramOutput] = useState<string>('');
   const [svgOutput, setSvgOutput] = useState<string>('');
+  const [d2Output, setD2Output] = useState<string>('');
   const [isRendering, setIsRendering] = useState<boolean>(false);
   // The WASM module is initialized lazily on the first render (see wasm.ts),
   // so the app is immediately usable and starts in a ready state.
@@ -88,6 +90,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         rendered = await renderMermaidDiagram(input, { full: diagramFull });
       } else if (outputView === 'svg') {
         rendered = await renderSVGDiagram(input, { full: diagramFull });
+      } else if (outputView === 'd2') {
+        rendered = await renderD2Source(input, { full: diagramFull });
       } else {
         const appendixOptions: RenderAppendixOptions = {
           showScalarVars,
@@ -102,6 +106,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setDiagramOutput(rendered);
       } else if (outputView === 'svg') {
         setSvgOutput(rendered);
+      } else if (outputView === 'd2') {
+        setD2Output(rendered);
       } else {
         setAsciiOutput(rendered);
       }
@@ -184,6 +190,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     asciiOutput,
     diagramOutput,
     svgOutput,
+    d2Output,
     message,
     isRendering,
     handleRender,

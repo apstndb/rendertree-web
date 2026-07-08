@@ -6,7 +6,7 @@ Client-side Spanner query plan viewer: React + Vite UI, Go WASM (`main.go`) for 
 
 | Area | Role |
 |------|------|
-| `main.go` | WASM entry: `renderASCII`, `renderMermaid`, `renderDOT` (spannerplanviz) |
+| `main.go` | WASM entry: `renderASCII`, `renderMermaid`, `renderDOT`, `renderD2` (spannerplanviz) |
 | `src/wasm.ts`, `src/types/wasm.ts` | JS ↔ WASM bridge and types |
 | `WasmContext` / `AppContext` | Module load vs UI state |
 | `InputPanel` / `OutputPanel` | Input, ASCII or Diagram output |

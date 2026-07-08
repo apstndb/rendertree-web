@@ -25,7 +25,7 @@ interface SettingsProviderProps {
 }
 
 const isOutputView = (value: string | null): value is OutputView =>
-  value === 'ascii' || value === 'diagram' || value === 'svg';
+  value === 'ascii' || value === 'diagram' || value === 'svg' || value === 'd2';
 
 export const MIN_DIAGRAM_ZOOM = 5;
 export const MAX_DIAGRAM_ZOOM = 500;

@@ -316,6 +316,21 @@ textarea.input-area {
   min-height: 0;
 }
 
+.d2-hint {
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #495057;
+  background-color: #f0f8ff;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.d2-hint code {
+  font-family: Consolas, 'Courier New', Courier, monospace;
+  background-color: #e9ecef;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
 /* Rendering control styles */
 .render-controls {
   /* display: flex; Removed as it's now a column flex container */

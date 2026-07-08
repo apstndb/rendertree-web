@@ -12,7 +12,7 @@ import { useDiagramZoomGestures } from '../hooks/useDiagramZoomGestures';
 import { useScrollTracking } from '../hooks/useScrollTracking';
 
 const OutputPanel: React.FC = () => {
-  const { asciiOutput, diagramOutput, svgOutput, message, isRendering } = useAppContext();
+  const { asciiOutput, diagramOutput, svgOutput, d2Output, message, isRendering } = useAppContext();
   const { fontSize, diagramZoom, setDiagramZoom, outputView, registerDiagramFitHandler } = useSettingsContext();
   // WASM initializes lazily inside the render call, so the render lifecycle
   // (isRendering) is the single source of the loading indicator -- it covers
@@ -20,8 +20,15 @@ const OutputPanel: React.FC = () => {
   const isLoading = isRendering;
   const isDiagramView = outputView === 'diagram';
   const isSvgView = outputView === 'svg';
+  const isD2View = outputView === 'd2';
   const isZoomableView = isDiagramView || isSvgView;
-  const activeOutput = isDiagramView ? diagramOutput : isSvgView ? svgOutput : asciiOutput;
+  const activeOutput = isDiagramView
+    ? diagramOutput
+    : isSvgView
+      ? svgOutput
+      : isD2View
+        ? d2Output
+        : asciiOutput;
 
   const preRef = useRef<HTMLPreElement>(null);
   const codeRef = useRef<HTMLElement>(null);
@@ -37,7 +44,7 @@ const OutputPanel: React.FC = () => {
   const { scrollLeft, rulerWidth } = useScrollTracking(
     preRef,
     codeRef,
-    isZoomableView ? '' : asciiOutput,
+    outputView === 'ascii' ? asciiOutput : '',
     fontSize,
     "Consolas, 'Courier New', Courier, monospace"
   );
@@ -173,6 +180,47 @@ const OutputPanel: React.FC = () => {
           <OutputActionButtons
             content={asciiOutput}
             download={OUTPUT_DOWNLOAD.ascii}
+          />
+        </div>
+      )}
+
+      {isD2View && d2Output && (
+        <div
+          className="pre-container"
+          data-testid="output-container"
+        >
+          <div className="d2-hint" data-testid="d2-hint">
+            Render with the D2 CLI: <code>d2 plan.d2 plan.svg</code>
+          </div>
+          <pre
+            style={{
+              fontFamily: 'monospace',
+              whiteSpace: 'pre',
+              border: 'solid',
+              padding: '10px',
+              marginTop: '0',
+              position: 'relative',
+              overflow: 'auto',
+              maxWidth: '100%',
+              flex: '1 1 auto',
+              boxSizing: 'border-box',
+              margin: '0',
+            }}
+          >
+            <code
+              style={{
+                fontFamily: "Consolas, 'Courier New', Courier, monospace",
+                fontSize: `${fontSize}px`,
+              }}
+              data-testid="d2-output-code"
+            >
+              {d2Output}
+            </code>
+          </pre>
+
+          <OutputActionButtons
+            content={d2Output}
+            download={OUTPUT_DOWNLOAD.d2}
           />
         </div>
       )}

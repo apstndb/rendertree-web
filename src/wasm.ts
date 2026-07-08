@@ -11,6 +11,7 @@ import { extractErrorInfo } from './utils/errorHandling';
 declare function renderASCII(paramsJson: string): string;
 declare function renderMermaid(paramsJson: string): string;
 declare function renderDOT(paramsJson: string): string;
+declare function renderD2(paramsJson: string): string;
 
 let cachedWasmFunctions: WasmFunctions | null = null;
 let initPromise: Promise<WasmFunctions> | null = null;
@@ -118,7 +119,7 @@ async function initializeWasm(): Promise<WasmFunctions> {
     const result = await WebAssembly.instantiateStreaming(fetchResponse, go.importObject);
     void go.run(result.instance);
 
-    cachedWasmFunctions = { renderASCII, renderMermaid, renderDOT };
+    cachedWasmFunctions = { renderASCII, renderMermaid, renderDOT, renderD2 };
     logger.info('WASM initialization completed successfully');
     return cachedWasmFunctions;
   } catch (e) {
@@ -181,6 +182,34 @@ export async function renderMermaidDiagram(
   } catch (e) {
     const { message, originalError } = extractErrorInfo(e);
     logger.error('Error during mermaid rendering:', message);
+    throw new WasmRenderingError(message, originalError);
+  }
+}
+
+/**
+ * Render D2 (https://d2lang.com) diagram source text for a query plan via WASM.
+ *
+ * Unlike the SVG view, no in-browser layout happens: the official D2 browser
+ * bundle is far too large to ship, so this returns the raw D2 source for the
+ * user to render externally with the d2 CLI (for example `d2 plan.d2 plan.svg`).
+ */
+export async function renderD2Source(
+  input: string,
+  options: Omit<RenderPlanVizParams, 'input'> = { full: true }
+): Promise<string> {
+  logger.info('renderD2Source called');
+  logger.debug('Input length:', input.length, 'characters');
+
+  try {
+    const wasmFunctions = await initWasm();
+    const params: RenderPlanVizParams = {
+      input,
+      ...options,
+    };
+    return invokeWasm(wasmFunctions.renderD2, JSON.stringify(params));
+  } catch (e) {
+    const { message, originalError } = extractErrorInfo(e);
+    logger.error('Error during D2 rendering:', message);
     throw new WasmRenderingError(message, originalError);
   }
 }
